@@ -92,6 +92,7 @@ func sim_data() -> Dictionary:
 		"materials": materials,
 		"nose_shapes": nose_shapes,
 		"drag_model": raw.get("nose_shapes", {}).get("drag_model", {}),
+		"nose_mass_model": raw.get("nose_shapes", {}).get("nose_mass_model", {}),
 		"q_limit_model": raw.get("materials", {}).get("q_limit_model", {}),
 		"delta_v": {
 			"legs": dv_legs,

@@ -31,11 +31,14 @@ static func body_dry_mass(diameter: float, length: float, material: Dictionary) 
 	return body_wall_area(diameter, length) * float(material.get("areal_density_kg_m2", 0.0))
 
 
-## Nose shell mass from the lateral area of a cone of the same size: pi * R * slant.
-static func nose_shell_mass(diameter: float, length: float, material: Dictionary) -> float:
+## Nose shell mass from the lateral area of a cone of the same size: pi * R * slant,
+## times the material's areal density, times areal_factor. A nose fairing carries no
+## tank pressure, bulkheads or plumbing, so it is much lighter per square metre than a
+## tank wall (factor from nose_shapes.json "nose_mass_model").
+static func nose_shell_mass(diameter: float, length: float, material: Dictionary, areal_factor: float = 1.0) -> float:
 	var radius := diameter / 2.0
 	var slant := sqrt(radius * radius + length * length)
-	return PI * radius * slant * float(material.get("areal_density_kg_m2", 0.0))
+	return PI * radius * slant * float(material.get("areal_density_kg_m2", 0.0)) * areal_factor
 
 
 ## Builds the segment list. `materials` and `nose_shapes` are { id -> entry } tables.
@@ -44,7 +47,8 @@ static func nose_shell_mass(diameter: float, length: float, material: Dictionary
 ##               propellant_mass_kg, cg_x_m}]
 ##   length_m (nose tip to tail), diameter_m (first-stage body: the reference calibre),
 ##   max_diameter_m, fin_root_le_x_m, dry_mass_kg, propellant_mass_kg, liftoff_mass_kg
-static func build(design: Dictionary, materials: Dictionary = {}, nose_shapes: Dictionary = {}) -> Dictionary:
+## nose_areal_factor scales the derived nose mass (see nose_shell_mass).
+static func build(design: Dictionary, materials: Dictionary = {}, nose_shapes: Dictionary = {}, nose_areal_factor: float = 1.0) -> Dictionary:
 	var segments: Array = []
 	var stages: Array = design.get("stages", [])
 	var options: Dictionary = design.get("options", {})
@@ -77,7 +81,7 @@ static func build(design: Dictionary, materials: Dictionary = {}, nose_shapes: D
 	var nose_shape: Dictionary = nose_shapes.get(str(nose.get("shape", "")), {})
 	var nose_mass := float(nose.get("mass_kg", -1.0))
 	if nose_mass < 0.0:
-		nose_mass = nose_shell_mass(top_diameter, nose_length, top_material)
+		nose_mass = nose_shell_mass(top_diameter, nose_length, top_material, nose_areal_factor)
 	var nose_cg := float(nose_shape.get("cg_fraction", DEFAULT_NOSE_CG_FRACTION))
 	segments.append(_segment("nose", "Nose cone", -1, x, nose_length, top_diameter,
 			nose_mass, 0.0, x + nose_cg * nose_length))

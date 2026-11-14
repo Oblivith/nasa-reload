@@ -124,7 +124,7 @@ static func barrowman(nose_length: float, nose_factor: float, diameter: float, f
 ## Classify a static margin (spec 2.1 table plus the gimbal rule).
 ##   < 0      unstable     fail
 ##   0 - 1    marginal     fail, unless gimballed and margin >= 0.3 (then warn)
-##   1 - 3    stable       pass  (the spec's table leaves 2-3 unnamed; treated as stable)
+##   1 - 3    stable       pass
 ##   > 3      over_stable  warn
 ## Returns {"class", "status" (pass/warn/fail), "flyable"}.
 static func classify(margin_cal: float, gimballed: bool) -> Dictionary:

@@ -31,6 +31,8 @@ func _ready() -> void:
 	_test_stability_rules()
 	_test_mission_budget()
 	_test_aero()
+	_test_twr_thresholds()
+	_test_design_builder()
 	_test_redstone_reference()
 	_test_easy_presets()
 	print("\n================ RESULT: %d passed, %d failed ================" % [_passed, _failed])
@@ -204,6 +206,7 @@ func _test_redstone_reference() -> void:
 	_expect_close("static margin at burnout", float(numbers["static_margin_burnout_cal"]), 2.47, "cal")
 	_expect_close("delta-v", float(numbers["delta_v_available_ms"]), 3436.0, "m/s")
 	_expect_close("TWR at liftoff", float(numbers["twr_liftoff"]), 1.194, "")
+	_expect_text("TWR 1.19 now passes the liftoff gate", _status_of(report, "liftoff"), "pass")
 	_expect_true("overall verdict is not a failure (got '%s')" % str(report["overall"]), str(report["overall"]) != "fail")
 
 	print("\n  -- Against the real flight (%s) --" % str(real["mission"]))
@@ -223,61 +226,114 @@ func _test_redstone_reference() -> void:
 		float(ascent["gravity_loss_ms"]), float(ascent["drag_loss_ms"])])
 
 
+func _test_twr_thresholds() -> void:
+	_section("Liftoff thresholds (decision: pass >= 1.1, warn 1.0 to 1.1, fail < 1.0)")
+	_expect_text("TWR 0.95", str(RocketEvaluator._liftoff_check(0.95, 1.0, 1.0)["status"]), "fail")
+	_expect_text("TWR 1.00", str(RocketEvaluator._liftoff_check(1.0, 1.0, 1.0)["status"]), "warn")
+	_expect_text("TWR 1.05", str(RocketEvaluator._liftoff_check(1.05, 1.0, 1.0)["status"]), "warn")
+	_expect_text("TWR 1.10", str(RocketEvaluator._liftoff_check(1.1, 1.0, 1.0)["status"]), "pass")
+	_expect_text("TWR 1.19 (Redstone-class)", str(RocketEvaluator._liftoff_check(1.19, 1.0, 1.0)["status"]), "pass")
+
+
+func _test_design_builder() -> void:
+	_section("DesignBuilder: sliders and upper-stage stacking")
+	# Slider: 0.5 = reference, 0 = 0.5x, 1 = 2x, linear on each half.
+	_expect_close("slider 0.5 = reference", DesignBuilder.slider_to_value(0.5, 100.0, 0.5, 2.0), 100.0, "")
+	_expect_close("slider 0 = min", DesignBuilder.slider_to_value(0.0, 100.0, 0.5, 2.0), 50.0, "")
+	_expect_close("slider 1 = max", DesignBuilder.slider_to_value(1.0, 100.0, 0.5, 2.0), 200.0, "")
+	_expect_close("slider 0.75", DesignBuilder.slider_to_value(0.75, 100.0, 0.5, 2.0), 150.0, "")
+	_expect_close("value -> slider round trip", DesignBuilder.value_to_slider(150.0, 100.0, 0.5, 2.0), 0.75, "")
+	# Tank length: 12,000 kg * 1.1 / (1200 * pi * 3.05^2 / 4) = 13.2 / 8.7675 = 1.5056 m
+	_expect_close("tank length from volume", DesignBuilder.tank_length(12000.0, 1200.0, 1.1, 3.05), 1.5056, "m")
+
+	var reference: Dictionary = DataLoader.reference_rockets["redstone_class"]
+	var single := DesignBuilder.from_sliders(reference, {}, DataLoader.engines, false)
+	_expect_true("Medium, all sliders at 0.5, no upper stage = the reference design", single["stages"].size() == 1
+			and is_equal_approx(float(single["stages"][0]["body"]["propellant_mass_kg"]), 23600.0))
+	var stacked := DesignBuilder.from_sliders(reference, {"stages/1/body/propellant_mass_kg": 1.0}, DataLoader.engines, true)
+	var upper_body: Dictionary = stacked["stages"][1]["body"]
+	var upper_engine: Dictionary = stacked["stages"][1]["engine"]
+	_expect_close("Medium upper stage, propellant slider at 1 (2x)", float(upper_body["propellant_mass_kg"]), 24000.0, "kg")
+	_expect_close("upper stage takes the first stage's diameter", float(upper_body["diameter_m"]), 1.78, "m")
+	# 24,000 * 1.1 / (1200 * pi * 1.78^2 / 4) = 26.4 / 2.98615 = 8.8408 m
+	_expect_close("upper tank length follows the scaled propellant", float(upper_body["length_m"]), 8.8408, "m")
+	_expect_close("upper engine resolved from engines.json", float(upper_engine["thrust_vac_N"]), 450000.0, "N")
+	var unstacked := DesignBuilder.without_upper_stages(stacked)
+	_expect_true("upper stage can be removed again", unstacked["stages"].size() == 1)
+
+	# Hard mode: raw numbers, same stacking call.
+	var hard := DesignBuilder.add_upper_stage(single, {
+		"body": {"length_m": 3.0, "diameter_m": 1.78, "material": "steel", "propellant_mass_kg": 5000.0},
+		"engine": {"engine_id": "hypergolic_upper", "section_length_m": 1.2, "isp_vac": 300.0},
+	}, DataLoader.engines)
+	_expect_close("Hard upper stage keeps the player's length", float(hard["stages"][1]["body"]["length_m"]), 3.0, "m")
+	_expect_close("Hard upper stage keeps the player's Isp override", float(hard["stages"][1]["engine"]["isp_vac"]), 300.0, "s")
+	var hard_report := RocketEvaluator.evaluate(hard, DataLoader.sim_data())
+	var hard_stages: Array = (hard_report["numbers"] as Dictionary)["delta_v_stages"]
+	_expect_true("evaluator sees both stages", hard_stages.size() == 2)
+	_expect_true("upper-stage thrust check is reported", _status_of(hard_report, "upper_twr_stage_2") != "missing")
+
+
 func _test_easy_presets() -> void:
 	_section("Easy-mode presets: sanity runs")
 	var data := DataLoader.sim_data()
-	var mission := {"profile": "suborbital", "target_altitude_km": 187.0, "latitude_deg": 28.5}
-	var sensible := _design_from_presets("rounded", "medium", "medium", "small_cheap", "light", mission)
+	var payload := {"length_m": 1.0, "mass_kg": 20.0}
+	var hop := {"profile": "suborbital", "target_altitude_km": 187.0, "latitude_deg": 28.5}
+	var sensible := _easy("rounded", "medium", "medium", "small_cheap", "light", "none", payload, hop)
 	var report := RocketEvaluator.evaluate(sensible, data)
 	print(RocketEvaluator.format_report(report))
 	_expect_text("Rounded / Medium / Medium fins / Small engine / Light passes every check", str(report["overall"]), "pass")
 
-	var tiny_fins := _design_from_presets("rounded", "medium", "small", "small_cheap", "light", mission)
+	var tiny_fins := _easy("rounded", "medium", "small", "small_cheap", "light", "none", payload, hop)
 	_expect_text("same rocket with Small fins is unstable", _status_of(RocketEvaluator.evaluate(tiny_fins, data), "stability_liftoff"), "fail")
-	var too_heavy := _design_from_presets("rounded", "tall_fat", "large", "small_cheap", "light", mission)
+	var too_heavy := _easy("rounded", "tall_fat", "large", "small_cheap", "light", "none", payload, hop)
 	_expect_text("Tall & fat body on the Small engine cannot lift off", _status_of(RocketEvaluator.evaluate(too_heavy, data), "liftoff"), "fail")
-	var too_hot := _design_from_presets("rounded", "medium", "medium", "medium", "light", mission)
+	var too_hot := _easy("rounded", "medium", "medium", "medium", "light", "none", payload, hop)
 	_expect_text("Medium body on the Medium engine breaks up at Max-Q", _status_of(RocketEvaluator.evaluate(too_hot, data), "structure"), "fail")
 
-	var orbit_mission := {"profile": "leo", "target_altitude_km": 200.0, "latitude_deg": 28.5}
-	var best := _design_from_presets("rounded", "tall_fat", "large", "medium", "light", orbit_mission)
-	var orbit_report := RocketEvaluator.evaluate(best, data)
-	print(RocketEvaluator.format_report(orbit_report))
-	print("  [INFO] Best single-stage Easy preset vs low Earth orbit: range ratio %.2f. No single-stage preset reaches orbit." % float((orbit_report["numbers"] as Dictionary)["range_ratio"]))
+	_section("Easy-mode presets: Level 1 orbit (20 kg to 400 km from the Cape)")
+	var level1 := {"profile": "leo", "target_altitude_km": 400.0, "latitude_deg": 28.5, "needs_return": false}
+	var single := RocketEvaluator.evaluate(_easy("rounded", "tall_fat", "large", "medium", "light", "none", payload, level1), data)
+	var single_ratio := float((single["numbers"] as Dictionary)["range_ratio"])
+	_expect_true("best single-stage preset cannot reach orbit (ratio %.3f)" % single_ratio, single_ratio < 1.0)
+
+	var best := _easy("rounded", "tall_fat", "large", "medium", "light", "big", payload, level1)
+	var best_report := RocketEvaluator.evaluate(best, data)
+	print(RocketEvaluator.format_report(best_report))
+	var best_ratio := float((best_report["numbers"] as Dictionary)["range_ratio"])
+	_expect_true("Tall & fat + Medium engine + Large fins + Light + Big upper reaches LEO with ratio >= 1.05 (got %.3f)" % best_ratio,
+			best_ratio >= 1.05)
+	_expect_true("...and fails no check (overall '%s')" % str(best_report["overall"]), str(best_report["overall"]) != "fail")
+
+	# Every Easy combination with an upper stage, so the team can see the whole picture.
+	print("\n  Easy combinations with an upper stage that reach LEO (nose: rounded):")
+	print("  %-10s %-13s %-7s %-7s %-6s  %6s %6s %6s %8s  %s" % ["body", "engine", "fins", "mat", "upper", "TWR", "SM0", "SM1", "ratio", "overall"])
+	var reaching := 0
+	for body_id in ["short_thin", "medium", "tall_fat"]:
+		for engine_id in ["small_cheap", "medium", "big_powerful"]:
+			for fins_id in ["small", "medium", "large"]:
+				for material_id in ["light", "strong"]:
+					for upper_id in ["small", "big"]:
+						var r := RocketEvaluator.evaluate(_easy("rounded", body_id, fins_id, engine_id, material_id, upper_id, payload, level1), data)
+						var n: Dictionary = r["numbers"]
+						if float(n["range_ratio"]) < 1.0:
+							continue
+						reaching += 1
+						print("  %-10s %-13s %-7s %-7s %-6s  %6.2f %6.2f %6.2f %8.3f  %s" % [body_id, engine_id, fins_id, material_id, upper_id,
+								float(n["twr_liftoff"]), float(n["static_margin_liftoff_cal"]), float(n["static_margin_burnout_cal"]),
+								float(n["range_ratio"]), str(r["overall"])])
+	_expect_true("at least one Easy combination reaches LEO (%d found)" % reaching, reaching > 0)
+
+
+func _easy(nose_id: String, body_id: String, fins_id: String, engine_id: String, material_id: String,
+		upper_id: String, payload: Dictionary, mission: Dictionary) -> Dictionary:
+	return DesignBuilder.from_easy({
+		"nose": nose_id, "body": body_id, "fins": fins_id, "engine": engine_id,
+		"material": material_id, "upper_stage": upper_id,
+	}, DataLoader.presets, DataLoader.engines, payload, mission)
 
 
 # --- Helpers --------------------------------------------------------------------------
-
-## Assembles a single-stage design from Easy-mode preset ids (the rocket builder will do
-## this for real; here it only proves the preset numbers make sensible rockets).
-func _design_from_presets(nose_id: String, body_id: String, fins_id: String, engine_id: String,
-		material_id: String, mission: Dictionary) -> Dictionary:
-	var nose: Dictionary = DataLoader.presets["nose"][nose_id]
-	var body: Dictionary = DataLoader.presets["body"][body_id]
-	var fins: Dictionary = DataLoader.presets["fins"][fins_id]
-	var engine_preset: Dictionary = DataLoader.presets["engine"][engine_id]
-	var material: Dictionary = DataLoader.presets["material"][material_id]
-	var engine: Dictionary = DataLoader.engines[str(engine_preset["engine_id"])].duplicate()
-	engine["count"] = engine_preset["count"]
-	engine["section_length_m"] = engine_preset["section_length_m"]
-	return {
-		"name": "Easy: %s nose, %s body, %s fins, %s engine, %s" % [nose_id, body_id, fins_id, engine_id, material_id],
-		"nose": {"shape": nose["shape"], "length_m": float(nose["length_to_diameter"]) * float(body["diameter_m"])},
-		"payload": {"length_m": 1.0, "mass_kg": 20.0},
-		"stages": [{
-			"body": {
-				"length_m": body["length_m"],
-				"diameter_m": body["diameter_m"],
-				"material": material["material"],
-				"propellant_mass_kg": body["propellant_mass_kg"],
-			},
-			"engine": engine,
-		}],
-		"fins": fins,
-		"options": {"gimballed": false},
-		"mission": mission,
-	}
-
 
 func _status_of(report: Dictionary, check_id: String) -> String:
 	var checks: Array = report["checks"]

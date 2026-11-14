@@ -40,10 +40,10 @@ The rocket is built bottom to top from segments. Every segment has mass, length,
 | **Body / tanks** | length, diameter d, material (aluminium / steel / titanium), propellant mass |
 | **Engine section** | engine choice (real data: thrust SL/vac, Isp SL/vac, mass; nozzle is part of the engine) |
 | **Fins** | count N (3/4), root chord C_r, tip chord C_t, span S, sweep X_r, position from tail |
-| **Upper stages** (L2+) | same as body + engine, stacked |
+| **Upper stages** (optional, from L1) | same as body + engine, stacked on top of the first stage, same diameter as the stage below. Needed to reach orbit: no single stage can. |
 | **Options** | gimballed engine (steers, allows less fins, costs $), escape tower (crewed) |
 
-Dry structure mass = tank/body area × material areal density (derived from real tank mass fractions).
+Dry structure mass = tank/body area × material areal density (derived from real tank mass fractions). A nose fairing weighs its area × areal density × 0.35 (a thin unpressurised shell; `nose_shapes.json` → `nose_mass_model`). Preset and reference upper stages give their structure mass directly, and their tank length comes from the propellant volume (mass × 1.1 ullage ÷ density ÷ cross-section).
 
 ---
 
@@ -71,13 +71,21 @@ All distances measured from the nose tip. d = body diameter, R = d/2.
 |---|---|
 | < 0 | Unstable: tumbles (fail) |
 | 0–1 | Marginal: wobbles, extra drag; fails unless the engine is gimballed |
-| 1–2 | ✓ Stable |
+| 1–3 | ✓ Stable |
 | > 3 | Over-stable: weathercocks into the wind, extra losses (warning) |
 
 *Gimballed engine:* treat margin ≥ 0.3 as flyable. Real orbital rockets steer this way.
 
 ### 2.2 Liftoff gate
-- TWR = Thrust_SL / (m_total · g₀) must be > 1.2. Below 1: no liftoff. 1.0–1.2: liftoff but huge gravity losses (sim will show it).
+- TWR = Thrust_SL / (m_total · g₀), with m_total including every upper stage.
+
+| TWR | Result |
+|---|---|
+| < 1.0 | No liftoff (fail) |
+| 1.0–1.1 | Lifts off slowly, huge gravity losses (warning; the sim will show it) |
+| ≥ 1.1 | ✓ Pass |
+
+(The real Mercury-Redstone left the pad at about 1.2.) Upper stages need vacuum TWR > 0.5 (warning below).
 
 ### 2.3 Range: Δv (can it get there and back?)
 - Per stage: Δv = Isp · g₀ · ln(m₀ / m_f)
@@ -105,7 +113,7 @@ Power (solar/battery through eclipses), data vs comms, orbit lifetime, heat shie
 
 ## 3. The Three Input Modes
 
-All three produce the *same* list of real values for the engine.
+All three produce the *same* list of real values for the engine (`scripts/sim/DesignBuilder.gd`: `from_easy`, `from_sliders`, `add_upper_stage`).
 
 ### EASY: pick simple descriptive options (2–3 each)
 Players see plain words and pictures, not part names or numbers. Each option secretly maps to real-unit values (based on real hardware) for the engine.
@@ -116,16 +124,19 @@ Players see plain words and pictures, not part names or numbers. Each option sec
 | Material | Light (aluminium) · Strong (steel) |
 | Engine | Small & cheap · Medium · Big & powerful |
 | Fins | Small · Medium · Large (fixed count 4, preset shape) |
+| Upper stage | None · Small upper stage · Big upper stage (hypergolic-class engine, sits on top of the body) |
 **Output:** ✓/✗ per check with a plain-English reason: *"Your rocket tips over: the fins are too small to keep the back behind the front. Try bigger fins, or put heavy parts higher up."*
 
 ### MEDIUM: normalised sliders vs a real reference rocket
 - Each parameter is a slider 0 → 1. **0.5 = the real reference rocket's value**; 0 and 1 = the allowed min/max (e.g. 0.5×–2× the reference).
-- Converted to real units before going into the engine: `real = min + slider·(max − min)`.
+- Converted to real units before going into the engine, linear on each half so both rules hold: slider 0 → 0.5 = `min → reference`, slider 0.5 → 1 = `reference → max`.
+- **Optional upper stage:** a toggle adds the reference rocket's `optional_upper_stage` (off by default); its sliders work the same way.
 - Reference rockets (pick per level): **Redstone-class** (L1), Atlas-class, Titan-class, Saturn-class (later levels).
 **Output:** 0–1 gauges: Stability, Range, Liftoff, Structure, with green/yellow/red zones. Hover to see the real number.
 
 ### HARD: raw real numbers
 - Number fields in real units for every parameter in section 1, plus gravity-turn pitch-kick angle.
+- Upper stages can be added or removed; each is a body + engine with its own numbers.
 - Player can type their own predicted Δv and static margin. The game shows theirs vs the engine's after the run.
 **Output:** raw values: static margin (calibres) at liftoff/burnout, X_cp, X_cg, Δv per stage, TWR, q_max, final apogee/perigee, plus the formula used.
 
@@ -140,8 +151,10 @@ Players see plain words and pictures, not part names or numbers. Each option sec
 
 | Rocket | Real result | Our sim | Error |
 |---|---|---|---|
-| Mercury-Redstone (suborbital) | ~187 km apogee | ? | ? |
+| Mercury-Redstone (suborbital) | ~187 km apogee | pending launch sim | — |
 | Atlas (orbit) | orbit ~160 × 260 km | ? | ? |
+
+*Status:* the pre-flight evaluator already matches the real Mercury-Redstone liftoff mass and burn time within 0.2%. Apogee is **not** compared yet: the evaluator only has a straight-up ascent estimate for Max-Q, so apogee validation waits for the launch sim (2.6).
 
 > **Pitch line:** "Three ways to design, one real physics engine, validated against real 1960s flights."
 

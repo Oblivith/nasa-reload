@@ -1,13 +1,16 @@
 {
   "comment": "Values approximate; verify against NASA sources.",
-  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Each reference rocket carries a complete 'design' in the real-unit format RocketEvaluator takes (metres, kg, newtons, seconds). Segments stack from the nose tip down: [escape tower] > nose > payload > stages (last stage on top) > fins on the first stage. 'stages' are listed in firing order (index 0 = first stage, at the bottom). Medium mode: slider 0.5 = these values, 0 and 1 = min_factor and max_factor times them. 'real_flight' is the real mission record the launch sim is validated against.",
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Each reference rocket carries a complete 'design' in the real-unit format RocketEvaluator takes (metres, kg, newtons, seconds). Segments stack from the nose tip down: [escape tower] > nose > payload > stages (last stage on top) > fins on the first stage. 'stages' are listed in firing order (index 0 = first stage, at the bottom). Medium mode: slider 0.5 = these values, 0 and 1 = min_factor and max_factor times them. 'real_flight' is the real mission record the launch sim is validated against. 'optional_upper_stage' is the Medium/Hard upper stage at slider 0.5. It is off by default and added with DesignBuilder.add_upper_stage(). It takes the first stage's diameter, and its tank length is computed from the propellant volume unless length_m is set.",
   "reference_rockets": [
     {
       "id": "redstone_class",
       "name": "Redstone-class",
       "level": "L1",
       "description": "A single-stage alcohol/LOX rocket carrying a small crewed capsule on a suborbital hop.",
-      "slider_range": { "min_factor": 0.5, "max_factor": 2.0 },
+      "slider_range": {
+        "min_factor": 0.5,
+        "max_factor": 2
+      },
       "design": {
         "name": "Redstone-class reference",
         "nose": {
@@ -22,7 +25,7 @@
         "stages": [
           {
             "body": {
-              "length_m": 12.0,
+              "length_m": 12,
               "diameter_m": 1.78,
               "material": "aluminium",
               "propellant_mass_kg": 23600,
@@ -46,12 +49,15 @@
           "tip_chord_m": 1.2,
           "span_m": 1.07,
           "sweep_m": 1.2,
-          "position_from_tail_m": 0.0,
+          "position_from_tail_m": 0,
           "mass_kg": 300
         },
         "options": {
           "gimballed": true,
-          "escape_tower": { "length_m": 4.5, "mass_kg": 500 }
+          "escape_tower": {
+            "length_m": 4.5,
+            "mass_kg": 500
+          }
         },
         "mission": {
           "profile": "suborbital",
@@ -82,7 +88,24 @@
         "notes": "Apogee, range, speed and duration are from memory of the NASA MR-3 mission summary: VERIFY. max_q_pa (about 575 lb/ft2) is LOW CONFIDENCE and may be wrong. Mercury-Redstone 4 (21 July 1961) reached about 190 km and 486 km downrange."
       },
       "verified": false,
-      "source": "Inspired by the real Mercury-Redstone Launch Vehicle (NASA MSFC, 1960-61). See 'The Mercury-Redstone Project' (NASA TMX-53107, 1964) and 'This New Ocean' (NASA SP-4201) for the numbers to verify against."
+      "source": "Inspired by the real Mercury-Redstone Launch Vehicle (NASA MSFC, 1960-61). See 'The Mercury-Redstone Project' (NASA TMX-53107, 1964) and 'This New Ocean' (NASA SP-4201) for the numbers to verify against.",
+      "optional_upper_stage": {
+        "enabled_by_default": false,
+        "body": {
+          "material": "aluminium",
+          "propellant_mass_kg": 12000,
+          "dry_mass_kg": 840,
+          "propellant_density_kg_m3": 1200,
+          "ullage_factor": 1.1
+        },
+        "engine": {
+          "engine_id": "hypergolic_upper",
+          "count": 1,
+          "section_length_m": 1.5
+        },
+        "verified": false,
+        "source": "MADE UP: same as the presets.json 'big' upper stage. The real Mercury-Redstone had no upper stage; the Redstone-derived Jupiter-C / Juno I carried small solid-rocket upper stages instead."
+      }
     }
   ]
 }

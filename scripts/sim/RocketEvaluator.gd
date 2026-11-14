@@ -7,7 +7,7 @@ extends RefCounted
 ## evaluate(design, data):
 ##   design: see RocketGeometry for the format, plus "mission" (see MissionBudget).
 ##   data:   {materials, nose_shapes: { id -> entry },
-##            drag_model, q_limit_model: Dictionary,
+##            drag_model, q_limit_model, nose_mass_model: Dictionary,
 ##            delta_v: {legs, mission_profiles: { id -> entry }, earth_rotation, margins}}
 ##           (DataLoader.sim_data() builds this from /data.)
 ##
@@ -16,8 +16,9 @@ extends RefCounted
 ##    checks: [{id, name, value, unit, threshold, status, plain, technical}],
 ##    numbers: {...every raw value...}, geometry: RocketGeometry.build() output}
 
+## Liftoff gate (Sim Spec v2 2.2): fail < 1.0, warn 1.0 to 1.1, pass >= 1.1.
 const TWR_MIN_LIFTOFF := 1.0
-const TWR_GOOD_LIFTOFF := 1.2
+const TWR_GOOD_LIFTOFF := 1.1
 const TWR_MIN_UPPER := 0.5
 
 const _STATUS_RANK := {"pass": 0, "warn": 1, "fail": 2}
@@ -39,7 +40,8 @@ static func evaluate(design: Dictionary, data: Dictionary) -> Dictionary:
 
 	var checks: Array = []
 	var numbers := {}
-	var geometry := RocketGeometry.build(design, materials, nose_shapes)
+	var nose_model: Dictionary = data.get("nose_mass_model", {})
+	var geometry := RocketGeometry.build(design, materials, nose_shapes, float(nose_model.get("areal_factor", 1.0)))
 	var report := {
 		"design_name": str(design.get("name", "Unnamed rocket")),
 		"overall": "fail",
@@ -211,21 +213,22 @@ static func format_report(report: Dictionary) -> String:
 # --- Check builders -------------------------------------------------------------------
 
 static func _liftoff_check(twr: float, thrust_sl: float, mass: float) -> Dictionary:
-	var technical := "TWR = thrust_SL / (m * g0) = %.0f N / (%.0f kg * %.5f) = %.3f. Needs > %.1f to leave the pad, > %.1f to climb well." % [
+	var threshold := ">= %.1f" % TWR_GOOD_LIFTOFF
+	var technical := "TWR = thrust_SL / (m * g0) = %.0f N / (%.0f kg * %.5f) = %.3f. Needs >= %.1f to leave the pad, >= %.1f to climb well." % [
 		thrust_sl, mass, RocketMath.G0, twr, TWR_MIN_LIFTOFF, TWR_GOOD_LIFTOFF]
 	if thrust_sl <= 0.0:
-		return _check("liftoff", "Liftoff (thrust-to-weight)", 0.0, "", "> 1.2", "fail",
+		return _check("liftoff", "Liftoff (thrust-to-weight)", 0.0, "", threshold, "fail",
 				"This engine only works in space. It cannot light on the launch pad, so the rocket goes nowhere.",
 				"First-stage engine has no sea-level thrust (vacuum-only engine). " + technical)
-	if twr <= TWR_MIN_LIFTOFF:
-		return _check("liftoff", "Liftoff (thrust-to-weight)", twr, "", "> 1.2", "fail",
+	if twr < TWR_MIN_LIFTOFF:
+		return _check("liftoff", "Liftoff (thrust-to-weight)", twr, "", threshold, "fail",
 				"Your rocket is too heavy for its engine. It sits on the pad making a lot of noise. Try a bigger engine or less fuel.",
 				technical)
-	if twr <= TWR_GOOD_LIFTOFF:
-		return _check("liftoff", "Liftoff (thrust-to-weight)", twr, "", "> 1.2", "warn",
+	if twr < TWR_GOOD_LIFTOFF:
+		return _check("liftoff", "Liftoff (thrust-to-weight)", twr, "", threshold, "warn",
 				"Your rocket only just lifts off. It climbs so slowly that it wastes a lot of fuel fighting gravity.",
 				technical)
-	return _check("liftoff", "Liftoff (thrust-to-weight)", twr, "", "> 1.2", "pass",
+	return _check("liftoff", "Liftoff (thrust-to-weight)", twr, "", threshold, "pass",
 			"The engine is strong enough to lift the rocket briskly off the pad.", technical)
 
 
