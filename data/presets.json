@@ -1,0 +1,159 @@
+{
+  "comment": "Values approximate; verify against NASA sources.",
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Easy-mode options (Sim Spec v2 section 3). Each option maps to real-unit values that drop straight into the RocketEvaluator design format. Nose length = length_to_diameter x the chosen body's diameter, and nose mass (if not given) is derived from the material. Engine presets point at an id in engines.json for thrust, Isp and mass. Fins are always 4 with a preset shape.",
+  "nose": [
+    {
+      "id": "pointy",
+      "label": "Pointy",
+      "shape": "cone",
+      "length_to_diameter": 3,
+      "description": "A long sharp cone.",
+      "verified": false,
+      "source": "MADE UP fineness ratio, typical of sounding-rocket nose cones (about 3:1)."
+    },
+    {
+      "id": "rounded",
+      "label": "Rounded",
+      "shape": "ogive",
+      "length_to_diameter": 2,
+      "description": "A smooth curved nose. Slips through the air most easily.",
+      "verified": false,
+      "source": "MADE UP fineness ratio, typical of 1960s payload fairings (about 2:1 ogive)."
+    },
+    {
+      "id": "fat",
+      "label": "Fat / Blunt",
+      "shape": "blunt",
+      "length_to_diameter": 0.8,
+      "description": "Short and stubby, like a capsule. Roomy, but it pushes a lot of air.",
+      "verified": false,
+      "source": "MADE UP fineness ratio, loosely a Mercury-style capsule shape."
+    }
+  ],
+  "body": [
+    {
+      "id": "short_thin",
+      "label": "Short & thin",
+      "length_m": 10,
+      "diameter_m": 1.5,
+      "propellant_mass_kg": 15000,
+      "description": "A slim little rocket. Light and cheap, with not much fuel.",
+      "verified": false,
+      "source": "MADE UP: sized so the Redstone-class engine lifts it at a thrust-to-weight ratio of about 1.9 (lively, and hard on a light structure)."
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "length_m": 12,
+      "diameter_m": 1.78,
+      "propellant_mass_kg": 23600,
+      "description": "A solid all-rounder.",
+      "verified": false,
+      "source": "Same tank section as the Redstone-class reference rocket (see reference_rockets.json)."
+    },
+    {
+      "id": "tall_fat",
+      "label": "Tall & fat",
+      "length_m": 20,
+      "diameter_m": 3.05,
+      "propellant_mass_kg": 110000,
+      "description": "A great big fuel tank. Goes far, if the engine can lift it.",
+      "verified": false,
+      "source": "Inspired by the Atlas booster (3.05 m diameter, roughly 110 t of propellant). Length is an ESTIMATE; numbers from memory: verify."
+    }
+  ],
+  "fins": [
+    {
+      "id": "small",
+      "label": "Small",
+      "count": 4,
+      "root_chord_m": 1,
+      "tip_chord_m": 0.5,
+      "span_m": 0.5,
+      "sweep_m": 0.5,
+      "position_from_tail_m": 0,
+      "mass_kg": 60,
+      "description": "Little fins. Light, but they do not steady the rocket much.",
+      "verified": false,
+      "source": "MADE UP: under half the Redstone-class fin in every dimension. Too small to stabilise any of the preset bodies, on purpose."
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "count": 4,
+      "root_chord_m": 2.4,
+      "tip_chord_m": 1.2,
+      "span_m": 1.3,
+      "sweep_m": 1.2,
+      "position_from_tail_m": 0,
+      "mass_kg": 300,
+      "description": "Sensible fins for a sensible rocket.",
+      "verified": false,
+      "source": "MADE UP, close to the estimated Redstone-class fin; tuned so the Medium body is stable (about 1.4-1.8 calibres)."
+    },
+    {
+      "id": "large",
+      "label": "Large",
+      "count": 4,
+      "root_chord_m": 3.6,
+      "tip_chord_m": 1.8,
+      "span_m": 2.4,
+      "sweep_m": 1.8,
+      "position_from_tail_m": 0,
+      "mass_kg": 800,
+      "description": "Big fins. Very steady, but heavy and draggy.",
+      "verified": false,
+      "source": "MADE UP: 1.5x the medium chords and about 1.8x its span; tuned so the Tall & fat body is stable (about 1.4-1.7 calibres)."
+    }
+  ],
+  "engine": [
+    {
+      "id": "small_cheap",
+      "label": "Small & cheap",
+      "engine_id": "redstone_class",
+      "count": 1,
+      "section_length_m": 3.5,
+      "description": "A modest engine that will not break the bank.",
+      "verified": false,
+      "source": "Points at engines.json 'redstone_class' (350 kN). Section length is an ESTIMATE."
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "engine_id": "kerosene_booster",
+      "count": 1,
+      "section_length_m": 4,
+      "description": "A proper workhorse.",
+      "verified": false,
+      "source": "Points at engines.json 'kerosene_booster' (1,500 kN). Section length is an ESTIMATE."
+    },
+    {
+      "id": "big_powerful",
+      "label": "Big & powerful",
+      "engine_id": "heavy_booster",
+      "count": 1,
+      "section_length_m": 5.8,
+      "description": "A monster. Make sure the rest of the rocket can take it.",
+      "verified": false,
+      "source": "Points at engines.json 'heavy_booster' (6,700 kN, F-1 class; the real F-1 is about 5.8 m long). Note engines.json unlocks it at level 5."
+    }
+  ],
+  "material": [
+    {
+      "id": "light",
+      "label": "Light",
+      "material": "aluminium",
+      "description": "Aluminium: light, so more of your fuel goes into speed.",
+      "verified": false,
+      "source": "Points at materials.json 'aluminium'."
+    },
+    {
+      "id": "strong",
+      "label": "Strong",
+      "material": "steel",
+      "description": "Steel: heavy, but it holds together when the air pushes hard.",
+      "verified": false,
+      "source": "Points at materials.json 'steel'."
+    }
+  ]
+}

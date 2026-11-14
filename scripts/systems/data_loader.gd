@@ -9,6 +9,7 @@ const DATA_DIR := "res://data/"
 const FILES: Array[String] = [
 	"engines", "tanks", "orbits", "power",
 	"instruments", "comms", "structures", "levels",
+	"materials", "nose_shapes", "reference_rockets", "presets", "delta_v_map",
 ]
 
 ## file name -> full parsed JSON Dictionary (includes "comment" and "notes").
@@ -17,7 +18,8 @@ var raw: Dictionary = {}
 ## category name -> { id -> entry Dictionary }.
 ## Categories: engines, propellant_types, tank_sizes, orbits, solar_panels, batteries,
 ## fuel_cells, instruments, radios, ground_stations, tape_recorders, heat_shields,
-## structures (fairing, interstage, escape_tower), levels.
+## structures (fairing, interstage, escape_tower), levels, materials, nose_shapes,
+## reference_rockets, dv_legs, mission_profiles.
 var tables: Dictionary = {}
 
 ## Convenience aliases into `tables`.
@@ -35,6 +37,14 @@ var tape_recorders: Dictionary = {}
 var heat_shields: Dictionary = {}
 var structures: Dictionary = {}
 var levels: Dictionary = {}
+var materials: Dictionary = {}
+var nose_shapes: Dictionary = {}
+var reference_rockets: Dictionary = {}
+var dv_legs: Dictionary = {}
+var mission_profiles: Dictionary = {}
+
+## Easy-mode presets: part name (nose, body, fins, engine, material) -> { id -> entry }.
+var presets: Dictionary = {}
 
 var loaded: bool = false
 
@@ -75,6 +85,23 @@ func get_table(category: String) -> Dictionary:
 	return tables.get(category, {})
 
 
+## Everything RocketEvaluator.evaluate() needs from /data, in the shape it expects.
+func sim_data() -> Dictionary:
+	var dv_raw: Dictionary = raw.get("delta_v_map", {})
+	return {
+		"materials": materials,
+		"nose_shapes": nose_shapes,
+		"drag_model": raw.get("nose_shapes", {}).get("drag_model", {}),
+		"q_limit_model": raw.get("materials", {}).get("q_limit_model", {}),
+		"delta_v": {
+			"legs": dv_legs,
+			"mission_profiles": mission_profiles,
+			"earth_rotation": dv_raw.get("earth_rotation", {}),
+			"margins": dv_raw.get("margins", {}),
+		},
+	}
+
+
 ## Returns the first line of the top-level "comment" for a data file.
 func get_comment(file_name: String) -> String:
 	return str(raw.get(file_name, {}).get("comment", ""))
@@ -100,6 +127,18 @@ func _index_all() -> void:
 	tables["heat_shields"] = _index(structs.get("heat_shields", []))
 	tables["levels"] = _index(raw.get("levels", {}).get("levels", []))
 
+	tables["materials"] = _index(raw.get("materials", {}).get("materials", []))
+	tables["nose_shapes"] = _index(raw.get("nose_shapes", {}).get("nose_shapes", []))
+	tables["reference_rockets"] = _index(raw.get("reference_rockets", {}).get("reference_rockets", []))
+	tables["dv_legs"] = _index(raw.get("delta_v_map", {}).get("legs", []))
+	tables["mission_profiles"] = _index(raw.get("delta_v_map", {}).get("mission_profiles", []))
+
+	presets = {}
+	var presets_raw: Dictionary = raw.get("presets", {})
+	for part in presets_raw:
+		if presets_raw[part] is Array:
+			presets[part] = _index(presets_raw[part])
+
 	var struct_entries: Array = []
 	for key in ["fairing", "interstage", "escape_tower"]:
 		if structs.has(key):
@@ -120,6 +159,11 @@ func _index_all() -> void:
 	heat_shields = tables["heat_shields"]
 	structures = tables["structures"]
 	levels = tables["levels"]
+	materials = tables["materials"]
+	nose_shapes = tables["nose_shapes"]
+	reference_rockets = tables["reference_rockets"]
+	dv_legs = tables["dv_legs"]
+	mission_profiles = tables["mission_profiles"]
 
 
 func _index(entries: Array) -> Dictionary:

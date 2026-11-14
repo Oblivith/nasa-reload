@@ -1,0 +1,88 @@
+{
+  "comment": "Values approximate; verify against NASA sources.",
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Each reference rocket carries a complete 'design' in the real-unit format RocketEvaluator takes (metres, kg, newtons, seconds). Segments stack from the nose tip down: [escape tower] > nose > payload > stages (last stage on top) > fins on the first stage. 'stages' are listed in firing order (index 0 = first stage, at the bottom). Medium mode: slider 0.5 = these values, 0 and 1 = min_factor and max_factor times them. 'real_flight' is the real mission record the launch sim is validated against.",
+  "reference_rockets": [
+    {
+      "id": "redstone_class",
+      "name": "Redstone-class",
+      "level": "L1",
+      "description": "A single-stage alcohol/LOX rocket carrying a small crewed capsule on a suborbital hop.",
+      "slider_range": { "min_factor": 0.5, "max_factor": 2.0 },
+      "design": {
+        "name": "Redstone-class reference",
+        "nose": {
+          "shape": "cone",
+          "length_m": 2.9,
+          "mass_kg": 1300
+        },
+        "payload": {
+          "length_m": 2.5,
+          "mass_kg": 500
+        },
+        "stages": [
+          {
+            "body": {
+              "length_m": 12.0,
+              "diameter_m": 1.78,
+              "material": "aluminium",
+              "propellant_mass_kg": 23600,
+              "dry_mass_kg": 3000
+            },
+            "engine": {
+              "engine_id": "redstone_class",
+              "count": 1,
+              "section_length_m": 3.5,
+              "thrust_sl_N": 350000,
+              "thrust_vac_N": 382600,
+              "isp_sl": 215,
+              "isp_vac": 235,
+              "mass_kg": 700
+            }
+          }
+        ],
+        "fins": {
+          "count": 4,
+          "root_chord_m": 2.4,
+          "tip_chord_m": 1.2,
+          "span_m": 1.07,
+          "sweep_m": 1.2,
+          "position_from_tail_m": 0.0,
+          "mass_kg": 300
+        },
+        "options": {
+          "gimballed": true,
+          "escape_tower": { "length_m": 4.5, "mass_kg": 500 }
+        },
+        "mission": {
+          "profile": "suborbital",
+          "target_altitude_km": 187,
+          "latitude_deg": 28.5,
+          "needs_return": false,
+          "crewed": true
+        }
+      },
+      "geometry_notes": {
+        "overall": "Real Mercury-Redstone: about 25.4 m tall including capsule and escape tower, 1.78 m (70 in) diameter, about 30,000 kg (66,000 lb) at liftoff. Here: tower 4.5 + capsule 2.9 + booster 18.0 = 25.4 m; liftoff mass 29,900 kg.",
+        "nose": "The capsule itself is the nose. Modelled as a 2.9 m cone weighing 1,300 kg (real capsule about 1,300 kg at launch; it was a blunt truncated cone, not a pointed one).",
+        "payload": "The adapter plus instrument compartment between capsule and tanks. Length and mass are ESTIMATES.",
+        "body": "Tank section. 12.0 m length is an ESTIMATE (18.0 m booster minus the instrument and tail sections). Propellant 23,600 kg is DERIVED from 350 kN / (215 s x g0) = 166 kg/s times the real 142 s burn. Dry mass 3,000 kg is an ESTIMATE chosen so total liftoff mass matches about 30 t.",
+        "engine": "Same numbers as engines.json 'redstone_class' (inspired by the Rocketdyne A-7: 78,000 lbf sea-level thrust). Tail section length 3.5 m is an ESTIMATE.",
+        "fins": "Count 4 is real. Span 1.07 m per fin is DERIVED from a roughly 3.9 m overall fin span. Root chord, tip chord, sweep and mass are ESTIMATES from drawings, not sourced numbers.",
+        "options": "The real Redstone steered with carbon jet vanes in the exhaust plus air rudders, not a gimbal; 'gimballed: true' stands in for that active steering. Escape tower mass and length are ESTIMATES. The tower's aerodynamics are ignored; only its mass counts."
+      },
+      "real_flight": {
+        "mission": "Mercury-Redstone 3 (Freedom 7), 5 May 1961",
+        "type": "suborbital",
+        "apogee_km": 187.5,
+        "downrange_km": 487,
+        "max_velocity_ms": 2294,
+        "burn_time_s": 142,
+        "flight_duration_s": 922,
+        "max_q_pa": 27500,
+        "notes": "Apogee, range, speed and duration are from memory of the NASA MR-3 mission summary: VERIFY. max_q_pa (about 575 lb/ft2) is LOW CONFIDENCE and may be wrong. Mercury-Redstone 4 (21 July 1961) reached about 190 km and 486 km downrange."
+      },
+      "verified": false,
+      "source": "Inspired by the real Mercury-Redstone Launch Vehicle (NASA MSFC, 1960-61). See 'The Mercury-Redstone Project' (NASA TMX-53107, 1964) and 'This New Ocean' (NASA SP-4201) for the numbers to verify against."
+    }
+  ]
+}
