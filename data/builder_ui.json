@@ -24,7 +24,9 @@
     {"id": "upper_mass", "group": "Stage 2 (upper)", "label": "Stage mass (structure)", "unit": "kg", "upper": true, "paths": ["stages/1/body/dry_mass_kg"]},
     {"id": "upper_thrust", "group": "Stage 2 (upper)", "label": "Engine thrust", "unit": "kN", "display_divisor": 1000, "upper": true, "paths": ["stages/1/engine/thrust_vac_N"]},
     {"id": "upper2_propellant", "group": "Stage 3 (upper)", "label": "Fuel load", "unit": "kg", "upper": true, "paths": ["stages/2/body/propellant_mass_kg"]},
-    {"id": "upper2_mass", "group": "Stage 3 (upper)", "label": "Stage mass (structure)", "unit": "kg", "upper": true, "paths": ["stages/2/body/dry_mass_kg"]}
+    {"id": "upper2_mass", "group": "Stage 3 (upper)", "label": "Stage mass (structure)", "unit": "kg", "upper": true, "paths": ["stages/2/body/dry_mass_kg"]},
+    {"id": "upper3_propellant", "group": "Stage 4 (upper)", "label": "Fuel load", "unit": "kg", "upper": true, "paths": ["stages/3/body/propellant_mass_kg"]},
+    {"id": "upper3_mass", "group": "Stage 4 (upper)", "label": "Stage mass (structure)", "unit": "kg", "upper": true, "paths": ["stages/3/body/dry_mass_kg"]}
   ],
   "hard_fields": {
     "nose": [
@@ -73,13 +75,5 @@
     "range": {"label": "Range", "min": 0.0, "max": 1.6},
     "structure": {"label": "Structure (load / limit)", "min": 0.0, "max": 1.4},
     "upper_twr": {"label": "Upper-stage push", "min": 0.0, "max": 1.5}
-  },
-  "cost_model": {
-    "fin_cost_per_m2": 0.02,
-    "gimbal_cost_per_engine": 0.5,
-    "custom_engine_cost": 3.0,
-    "escape_tower_cost": 1.0,
-    "verified": false,
-    "source": "MADE UP for gameplay. Engine cost comes from engines.json 'cost' x count; body walls from materials.json 'cost_per_m2' x pi * d * L. Fins, gimbal and tower costs are placeholders. All in millions of USD, like the level budget."
   }
 }

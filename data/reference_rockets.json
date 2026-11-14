@@ -111,7 +111,7 @@
       "id": "juno_class",
       "name": "Juno-class",
       "level": "L1",
-      "description": "A stretched Redstone-class booster with a stack of small solid-rocket upper stages: an orbital launcher for a small satellite, the way Juno I put Explorer 1 into orbit.",
+      "description": "A stretched Redstone-class booster carrying a spinning tub of small solid rockets in three stages (11, then 3, then 1), the way Juno I put the 14 kg Explorer 1 into orbit in 1958.",
       "slider_range": {
         "min_factor": 0.5,
         "max_factor": 2
@@ -120,30 +120,30 @@
         "name": "Juno-class reference",
         "nose": {
           "shape": "cone",
-          "length_m": 2.0,
-          "mass_kg": 150
+          "length_m": 0.5,
+          "mass_kg": 0
         },
         "payload": {
           "length_m": 1.0,
-          "mass_kg": 20
+          "mass_kg": 14
         },
         "stages": [
           {
             "body": {
-              "length_m": 11.5,
-              "diameter_m": 2.0,
+              "length_m": 14.4,
+              "diameter_m": 1.78,
               "material": "aluminium",
-              "propellant_mass_kg": 24000,
-              "dry_mass_kg": 3100
+              "propellant_mass_kg": 25700,
+              "dry_mass_kg": 3000
             },
             "engine": {
               "engine_id": "redstone_class",
               "count": 1,
               "section_length_m": 3.5,
-              "thrust_sl_N": 400000,
-              "thrust_vac_N": 434200,
-              "isp_sl": 235,
-              "isp_vac": 255,
+              "thrust_sl_N": 350000,
+              "thrust_vac_N": 382600,
+              "isp_sl": 215,
+              "isp_vac": 235,
               "mass_kg": 700
             }
           }
@@ -152,7 +152,7 @@
           "count": 4,
           "root_chord_m": 2.4,
           "tip_chord_m": 1.2,
-          "span_m": 1.25,
+          "span_m": 1.07,
           "sweep_m": 1.2,
           "position_from_tail_m": 0,
           "mass_kg": 300
@@ -169,62 +169,99 @@
         }
       },
       "geometry_notes": {
-        "overall": "Real Juno I / Jupiter-C: a Redstone with stretched tanks (about 17 m) carrying a spinning tub of clustered Sergeant solid rockets. Here: booster 19.5 m + two solid stages + payload and nose.",
-        "body": "ALL MADE UP / ESTIMATED: tank length 16 m, propellant 24,000 kg and dry mass 3,300 kg are tuned so the reference just reaches the Level 1 orbit (about 2 stars).",
-        "engine": "Redstone-class engine with a MADE UP uprate (380 kN sea level): the real Jupiter-C used a slightly uprated Rocketdyne A-7 on a stretched airframe.",
-        "upper_stages": "MADE UP. The real tub held 11 + 3 + 1 small solids. Two stacked solid stages stand in for it."
+        "overall": "Real Juno I (Jupiter-C, 1958): about 21 m tall, 1.78 m diameter, about 29 t at liftoff. A Redstone with stretched tanks, then a spinning tub of scaled-down Sergeant solid rockets: 11 in stage 2, 3 in stage 3, 1 in stage 4 (which stayed attached to Explorer 1).",
+        "nose": "Explorer 1's own nose. Its mass is counted in the 14 kg payload, so the nose segment weighs 0 here. Length 0.5 m is an ESTIMATE.",
+        "body": "Tank length 14.4 m is an ESTIMATE: the Redstone-class reference's 12 m plus about 2.4 m of stretch. Propellant 25,700 kg is DERIVED like the Redstone's: 350 kN / (215 s x g0) = 166 kg/s times an ESTIMATED 155 s burn. Dry mass 3,000 kg is an ESTIMATE (same as the Redstone-class, the stretch roughly offset by the lighter instrument section).",
+        "engine": "The Redstone-class engine with the same numbers as engines.json (350 kN sea level, 382.6 kN vacuum, Isp 215 s / 235 s, 700 kg). The real Jupiter-C burned hydyne for a little more thrust; that uprate is deliberately NOT modelled.",
+        "fins": "Same ESTIMATED fins as the Redstone-class reference.",
+        "options": "Gimballed stands in for the real carbon jet vanes, like the Redstone-class reference.",
+        "upper_stages": "Each motor is an ESTIMATE of a 1950s 'Baby Sergeant': 7.3 kN for about 6.5 s, Isp 220 s, about 22 kg of propellant in a 4.7 kg case, 1.22 m long, 0.152 m wide. 220 s is typical of 1950s polysulfide / ammonium perchlorate solids. Stage structure (the spinning tub and its rings) is an ESTIMATE."
       },
       "real_flight": {
         "mission": "Explorer 1 on Juno I, 31 January 1958",
         "type": "orbital",
         "perigee_km": 358,
         "apogee_km": 2550,
-        "notes": "From memory: VERIFY. Explorer 1 weighed about 14 kg and reached roughly 358 x 2,550 km."
+        "payload_kg": 14,
+        "notes": "From memory: VERIFY against NASA/JPL records. Explorer 1 (with its attached fourth-stage case) weighed about 14 kg and reached roughly 358 x 2,550 km. The real ascent lofted the tub to about 360 km and fired the solids near-horizontally at apogee."
       },
       "verified": false,
-      "source": "Inspired by the real Juno I / Jupiter-C launch vehicle (Army Ballistic Missile Agency, 1956-58). Every number here is an estimate or made up for gameplay: see geometry_notes.",
+      "source": "Inspired by the real Juno I / Jupiter-C launch vehicle (Army Ballistic Missile Agency and JPL, 1958). Every number is an estimate: see geometry_notes. VERIFY against NASA SP-4201-era sources and JPL's Explorer 1 records.",
       "optional_upper_stages": [
         {
           "enabled_by_default": true,
           "body": {
-            "diameter_m": 1.2,
+            "length_m": 1.22,
+            "diameter_m": 0.8,
             "material": "aluminium",
-            "propellant_mass_kg": 4200,
-            "dry_mass_kg": 330,
-            "propellant_density_kg_m3": 1700,
-            "ullage_factor": 1.05
+            "propellant_mass_kg": 242,
+            "dry_mass_kg": 30
           },
           "engine": {
-            "count": 1,
-            "section_length_m": 0.6,
-            "thrust_vac_N": 70000,
-            "isp_vac": 245,
-            "mass_kg": 80,
-            "cost": 0.5
+            "name": "11 x Baby-Sergeant-class solid",
+            "propellant": "solid",
+            "count": 11,
+            "section_length_m": 0.1,
+            "thrust_sl_N": null,
+            "thrust_vac_N": 7300,
+            "isp_sl": null,
+            "isp_vac": 220,
+            "mass_kg": 4.7,
+            "cost": 0.05,
+            "cost_thrust_N": 7300
           },
           "verified": false,
-          "source": "MADE UP solid-rocket stage (no engine id: values inline). Isp 235 s is typical of 1950s solid propellant (Sergeant-class); everything else is a gameplay estimate."
+          "source": "ESTIMATE: 11 motors x 22 kg propellant; 30 kg of tub structure is a guess."
         },
         {
           "enabled_by_default": true,
           "body": {
-            "diameter_m": 0.8,
+            "length_m": 1.22,
+            "diameter_m": 0.45,
             "material": "aluminium",
-            "propellant_mass_kg": 1000,
-            "dry_mass_kg": 105,
-            "propellant_density_kg_m3": 1700,
-            "ullage_factor": 1.05
+            "propellant_mass_kg": 66,
+            "dry_mass_kg": 8
           },
           "engine": {
-            "count": 1,
-            "section_length_m": 0.4,
-            "thrust_vac_N": 15000,
-            "isp_vac": 255,
-            "mass_kg": 30,
-            "cost": 0.3
+            "name": "3 x Baby-Sergeant-class solid",
+            "propellant": "solid",
+            "count": 3,
+            "section_length_m": 0.1,
+            "thrust_sl_N": null,
+            "thrust_vac_N": 7300,
+            "isp_sl": null,
+            "isp_vac": 220,
+            "mass_kg": 4.7,
+            "cost": 0.05,
+            "cost_thrust_N": 7300
           },
           "verified": false,
-          "source": "MADE UP small solid-rocket stage. The real top stage was a single small Sergeant carrying Explorer 1."
+          "source": "ESTIMATE: 3 motors x 22 kg propellant; 8 kg of ring structure is a guess."
+        },
+        {
+          "enabled_by_default": true,
+          "body": {
+            "length_m": 1.22,
+            "diameter_m": 0.16,
+            "material": "aluminium",
+            "propellant_mass_kg": 22,
+            "dry_mass_kg": 1
+          },
+          "engine": {
+            "name": "1 x Baby-Sergeant-class solid",
+            "propellant": "solid",
+            "count": 1,
+            "section_length_m": 0.1,
+            "thrust_sl_N": null,
+            "thrust_vac_N": 7300,
+            "isp_sl": null,
+            "isp_vac": 220,
+            "mass_kg": 4.7,
+            "cost": 0.05,
+            "cost_thrust_N": 7300
+          },
+          "verified": false,
+          "source": "ESTIMATE: 1 motor x 22 kg propellant, attached to the satellite; 1 kg of fittings is a guess."
         }
       ]
     }

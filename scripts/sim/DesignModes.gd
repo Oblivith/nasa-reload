@@ -6,7 +6,7 @@ extends RefCounted
 ##   Easy -> Medium -> Hard: the design is kept as it is (nothing to convert).
 ##   Medium/Hard -> Easy: snap_to_easy() picks the nearest preset per part.
 ##   Any -> Medium: slider_positions() shows where each value sits on its slider.
-## Also: the level's payload and mission, and the design's cost.
+## Also: the level's payload and mission (with its budget). Cost lives in CostModel.
 
 
 ## Level payload in the RocketGeometry format (levels.json entry).
@@ -18,13 +18,15 @@ static func level_payload(level: Dictionary) -> Dictionary:
 
 
 ## Level mission in the MissionBudget format: the level's "mission" block plus the
-## launch site's latitude.
+## launch site's latitude and the level budget ("budget_musd", for RocketEvaluator).
 static func level_mission(level: Dictionary) -> Dictionary:
 	var mission: Dictionary = (level.get("mission", {}) as Dictionary).duplicate(true)
 	mission.erase("note")
 	var site: Dictionary = level.get("launch_site", {})
 	if not mission.has("latitude_deg"):
 		mission["latitude_deg"] = float(site.get("latitude_deg", 0.0))
+	if float(level.get("budget", 0.0)) > 0.0:
+		mission["budget_musd"] = float(level["budget"])
 	return mission
 
 
@@ -185,44 +187,6 @@ static func snap_to_easy(design: Dictionary, presets: Dictionary, engines: Dicti
 	if float((options.get("escape_tower", {}) as Dictionary).get("mass_kg", 0.0)) > 0.0:
 		dropped.append("Easy mode has no escape tower, so it was removed.")
 	return {"selections": selections, "changed": changed, "dropped": dropped}
-
-
-# --- Cost --------------------------------------------------------------------------------
-
-## Design cost in millions of USD: engines + body walls + fins + options.
-## Returns {total, items: [{label, cost}]}.
-static func design_cost(design: Dictionary, engines: Dictionary, materials: Dictionary,
-		cost_model: Dictionary) -> Dictionary:
-	var items: Array = []
-	var stages: Array = design.get("stages", [])
-	var engine_total := 0
-	for i in stages.size():
-		var stage: Dictionary = stages[i]
-		var engine: Dictionary = stage.get("engine", {})
-		var body: Dictionary = stage.get("body", {})
-		var count := int(engine.get("count", 1))
-		engine_total += count
-		var entry: Dictionary = engines.get(str(engine.get("engine_id", "")), {})
-		var unit_cost := float(engine.get("cost", entry.get("cost", cost_model.get("custom_engine_cost", 3.0))))
-		items.append({"label": "Stage %d engines (%d x $%.1fM)" % [i + 1, count, unit_cost], "cost": unit_cost * count})
-		var material: Dictionary = materials.get(str(body.get("material", "")), {})
-		var wall := RocketGeometry.body_wall_area(float(body.get("diameter_m", 0.0)), float(body.get("length_m", 0.0)))
-		items.append({"label": "Stage %d tanks (%.0f m2 %s)" % [i + 1, wall, str(material.get("name", "?"))],
-				"cost": wall * float(material.get("cost_per_m2", 0.0))})
-	var fins: Dictionary = design.get("fins", {})
-	var fin_area := Aero.fin_planform_area(int(fins.get("count", 0)), float(fins.get("root_chord_m", 0.0)),
-			float(fins.get("tip_chord_m", 0.0)), float(fins.get("span_m", 0.0)))
-	if fin_area > 0.0:
-		items.append({"label": "Fins (%.1f m2)" % fin_area, "cost": fin_area * float(cost_model.get("fin_cost_per_m2", 0.0))})
-	var options: Dictionary = design.get("options", {})
-	if bool(options.get("gimballed", false)):
-		items.append({"label": "Gimbal mounts", "cost": engine_total * float(cost_model.get("gimbal_cost_per_engine", 0.0))})
-	if float((options.get("escape_tower", {}) as Dictionary).get("mass_kg", 0.0)) > 0.0:
-		items.append({"label": "Escape tower", "cost": float(cost_model.get("escape_tower_cost", 0.0))})
-	var total := 0.0
-	for item: Dictionary in items:
-		total += float(item["cost"])
-	return {"total": total, "items": items}
 
 
 # --- Paths -------------------------------------------------------------------------------

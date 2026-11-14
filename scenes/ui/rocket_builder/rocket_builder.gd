@@ -4,7 +4,8 @@ extends Control
 ## design; RocketEvaluator judges it live. UI only: physics lives in /scripts/sim,
 ## conversions in DesignModes / DesignBuilder, content in /data.
 ##
-## Debug: run with `-- --screenshot=<png path> [--mode=easy|medium|hard] [--burnout]`
+## Debug: run with `-- --screenshot=<png path> [--mode=easy|medium|hard] [--burnout]
+##   [--reference] [--budget=<$M>]`
 ## to save a screenshot of the screen and quit.
 
 enum InputMode { EASY, MEDIUM, HARD }
@@ -55,6 +56,7 @@ var _name_edit: LineEdit
 var _load_button: OptionButton
 var _launch_button: Button
 var _notice_timer: Timer
+var _brief_info: Label
 
 
 func _ready() -> void:
@@ -70,6 +72,11 @@ func _ready() -> void:
 	_min_factor = float(slider_range.get("min_factor", 0.5))
 	_max_factor = float(slider_range.get("max_factor", 2.0))
 	_ref_values = DesignModes.reference_values(_reference, DataLoader.engines, _ui.get("medium_sliders", []))
+	# The level's budget becomes the live limit when a level starts; event cards may
+	# change GameState.budget later and the builder follows it.
+	if GameState.budget <= 0.0 or str(GameState.builder_state.get("level", "")) != _level_id:
+		GameState.budget = float(_level.get("budget", 0.0))
+	GameState.budget_changed.connect(_on_budget_changed)
 
 	_notice_timer = Timer.new()
 	_notice_timer.one_shot = true
@@ -118,6 +125,8 @@ func _apply_cmdline() -> void:
 				_switch_mode(index, false)
 		elif arg == "--burnout":
 			_rocket_view.show_burnout = true
+		elif arg.begins_with("--budget="):
+			GameState.budget = float(arg.trim_prefix("--budget="))
 		elif arg == "--reference":
 			_design = DesignModes.reference_design(_reference, DataLoader.engines, _level,
 					DesignBuilder.upper_stages_default_on(_reference))
@@ -142,8 +151,6 @@ func _maybe_screenshot() -> void:
 func _build_brief() -> void:
 	var goal: Dictionary = _level.get("required_goal", {})
 	var optional: Dictionary = _level.get("optional_goal", {})
-	var site: Dictionary = _level.get("launch_site", {})
-	var mission := DesignModes.level_mission(_level)
 	_brief_box.add_child(_wrap_placard(ConsoleTheme.heading("MISSION BRIEF  //  LEVEL %d: %s  (%s)" % [
 			int(_level.get("number", 1)), str(_level.get("name", "")), str(_level.get("year", ""))], 20, ConsoleTheme.CREAM)))
 	var row := HBoxContainer.new()
@@ -162,10 +169,17 @@ func _build_brief() -> void:
 	required.add_theme_font_override("font", ConsoleTheme.typewriter())
 	goals.add_child(required)
 	goals.add_child(ConsoleTheme.body("OPTIONAL: %s" % str(optional.get("description", "")), 17, ConsoleTheme.TEAL_DARK))
-	goals.add_child(ConsoleTheme.body("Payload %d kg  |  Budget $%dM  |  %s, %.1f deg N  |  Checked for: %s %d km" % [
-			int(_level.get("payload_mass_kg", 0)), int(_level.get("budget", 0)), str(site.get("name", "")),
+	_brief_info = ConsoleTheme.body(_brief_info_text(), 16, ConsoleTheme.INK_SOFT)
+	goals.add_child(_brief_info)
+
+
+func _brief_info_text() -> String:
+	var site: Dictionary = _level.get("launch_site", {})
+	var mission := DesignModes.level_mission(_level)
+	return "Payload %d kg  |  Budget $%.1fM  |  %s, %.1f deg N  |  Checked for: %s %d km" % [
+			int(_level.get("payload_mass_kg", 0)), _budget_limit(), str(site.get("name", "")),
 			float(site.get("latitude_deg", 0.0)), str(mission.get("profile", "")).to_upper(),
-			int(mission.get("target_altitude_km", 0))], 16, ConsoleTheme.INK_SOFT))
+			int(mission.get("target_altitude_km", 0))]
 
 
 func _build_mode_switch() -> void:
@@ -315,6 +329,7 @@ func _mode_from_game_state() -> int:
 func _refresh() -> void:
 	_design["payload"] = DesignModes.level_payload(_level)
 	_design["mission"] = DesignModes.level_mission(_level)
+	_design["mission"]["budget_musd"] = _budget_limit()
 	_report = RocketEvaluator.evaluate(_design, _sim_data)
 	_rocket_view.show_report(_report, _design)
 	_rebuild_right()
@@ -324,19 +339,28 @@ func _refresh() -> void:
 
 
 func _update_bottom() -> void:
-	var cost := DesignModes.design_cost(_design, DataLoader.engines, DataLoader.materials, _ui.get("cost_model", {}))
+	var cost := _cost(_design)
 	var lines: PackedStringArray = []
 	for item: Dictionary in cost["items"]:
-		lines.append("%-34s $%5.2fM" % [str(item["label"]), float(item["cost"])])
-	var budget := float(_level.get("budget", 0.0))
+		lines.append("%-40s $%5.2fM" % [str(item["label"]), float(item["cost"])])
+	_brief_info.text = _brief_info_text()
+	var budget := _budget_limit()
 	_budget_bar.set_values(float(cost["total"]), budget, "\n".join(lines))
-	var spare := budget - float(cost["total"])
-	_cost_label.text = ("$%.1fM spare" % spare) if spare >= 0.0 else ("$%.1fM OVER BUDGET" % -spare)
+	var status := CostModel.budget_status(float(cost["total"]), budget, DataLoader.cost_model)
+	var spare := float(status["left_musd"])
+	if spare < 0.0:
+		_cost_label.text = "$%.1fM OVER BUDGET" % -spare
+	else:
+		_cost_label.text = "$%.1fM left%s" % [spare, "  +budget star" if bool(status["budget_star"]) else ""]
+	_cost_label.tooltip_text = "Keep at least %d%% of the budget unspent to earn the budget star." % int(
+			round(float(DataLoader.cost_model.get("budget_star_min_left_fraction", 0.0)) * 100.0))
 	_cost_label.add_theme_color_override("font_color", ConsoleTheme.INK_SOFT if spare >= 0.0 else ConsoleTheme.FAIL)
 
 	var blocked := ""
 	if (_design.get("stages", []) as Array).is_empty():
 		blocked = "There is no rocket to launch."
+	elif spare < 0.0:
+		blocked = "Over budget by $%.1fM: the budget is $%.1fM now. Make the rocket cheaper to launch." % [-spare, budget]
 	else:
 		for check: Dictionary in _report.get("checks", []):
 			if str(check["id"]) == "liftoff" and str(check["status"]) == "fail":
@@ -363,6 +387,7 @@ func _rebuild_left() -> void:
 
 
 func _build_easy() -> void:
+	var current_cost := _total(_design)
 	for part_def: Dictionary in _ui.get("easy_parts", []):
 		var part := str(part_def["part"])
 		var table: Dictionary = DataLoader.presets.get(part, {})
@@ -375,13 +400,23 @@ func _build_easy() -> void:
 		var scale_ref := _preset_scale(table)
 		for id in table:
 			var preset: Dictionary = table[id]
+			var picks := _easy_selections.duplicate()
+			picks[part] = str(id)
+			var option_cost := _cost(DesignBuilder.from_easy(picks, DataLoader.presets, DataLoader.engines,
+					DesignModes.level_payload(_level), DesignModes.level_mission(_level)))
+			var selected := str(_easy_selections.get(part, "")) == str(id)
+			var affordable := selected or _affordable(float(option_cost["total"]), current_cost)
+			var price := _easy_part_cost(part, option_cost)
 			var button := Button.new()
 			button.toggle_mode = true
 			button.button_group = group
-			button.button_pressed = str(_easy_selections.get(part, "")) == str(id)
+			button.button_pressed = selected
+			button.disabled = not affordable
 			button.custom_minimum_size = Vector2(0, 84)
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			button.tooltip_text = str(preset.get("description", ""))
+			if not affordable:
+				button.tooltip_text += "\nOver budget: the rocket would cost $%.1fM of $%.1fM." % [float(option_cost["total"]), _budget_limit()]
 			button.pressed.connect(_on_easy_pick.bind(part, str(id)))
 			var inner := HBoxContainer.new()
 			inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -405,7 +440,21 @@ func _build_easy() -> void:
 			label.size_flags_vertical = Control.SIZE_FILL
 			label.add_theme_font_override("font", ConsoleTheme.typewriter())
 			label.add_theme_font_size_override("font_size", 17)
-			inner.add_child(label)
+			var text_box := VBoxContainer.new()
+			text_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			text_box.alignment = BoxContainer.ALIGNMENT_CENTER
+			text_box.add_theme_constant_override("separation", 0)
+			text_box.add_child(label)
+			var price_label := Label.new()
+			price_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			price_label.text = "free" if price <= 0.0 else _money(price)
+			price_label.add_theme_font_size_override("font_size", 14)
+			price_label.add_theme_color_override("font_color", ConsoleTheme.FAIL if not affordable else ConsoleTheme.INK_SOFT)
+			if selected:
+				price_label.add_theme_color_override("font_color", ConsoleTheme.PAPER)
+			text_box.add_child(price_label)
+			inner.add_child(text_box)
 			button.add_child(inner)
 			row.add_child(button)
 	var hint := ConsoleTheme.body("Hover a part to read about it. Every picture stands for real numbers: switch to HARD to see them.", 15, ConsoleTheme.INK_SOFT)
@@ -426,12 +475,18 @@ func _build_medium() -> void:
 			func(id: String) -> void: _set_value("nose/shape", id))
 	_add_option_row(discrete, "Material", DataLoader.materials, str(DesignModes.path_get(_design, "stages/0/body/material")),
 			func(id: String) -> void: _set_material(id))
+	var cost := _cost(_design)
 	var gimbal := CheckBox.new()
-	gimbal.text = "Steerable (gimballed) engine"
+	var engine_count: Variant = DesignModes.path_get(_design, "stages/0/engine/count")
+	gimbal.text = "Steerable engine  (+%s)" % _money(float(DataLoader.cost_model.get("gimbal_cost_per_engine", 0.0))
+			* (int(engine_count) if engine_count != null else 1))
 	gimbal.button_pressed = bool(DesignModes.path_get(_design, "options/gimballed"))
 	gimbal.toggled.connect(func(on: bool) -> void: _set_value("options/gimballed", on))
 	var upper := CheckBox.new()
-	upper.text = "Upper stage"
+	var upper_cost := 0.0
+	for i in range(1, (_design.get("stages", []) as Array).size()):
+		upper_cost += CostModel.stage_cost(cost, i)
+	upper.text = "Upper stages  (%s)" % _money(upper_cost) if upper_cost > 0.0 else "Upper stages"
 	upper.button_pressed = (_design.get("stages", []) as Array).size() > 1
 	upper.toggled.connect(_on_medium_upper)
 	discrete.add_child(gimbal)
@@ -448,7 +503,8 @@ func _build_medium() -> void:
 			continue
 		if str(slider_def.get("group", "")) != group_name:
 			group_name = str(slider_def.get("group", ""))
-			_left_content.add_child(ConsoleTheme.heading(group_name.to_upper(), 18, ConsoleTheme.TEAL_DARK))
+			_left_content.add_child(ConsoleTheme.heading("%s  //  %s" % [group_name.to_upper(), _group_cost_text(slider_def, cost)],
+					18, ConsoleTheme.TEAL_DARK))
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
 		var name_label := ConsoleTheme.body(str(slider_def["label"]), 16)
@@ -481,8 +537,9 @@ func _build_medium() -> void:
 	reset.text = "RESET TO %s" % str(_reference.get("name", "REFERENCE")).to_upper()
 	reset.custom_minimum_size = Vector2(0, 46)
 	reset.pressed.connect(func() -> void:
-		_design = DesignModes.reference_design(_reference, DataLoader.engines, _level,
-					DesignBuilder.upper_stages_default_on(_reference))
+		_try_change(func(_d: Dictionary) -> Dictionary:
+			return DesignModes.reference_design(_reference, DataLoader.engines, _level,
+					DesignBuilder.upper_stages_default_on(_reference)))
 		_rebuild_left()
 		_refresh())
 	_left_content.add_child(reset)
@@ -502,9 +559,11 @@ func _build_hard() -> void:
 	var payload := DesignModes.level_payload(_level)
 	_left_content.add_child(ConsoleTheme.body("%.0f kg, %.2f m long" % [float(payload["mass_kg"]), float(payload["length_m"])], 16))
 
+	var cost := _cost(_design)
 	for i in stages.size():
 		var header := HBoxContainer.new()
-		var title := ConsoleTheme.heading("STAGE %d%s" % [i + 1, "  (FIRST, AT THE BOTTOM)" if i == 0 else "  (UPPER)"], 18, ConsoleTheme.TEAL_DARK)
+		var title := ConsoleTheme.heading("STAGE %d%s  //  %s" % [i + 1, "  (FIRST)" if i == 0 else "  (UPPER)",
+				_money(CostModel.items_cost(cost, ["stage_%d_engine" % i, "stage_%d_tanks" % i]))], 18, ConsoleTheme.TEAL_DARK)
 		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		header.add_child(title)
 		if i > 0 and i == stages.size() - 1:
@@ -537,17 +596,19 @@ func _build_hard() -> void:
 	add.disabled = offered.is_empty()
 	add.pressed.connect(func() -> void:
 		var next := clampi((_design["stages"] as Array).size() - 1, 0, offered.size() - 1)
-		_design = DesignBuilder.add_upper_stage(_design, offered[next], DataLoader.engines)
+		_try_change(func(d: Dictionary) -> Dictionary:
+			return DesignBuilder.add_upper_stage(d, offered[next], DataLoader.engines))
 		_rebuild_left()
 		_refresh())
 	_left_content.add_child(add)
 
-	_left_content.add_child(ConsoleTheme.heading("FINS", 18, ConsoleTheme.TEAL_DARK))
+	_left_content.add_child(ConsoleTheme.heading("FINS  //  %s" % _money(CostModel.items_cost(cost, ["fins"])), 18, ConsoleTheme.TEAL_DARK))
 	_add_fields(_field_grid(), fields.get("fins", []), "fins")
 
-	_left_content.add_child(ConsoleTheme.heading("OPTIONS", 18, ConsoleTheme.TEAL_DARK))
+	_left_content.add_child(ConsoleTheme.heading("OPTIONS  //  %s" % _money(CostModel.items_cost(cost, ["gimbal", "escape_tower"])),
+			18, ConsoleTheme.TEAL_DARK))
 	var gimbal := CheckBox.new()
-	gimbal.text = "Gimballed first-stage engine"
+	gimbal.text = "Gimballed first-stage engine  (+%s each)" % _money(float(DataLoader.cost_model.get("gimbal_cost_per_engine", 0.0)))
 	gimbal.button_pressed = bool(DesignModes.path_get(_design, "options/gimballed"))
 	gimbal.toggled.connect(func(on: bool) -> void: _set_value("options/gimballed", on))
 	_left_content.add_child(gimbal)
@@ -587,6 +648,8 @@ func _add_fields(grid: GridContainer, defs: Array, prefix: String) -> void:
 			DesignModes.path_set(_design, path, float(current))
 		edit.text = _fmt(float(current)) if current != null else ""
 		edit.text_changed.connect(_on_field.bind(path, field, edit))
+		edit.text_submitted.connect(func(_text: String) -> void: _commit_field(path, field, edit))
+		edit.focus_exited.connect(func() -> void: _commit_field(path, field, edit))
 		grid.add_child(edit)
 
 
@@ -615,8 +678,15 @@ func _add_option_row(grid: GridContainer, label_text: String, table: Dictionary,
 # --- Input handlers ------------------------------------------------------------------
 
 func _on_easy_pick(part: String, id: String) -> void:
-	_easy_selections[part] = id
-	_design = _easy_design()
+	var picks := _easy_selections.duplicate()
+	picks[part] = id
+	var applied := _try_change(func(_d: Dictionary) -> Dictionary:
+		return DesignBuilder.from_easy(picks, DataLoader.presets, DataLoader.engines,
+				DesignModes.level_payload(_level), DesignModes.level_mission(_level)))
+	if applied:
+		_easy_selections = picks
+		_design["name"] = "Easy rocket"
+	_rebuild_left.call_deferred()
 	_refresh()
 
 
@@ -625,27 +695,38 @@ func _on_slider(value: float, slider_id: String) -> void:
 		return
 	var row: Dictionary = _slider_rows.get(slider_id, {})
 	var slider_def: Dictionary = row.get("def", {})
+	var moves: Array = []   # [path, from, to]
 	for path in slider_def.get("paths", []):
 		var current: Variant = DesignModes.path_get(_design, str(path))
 		if current == null:
 			continue   # e.g. a vacuum-only engine has no sea-level thrust to scale
 		var ref := float(_ref_values.get(str(path), float(current)))
-		DesignModes.path_set(_design, str(path), DesignBuilder.slider_to_value(value, ref, _min_factor, _max_factor))
-		if str(path).contains("/body/propellant"):
-			_recompute_upper_length(int(str(path).split("/")[1]))
+		moves.append([str(path), float(current), DesignBuilder.slider_to_value(value, ref, _min_factor, _max_factor)])
+	var t := _limited_change(func(design: Dictionary, at: float) -> void:
+		for move: Array in moves:
+			DesignModes.path_set(design, move[0], lerpf(move[1], move[2], at))
+			if str(move[0]).contains("/body/propellant"):
+				var stage := int(str(move[0]).split("/")[1])
+				if stage >= 1:
+					DesignBuilder.recompute_tank_length(((design["stages"] as Array)[stage] as Dictionary)["body"]))
 	var positions := _slider_positions()
+	if t < 0.999:
+		var slider: HSlider = row["slider"]
+		_setting_sliders = true
+		slider.set_value_no_signal(float((positions.get(slider_id, {"slider": value}) as Dictionary)["slider"]))
+		_setting_sliders = false
 	_update_slider_label(slider_id, positions.get(slider_id, {}))
 	_refresh()
 
 
 func _on_medium_upper(on: bool) -> void:
-	if on:
-		_design = DesignBuilder.without_upper_stages(_design)
-		for spec: Dictionary in DesignBuilder.upper_stage_specs(_reference):
-			_design = DesignBuilder.add_upper_stage(_design, spec, DataLoader.engines)
-	else:
-		_design = DesignBuilder.without_upper_stages(_design)
-	_rebuild_left()
+	_try_change(func(d: Dictionary) -> Dictionary:
+		var result := DesignBuilder.without_upper_stages(d)
+		if on:
+			for spec: Dictionary in DesignBuilder.upper_stage_specs(_reference):
+				result = DesignBuilder.add_upper_stage(result, spec, DataLoader.engines)
+		return result)
+	_rebuild_left.call_deferred()
 	_refresh()
 
 
@@ -671,31 +752,71 @@ func _on_field(text: String, path: String, field: Dictionary, edit: LineEdit) ->
 			_mark_field(edit, false)
 			return
 		value = int(trimmed)
+	# While typing: apply only what the budget allows. Over budget = orange, applied
+	# (clamped) when the player presses Enter or leaves the field.
+	var trial := _design.duplicate(true)
+	DesignModes.path_set(trial, path, value)
+	if not _affordable(_total(trial), _total(_design)):
+		edit.add_theme_color_override("font_color", ConsoleTheme.ORANGE)
+		edit.tooltip_text = "Over budget: that makes the rocket $%.1fM of $%.1fM. Press Enter to use the most you can afford." % [
+				_total(trial), _budget_limit()]
+		return
 	_mark_field(edit, true)
-	DesignModes.path_set(_design, path, value)
+	edit.tooltip_text = ""
+	_design = trial
+	_refresh()
+
+
+## Enter / leaving a field: clamp an over-budget value to the most the budget allows.
+func _commit_field(path: String, field: Dictionary, edit: LineEdit) -> void:
+	var trimmed := edit.text.strip_edges()
+	if not trimmed.is_valid_float() or float(trimmed) < 0.0:
+		return
+	var current: Variant = DesignModes.path_get(_design, path)
+	if current == null or is_equal_approx(float(current), float(trimmed)):
+		return
+	var from := float(current)
+	var to := float(trimmed)
+	var integer := bool(field.get("integer", false))
+	var t := _limited_change(func(design: Dictionary, at: float) -> void:
+		var v := lerpf(from, to, at)
+		DesignModes.path_set(design, path, int(floor(v)) if integer else v))
+	var applied: Variant = DesignModes.path_get(_design, path)
+	if t < 0.999:
+		edit.text = _fmt(float(applied))
+	_mark_field(edit, true)
+	edit.tooltip_text = ""
 	_refresh()
 
 
 func _set_value(path: String, value: Variant) -> void:
-	DesignModes.path_set(_design, path, value)
+	if not _try_change(func(d: Dictionary) -> Dictionary:
+		DesignModes.path_set(d, path, value)
+		return d):
+		_rebuild_left.call_deferred()
 	_refresh()
 
 
 func _set_material(id: String) -> void:
-	for stage: Dictionary in _design.get("stages", []):
-		(stage["body"] as Dictionary)["material"] = id
+	if not _try_change(func(d: Dictionary) -> Dictionary:
+		for stage: Dictionary in d.get("stages", []):
+			(stage["body"] as Dictionary)["material"] = id
+		return d):
+		_rebuild_left.call_deferred()
 	_refresh()
 
 
 func _set_engine(stage_index: int, engine_id: String) -> void:
-	var stage: Dictionary = (_design["stages"] as Array)[stage_index]
-	var old: Dictionary = stage.get("engine", {})
-	stage["engine"] = DesignBuilder.resolve_engine({
-		"engine_id": engine_id,
-		"count": old.get("count", 1),
-		"section_length_m": old.get("section_length_m", 0.0),
-	}, DataLoader.engines)
-	_rebuild_left()
+	_try_change(func(d: Dictionary) -> Dictionary:
+		var stage: Dictionary = (d["stages"] as Array)[stage_index]
+		var old: Dictionary = stage.get("engine", {})
+		stage["engine"] = DesignBuilder.resolve_engine({
+			"engine_id": engine_id,
+			"count": old.get("count", 1),
+			"section_length_m": old.get("section_length_m", 0.0),
+		}, DataLoader.engines)
+		return d)
+	_rebuild_left.call_deferred()
 	_refresh()
 
 
@@ -772,6 +893,24 @@ func _rebuild_right() -> void:
 			(_report.get("tips", []) as Array).size(), "" if (_report.get("tips", []) as Array).size() == 1 else "s"]) if success \
 			else "Fix the red crosses before this one can fly."
 	_right_content.add_child(ConsoleTheme.body(tagline, 16, ConsoleTheme.INK_SOFT))
+	var budget: Dictionary = _report.get("budget", {})
+	if not budget.is_empty():
+		var budget_row := HBoxContainer.new()
+		budget_row.add_theme_constant_override("separation", 10)
+		var star := bool(budget["budget_star"])
+		var over := bool(budget["over"])
+		budget_row.add_child(StatusIcon.make("fail" if over else ("pass" if star else "warn"), 24.0))
+		var text := "Budget left: $%.1fM of $%.1fM" % [float(budget["left_musd"]), float(budget["budget_musd"])]
+		if over:
+			text = "Over budget by $%.1fM: cannot launch" % -float(budget["left_musd"])
+		elif star:
+			text += "  (budget star)"
+		else:
+			text += "  (keep %d%% for the budget star)" % int(round(float(DataLoader.cost_model.get("budget_star_min_left_fraction", 0.0)) * 100.0))
+		var budget_label := ConsoleTheme.body(text, 16)
+		budget_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		budget_row.add_child(budget_label)
+		_right_content.add_child(budget_row)
 	_right_content.add_child(HSeparator.new())
 
 	match _mode:
@@ -937,6 +1076,116 @@ func _raw_section(title: String, rows: Array, formula: String) -> void:
 	_right_content.add_child(grid)
 	if formula != "":
 		_right_content.add_child(ConsoleTheme.body(formula, 14, ConsoleTheme.INK_SOFT))
+
+
+# --- Budget: a live limit while building -------------------------------------------
+# Every change goes through _try_change (discrete: accept or refuse) or _limited_change
+# (continuous: clamp to the most the budget allows). A change that does not raise the
+# cost is always allowed, so a design that is over a cut budget can still be fixed.
+
+func _budget_limit() -> float:
+	return GameState.budget if GameState.budget > 0.0 else float(_level.get("budget", 0.0))
+
+
+func _cost(design: Dictionary) -> Dictionary:
+	return CostModel.design_cost(design, DataLoader.engines, DataLoader.materials, DataLoader.cost_model)
+
+
+func _total(design: Dictionary) -> float:
+	return float(_cost(design)["total"])
+
+
+func _affordable(new_cost: float, old_cost: float) -> bool:
+	return new_cost <= _budget_limit() + 0.0001 or new_cost <= old_cost + 0.0001
+
+
+## Discrete change: `apply` takes a copy of the design and returns the changed design.
+## Refused (with a line from Pike) if it would break the budget. Returns true if applied.
+func _try_change(apply: Callable) -> bool:
+	var old_cost := _total(_design)
+	var changed: Dictionary = apply.call(_design.duplicate(true))
+	var new_cost := _total(changed)
+	if not _affordable(new_cost, old_cost):
+		_show_notice("Not in the budget: that makes the rocket $%.1fM. PIKE: \"%s\"" % [new_cost,
+				_pike_line("over_budget", new_cost, old_cost)])
+		return false
+	_design = changed
+	return true
+
+
+## Continuous change: `apply_at(design, t)` sets the design to the change at fraction t
+## (0 = as it is now, 1 = all of it). Applies as much as the budget allows; returns t.
+func _limited_change(apply_at: Callable) -> float:
+	var base := _design.duplicate(true)
+	var old_cost := _total(base)
+	var cost_at := func(t: float) -> float:
+		var copy := base.duplicate(true)
+		apply_at.call(copy, t)
+		return _total(copy)
+	var t := CostModel.affordable_fraction(cost_at, maxf(_budget_limit(), old_cost))
+	var result := base.duplicate(true)
+	apply_at.call(result, t)
+	_design = result
+	if t < 0.999:
+		var kind := "clamped" if t > 0.001 else "over_budget"
+		_show_notice("Clamped to what the budget allows. PIKE: \"%s\"" % _pike_line(kind, float(cost_at.call(1.0)), old_cost))
+	return t
+
+
+func _pike_line(kind: String, cost: float, before_cost: float) -> String:
+	var lines: Array = (DataLoader.raw.get("pike_lines", {}) as Dictionary).get(kind, [])
+	if lines.is_empty():
+		return "No."
+	var budget := _budget_limit()
+	return str(lines[randi() % lines.size()]).replace("{cost}", "%.1f" % cost).replace("{budget}", "%.1f" % budget) \
+			.replace("{over}", "%.1f" % maxf(cost - budget, 0.0)).replace("{left}", "%.1f" % maxf(budget - before_cost, 0.0))
+
+
+func _money(value: float) -> String:
+	return "$%.2fM" % value
+
+
+## Easy: what one part costs in the rocket it would make (its share of the cost items).
+func _easy_part_cost(part: String, cost: Dictionary) -> float:
+	match part:
+		"body", "material":
+			return CostModel.items_cost(cost, ["stage_0_tanks"])
+		"engine":
+			return CostModel.items_cost(cost, ["stage_0_engine"])
+		"fins":
+			return CostModel.items_cost(cost, ["fins"])
+		"upper_stage":
+			var total := 0.0
+			for i in range(1, 8):
+				total += CostModel.stage_cost(cost, i)
+			return total
+	return 0.0
+
+
+## Medium: the cost of what a slider group controls ("" when it is free).
+func _group_cost_text(slider_def: Dictionary, cost: Dictionary) -> String:
+	var path := str((slider_def.get("paths", [""]) as Array)[0])
+	var parts := path.split("/")
+	if parts[0] == "fins":
+		return _money(CostModel.items_cost(cost, ["fins"]))
+	if parts[0] != "stages" or parts.size() < 3:
+		return "no cost"
+	var stage := int(parts[1])
+	if stage > 0:
+		return _money(CostModel.stage_cost(cost, stage))
+	if parts[2] == "engine":
+		return _money(CostModel.items_cost(cost, ["stage_0_engine", "gimbal"]))
+	return _money(CostModel.items_cost(cost, ["stage_0_tanks"]))
+
+
+func _on_budget_changed(_new_budget: float) -> void:
+	if not is_inside_tree():
+		return
+	_rebuild_left()
+	_refresh()
+	var cost := _total(_design)
+	if cost > _budget_limit():
+		_show_notice("PIKE: \"%s\"" % _pike_line("budget_cut", cost, cost))
 
 
 # --- Helpers -------------------------------------------------------------------------

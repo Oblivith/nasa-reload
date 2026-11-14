@@ -15,7 +15,9 @@ extends RefCounted
 ##   {design_name, overall: "pass"/"warn"/"fail",
 ##    outcome: "success"/"failure", stars: 0-3, tips: [String], failures: [String],
 ##    checks: [{id, name, value, unit, threshold, status, plain, technical}],
-##    numbers: {...every raw value...}, geometry: RocketGeometry.build() output}
+##    numbers: {...every raw value...}, geometry: RocketGeometry.build() output,
+##    budget: CostModel.budget_status() + items, only when mission.budget_musd > 0}
+## Budget never fails a mission: the Rocket Builder keeps designs within budget.
 
 ## Liftoff gate (Sim Spec v2 2.2): fail < 1.0, warn 1.0 to 1.1, pass >= 1.1.
 const TWR_MIN_LIFTOFF := 1.0
@@ -185,6 +187,14 @@ static func evaluate(design: Dictionary, data: Dictionary) -> Dictionary:
 				"The crew has an escape tower to pull them clear if the launch goes wrong." if has_tower
 				else "There are people on board and no escape tower. If the launch goes wrong they have no quick way out.",
 				"Escape tower fitted." if has_tower else "Crewed mission without a launch escape system."))
+
+	# --- 7. Budget: NOT a check. Spending is limited while building (Rocket Builder);
+	# the evaluator only reports cost and what is left, for the "budget left" score.
+	var budget_limit := float(mission.get("budget_musd", 0.0))
+	if budget_limit > 0.0:
+		var cost := CostModel.design_cost(design, data.get("engines", {}), materials, data.get("cost_model", {}))
+		report["budget"] = CostModel.budget_status(float(cost["total"]), budget_limit, data.get("cost_model", {}))
+		report["budget"]["items"] = cost["items"]
 
 	return _finish(report)
 

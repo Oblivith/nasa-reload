@@ -1,0 +1,20 @@
+{
+  "comment": "Dialogue. Story Bible: Director Bertram Pike speaks in budget numbers.",
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Lines Director Pike says in the Rocket Builder when the player bumps into the budget. Placeholders: {cost} = what the rocket would cost, {budget} = the budget, {left} = money left before the change, {over} = how far over. All in millions of USD, already formatted with one decimal. The builder picks a line at random from each list.",
+  "over_budget": [
+    "No. That's ${cost}M. You have ${budget}M.",
+    "${over}M over. I don't have ${over}M. Nobody in this building has ${over}M.",
+    "Rejected. Try again. Cheaper.",
+    "Washington gave us ${budget}M, not ${cost}M. Put it back.",
+    "No. ...Try again. Cheaper."
+  ],
+  "clamped": [
+    "That's as far as ${budget}M goes.",
+    "Stop there. ${left}M left, and it stays left.",
+    "Far enough. The rest costs money we don't have."
+  ],
+  "budget_cut": [
+    "The budget's ${budget}M now. Your rocket is ${cost}M. Fix it before you ask me for a launch.",
+    "Washington cut us to ${budget}M. That rocket doesn't fly until it costs less."
+  ]
+}

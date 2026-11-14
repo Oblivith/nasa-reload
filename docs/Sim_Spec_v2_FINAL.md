@@ -121,6 +121,8 @@ Every check above is pass / warn / fail. **Only a FAIL fails the mission.** A WA
 | two or more warnings | success | ★ |
 | any fail | failure (gentle cutscene + debrief) | none |
 
+**Budget is not a check.** It is a live limit while building (Rocket Builder): Easy options that would go over are greyed out with their price, Medium sliders and Hard fields clamp to the most the budget allows, and Director Pike says no (`data/pike_lines.json`). If the budget is cut below the design (event cards), Launch is disabled until it fits. The evaluator only reports cost and budget left (`report.budget`) for the separate "budget left" score; keeping at least 10% unspent earns the budget star. Cost model: `scripts/sim/CostModel.gd` + `data/costs.json`.
+
 ---
 
 ## 3. The Three Input Modes

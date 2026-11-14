@@ -10,7 +10,7 @@ const FILES: Array[String] = [
 	"engines", "tanks", "orbits", "power",
 	"instruments", "comms", "structures", "levels",
 	"materials", "nose_shapes", "reference_rockets", "presets", "delta_v_map",
-	"builder_ui",
+	"builder_ui", "costs", "pike_lines",
 ]
 
 ## file name -> full parsed JSON Dictionary (includes "comment" and "notes").
@@ -49,6 +49,9 @@ var presets: Dictionary = {}
 
 ## Rocket Builder screen config (builder_ui.json, used as-is).
 var builder_ui: Dictionary = {}
+
+## Cost model coefficients (costs.json "cost_model"), used by CostModel.
+var cost_model: Dictionary = {}
 
 var loaded: bool = false
 
@@ -95,6 +98,8 @@ func sim_data() -> Dictionary:
 	return {
 		"materials": materials,
 		"nose_shapes": nose_shapes,
+		"engines": engines,
+		"cost_model": raw.get("costs", {}).get("cost_model", {}),
 		"drag_model": raw.get("nose_shapes", {}).get("drag_model", {}),
 		"nose_mass_model": raw.get("nose_shapes", {}).get("nose_mass_model", {}),
 		"q_limit_model": raw.get("materials", {}).get("q_limit_model", {}),
@@ -151,6 +156,7 @@ func _index_all() -> void:
 	tables["structures"] = _index(struct_entries)
 
 	builder_ui = raw.get("builder_ui", {})
+	cost_model = raw.get("costs", {}).get("cost_model", {})
 	engines = tables["engines"]
 	propellant_types = tables["propellant_types"]
 	tank_sizes = tables["tank_sizes"]
