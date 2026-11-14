@@ -171,13 +171,13 @@
       "engine_id": "hypergolic_upper",
       "count": 1,
       "section_length_m": 1.5,
-      "propellant_mass_kg": 4000,
-      "dry_mass_kg": 300,
+      "propellant_mass_kg": 6000,
+      "dry_mass_kg": 420,
       "propellant_density_kg_m3": 1200,
       "ullage_factor": 1.1,
       "description": "A little second stage for an extra push once the air is thin.",
       "verified": false,
-      "source": "MADE UP sizes, loosely Able/Agena-class (a few tonnes of storable propellant). Propellant density from tanks.json 'hypergolic'; engine from engines.json 'hypergolic_upper'. Tuned so the best Easy rocket with it only just reaches a 400 km orbit."
+      "source": "MADE UP sizes (structure 7% of propellant), loosely Able/Agena-class (a few tonnes of storable propellant). Propellant density from tanks.json 'hypergolic'; engine from engines.json 'hypergolic_upper'. Tuned so exactly one Easy rocket passes every Level 1 check with no warnings: Fat nose + Tall & fat body + Medium engine + Large fins + Light + Small upper stage (range ratio 1.13, static margin 1.78 / 2.62 cal)."
     },
     {
       "id": "big",
