@@ -1,0 +1,77 @@
+{
+  "comment": "Values approximate; verify against NASA sources.",
+  "notes": "Heat shield mass = k * capsule_mass * (reentry_velocity_ms / 7800)^2. A shield is adequate only if reentry velocity <= max_rated_velocity_ms. LEO return is about 7.8 km/s; lunar return about 11 km/s.",
+  "fairing": {
+    "id": "fairing",
+    "name": "Payload fairing",
+    "mass_fraction_of_payload": 0.15,
+    "min_mass_kg": 20,
+    "cost": 0.3,
+    "jettison_altitude_km": 100,
+    "unlock_level": 1,
+    "description": "Protects the payload from airflow, then jettisons above about 100 km.",
+    "verified": false,
+    "source": "Inspired by real Thor-Delta and Atlas-Agena payload fairings, 1960s."
+  },
+  "interstage": {
+    "id": "interstage",
+    "name": "Interstage",
+    "mass_fraction_of_upper_stage": 0.02,
+    "min_mass_kg": 50,
+    "cost": 0.1,
+    "unlock_level": 1,
+    "description": "Connects two stages and carries separation hardware.",
+    "verified": false,
+    "source": "Inspired by real Thor-Able and Atlas-Centaur interstage adapters, 1950-60s."
+  },
+  "escape_tower": {
+    "id": "escape_tower",
+    "name": "Launch escape tower",
+    "mass_kg": 1000,
+    "cost": 2.0,
+    "crewed_only": true,
+    "jettison_altitude_km": 90,
+    "unlock_level": 3,
+    "description": "Adds mass but can pull the capsule clear if the booster fails during launch.",
+    "verified": false,
+    "source": "Inspired by the real Mercury and Apollo launch escape systems, 1960s."
+  },
+  "heat_shields": [
+    {
+      "id": "heat_shield_thin",
+      "name": "Thin heat shield",
+      "tier": "Thin",
+      "k": 0.05,
+      "max_rated_velocity_ms": 8000,
+      "cost": 0.5,
+      "unlock_level": 2,
+      "description": "Enough for a low Earth orbit return, no more.",
+      "verified": false,
+      "source": "Inspired by the real ablative heat shield on Mercury capsules, 1961."
+    },
+    {
+      "id": "heat_shield_standard",
+      "name": "Standard heat shield",
+      "tier": "Standard",
+      "k": 0.08,
+      "max_rated_velocity_ms": 9500,
+      "cost": 1.0,
+      "unlock_level": 3,
+      "description": "Comfortable margin for orbital returns and mild high-energy returns.",
+      "verified": false,
+      "source": "Inspired by the real Gemini ablative heat shield, 1965."
+    },
+    {
+      "id": "heat_shield_heavy",
+      "name": "Heavy heat shield",
+      "tier": "Heavy",
+      "k": 0.12,
+      "max_rated_velocity_ms": 11500,
+      "cost": 2.0,
+      "unlock_level": 5,
+      "description": "Needed for lunar-return speeds. Heavy, but it keeps the crew alive.",
+      "verified": false,
+      "source": "Inspired by the real Apollo command module Avcoat ablative heat shield, 1966-68."
+    }
+  ]
+}

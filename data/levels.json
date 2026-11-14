@@ -1,0 +1,50 @@
+{
+  "comment": "Values approximate; verify against NASA sources.",
+  "notes": "Budget is in millions of USD. unlocked_parts lists part ids from the other data files available in this level.",
+  "levels": [
+    {
+      "id": "L1",
+      "number": 1,
+      "name": "BEACON-1",
+      "year": 1962,
+      "description": "Put the first satellite in orbit and keep it talking.",
+      "required_goal": {
+        "id": "orbit_transmit_30_days",
+        "description": "Orbit and transmit for 30 days",
+        "type": "orbit_and_transmit",
+        "min_perigee_km": 150,
+        "min_orbit_lifetime_days": 30,
+        "transmit_days": 30
+      },
+      "optional_goal": {
+        "id": "radiation_data",
+        "description": "Return radiation data",
+        "type": "instrument_data",
+        "instrument_id": "radiation_counter",
+        "min_data_bits_downlinked": 100000
+      },
+      "payload_mass_kg": 20,
+      "budget": 60,
+      "launch_site": {
+        "id": "cape_canaveral",
+        "name": "Cape Canaveral",
+        "latitude_deg": 28.5,
+        "rotation_bonus_ms": 408
+      },
+      "unlocked_parts": {
+        "engines": ["redstone_class", "kerosene_booster", "hypergolic_upper"],
+        "tanks": ["S", "M", "L"],
+        "orbits": ["very_low", "low", "medium_low"],
+        "solar_panels": ["silicon_panel"],
+        "batteries": ["nicad", "silver_zinc"],
+        "instruments": ["radiation_counter", "magnetometer"],
+        "radios": ["beacon_transmitter", "telemetry_radio"],
+        "ground_stations": ["single_station"],
+        "tape_recorders": ["small_tape"],
+        "structures": ["fairing", "interstage"]
+      },
+      "verified": false,
+      "source": "Inspired by the real 1958-62 satellite programmes (Explorer 1, Vanguard 1, Telstar 1)."
+    }
+  ]
+}

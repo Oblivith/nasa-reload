@@ -1,0 +1,64 @@
+{
+  "comment": "Values approximate; verify against NASA sources.",
+  "constants": {
+    "solar_constant_W_m2": 1361,
+    "leo_orbit_period_min": 90,
+    "leo_eclipse_min": 35,
+    "notes": "Solar power P = 1361 * area * efficiency * cos(angle). Battery Wh = load_W * eclipse_h / depth_of_discharge."
+  },
+  "solar_panels": [
+    {
+      "id": "silicon_panel",
+      "name": "Silicon solar panel",
+      "efficiency": 0.10,
+      "max_W_per_m2": 136,
+      "mass_kg_per_kW": 35,
+      "mass_kg_per_m2": 4.8,
+      "cost_per_m2": 0.3,
+      "unlock_level": 1,
+      "description": "1960s silicon cells, about 10% efficient. Zero output in eclipse.",
+      "verified": false,
+      "source": "Inspired by real Vanguard 1 (1958) and Telstar (1962) silicon solar cells."
+    }
+  ],
+  "batteries": [
+    {
+      "id": "nicad",
+      "name": "Nickel-cadmium battery",
+      "wh_per_kg": 30,
+      "recommended_dod": 0.3,
+      "cost_per_kg": 0.05,
+      "unlock_level": 1,
+      "description": "Rechargeable and long-lived at shallow discharge.",
+      "verified": false,
+      "source": "Inspired by real nickel-cadmium cells used on early satellites, 1960s."
+    },
+    {
+      "id": "silver_zinc",
+      "name": "Silver-zinc battery",
+      "wh_per_kg": 100,
+      "recommended_dod": 0.5,
+      "cost_per_kg": 0.2,
+      "unlock_level": 1,
+      "description": "Light and powerful, but wears out with repeated cycles.",
+      "verified": false,
+      "source": "Inspired by real silver-zinc batteries used on 1960s spacecraft."
+    }
+  ],
+  "fuel_cells": [
+    {
+      "id": "alkaline_fuel_cell",
+      "name": "Alkaline fuel cell",
+      "power_W": 1000,
+      "mass_kg": 110,
+      "reactant_kg_per_kWh": 0.4,
+      "produces_water": true,
+      "needs_sunlight": false,
+      "cost": 2.0,
+      "unlock_level": 4,
+      "description": "High power without sunlight, but it consumes reactants that eventually run out. Makes drinking water for crew as a bonus.",
+      "verified": false,
+      "source": "Inspired by the real Pratt & Whitney / General Electric fuel cells of Gemini and Apollo, 1960s."
+    }
+  ]
+}
