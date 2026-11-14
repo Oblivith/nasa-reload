@@ -4,6 +4,8 @@
 // 486 Easy combinations for every candidate set, and prints the set closest to the targets:
 //   - 15-25% of combinations succeed (pass + warn), at least 10 clean passes
 //   - every body option and every engine option has at least one success
+//   - every engine option has at least one clean pass (3 stars)
+//   - the Big upper stage carries at least 1.8x the Small one's propellant
 //   - obvious mistakes fail: no upper stage, Small fins + Fat nose, Tall & fat + Small engine
 //   - Large fins + Big upper stage stays over-stable (warn, never a clean pass)
 //
@@ -48,7 +50,8 @@ const ENGINE_CHOICES = {
 const ENGINE_SLOTS = { small_cheap: ['R2', 'R3', 'R4', 'K1'], medium: ['K1', 'K2'], big_powerful: ['K2', 'K3'] };
 const THRUST = { R2: 2 * 350, R3: 3 * 350, R4: 4 * 350, K1: 1500, K2: 3000, K3: 4500 };
 const upperOf = (P) => ({ engine_id: 'hypergolic_upper', count: 1, section_length_m: 1.5, propellant_mass_kg: P, dry_mass_kg: round(P * 0.07, 10), propellant_density_kg_m3: 1200, ullage_factor: 1.1 });
-const UPPER_GRID = { small: [5000, 7000, 9000, 11000], big: [13000, 16000, 19000, 22000] };
+const UPPER_GRID = { small: [4000, 5000, 6000, 7000, 8000, 9000], big: [12000, 14000, 16000, 18000, 20000, 22000] };
+const UPPER_MIN_RATIO = 1.8;
 const finOf = (root, span) => ({ count: 4, root_chord_m: root, tip_chord_m: root / 2, span_m: span, sweep_m: root / 2, position_from_tail_m: 0, mass_kg: round(32 * 4 * (root + root / 2) / 2 * span, 10) });
 const CURRENT_FINS = byId(presets.fins);
 const FIN_GRID = {
@@ -99,6 +102,7 @@ function distance(t) {
   d += 100 * Math.max(0, 0.15 - frac, frac - 0.25);
   d += 10 * Math.max(0, 10 - t.clean);
   d += 20 * t.bodyOk.filter(n => n === 0).length + 20 * t.engOk.filter(n => n === 0).length;
+  d += 15 * t.engClean.filter(n => n === 0).length;
   d += 50 * t.bad;
   d += 5 * t.lbClean + (t.lbOver === 0 ? 5 : 0);
   // Tie-breaks (small): stay near 20%, spread successes across options, keep fins as they are.
@@ -114,17 +118,18 @@ const smallFins = FIN_OPTS.filter(f => f.key[0] === 's'), mediumFins = FIN_OPTS.
 const uS = UPPER_OPTS.filter(u => u.key[0] === 'S'), uB = UPPER_OPTS.filter(u => u.key[0] === 'B');
 
 for (const eng of engCombos) for (const us of uS) for (const ub of uB) for (const fs_ of smallFins) for (const fm of mediumFins) {
+  if (+ub.key.slice(1) < UPPER_MIN_RATIO * +us.key.slice(1)) continue;
   if (!(finArea(fs_.f) < 0.75 * finArea(fm.f) && finArea(fm.f) < 0.75 * finArea(LARGE_FINS))) continue;
   const finsChanged = (fs_.f.current ? 0 : 1) + (fm.f.current ? 0 : 1);
   const finKeys = [fs_.key, fm.key, 'L'], upKeys = ['none', us.key, ub.key];
   // Per slot and body candidate: totals for this config.
   const per = {};
   for (const slot of SLOTS) per[slot] = CELLS[slot].map(byEng => {
-    const v = { ok: 0, clean: 0, eng: [0, 0, 0], bad: 0, lbClean: 0, lbOver: 0 };
+    const v = { ok: 0, clean: 0, eng: [0, 0, 0], engClean: [0, 0, 0], bad: 0, lbClean: 0, lbOver: 0 };
     eng.forEach((ek, ei) => {
       for (const uk of upKeys) for (const fk of finKeys) {
         const c = byEng[ek][uk][fk];
-        v.ok += c.ok; v.clean += c.clean; v.eng[ei] += c.ok;
+        v.ok += c.ok; v.clean += c.clean; v.eng[ei] += c.ok; v.engClean[ei] += c.clean;
         if (uk === 'none') v.bad += c.ok;
         if (fk[0] === 's') v.bad += c.fatSmall;
         if (slot === 'tall_fat' && ei === 0) v.bad += c.ok;
@@ -142,7 +147,8 @@ for (const eng of engCombos) for (const us of uS) for (const ub of uB) for (cons
       const t = {
         ok: a.ok + b.ok + c.ok, clean: a.clean + b.clean + c.clean, bad: a.bad + b.bad + c.bad,
         lbClean: a.lbClean + b.lbClean + c.lbClean, lbOver: a.lbOver + b.lbOver + c.lbOver,
-        bodyOk: [a.ok, b.ok, c.ok], engOk: [0, 1, 2].map(e => a.eng[e] + b.eng[e] + c.eng[e]), finsChanged,
+        bodyOk: [a.ok, b.ok, c.ok], engOk: [0, 1, 2].map(e => a.eng[e] + b.eng[e] + c.eng[e]),
+        engClean: [0, 1, 2].map(e => a.engClean[e] + b.engClean[e] + c.engClean[e]), finsChanged,
       };
       const d = distance(t); setsScored++;
       const cand = { d, t, sel: { bodies: [i, j, k], eng, us: us.key, ub: ub.key, fs: fs_.key, fm: fm.key } };
@@ -161,6 +167,7 @@ function describe(label, c) {
   console.log(`\n${label}  (distance ${c.d.toFixed(3)})`);
   console.log(`  success ${t.ok}/486 = ${(100 * t.ok / 486).toFixed(1)}%  clean ${t.clean}  bad ${t.bad}  Large+Big: ${t.lbClean} clean, ${t.lbOver} over-stable`);
   console.log(`  successes by body ${JSON.stringify(Object.fromEntries(SLOTS.map((s, i) => [s, t.bodyOk[i]])))}  by engine ${JSON.stringify(Object.fromEntries(ENG_IDS.map((e, i) => [e, t.engOk[i]])))}`);
+  console.log(`  clean passes by engine ${JSON.stringify(Object.fromEntries(ENG_IDS.map((e, i) => [e, t.engClean[i]])))}`);
   for (const b of bodies) console.log(`  body   ${b.id.padEnd(12)} ${b.length_m} m x ${b.diameter_m} m, ${b.propellant_mass_kg} kg propellant`);
   sel.eng.forEach((ek, i) => console.log(`  engine ${ENG_IDS[i].padEnd(12)} ${ENGINE_CHOICES[ek].count} x ${ENGINE_CHOICES[ek].engine_id}`));
   console.log(`  upper  small ${sel.us.slice(1)} kg, big ${sel.ub.slice(1)} kg propellant (structure 7%)`);

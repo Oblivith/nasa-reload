@@ -137,7 +137,7 @@ Players see plain words and pictures, not part names or numbers. Each option sec
 | Engine | Small & cheap · Medium · Big & powerful |
 | Fins | Small · Medium · Large (fixed count 4, preset shape) |
 | Upper stage | None · Small upper stage · Big upper stage (hypergolic-class engine, sits on top of the body) |
-**Balance (Level 1):** the preset values are tuned by `tools/tune_easy_presets/tune.js` so about 19% of the 486 combinations succeed (13 with three stars), every body and engine option has successful combinations, and obvious mistakes fail (no upper stage, Small fins on a Fat nose, Tall & fat body on the Small engine). Large fins + Big upper stage stays over-stable on purpose. The test scene prints the full spread.
+**Balance (Level 1):** the preset values are tuned by `tools/tune_easy_presets/tune.js` so about 17% of the 486 combinations succeed (25 with three stars), every body and engine option has successful combinations, every engine option has at least one three-star rocket, the Big upper stage carries at least 1.8x the Small one's propellant, and obvious mistakes fail (no upper stage, Small fins on a Fat nose, Tall & fat body on the Small engine). Large fins + Big upper stage stays over-stable on purpose. The test scene prints the full spread.
 
 **Output:** ✓/✗ per check with a plain-English reason: *"Your rocket tips over: the fins are too small to keep the back behind the front. Try bigger fins, or put heavy parts higher up."*
 

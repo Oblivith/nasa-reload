@@ -44,9 +44,9 @@
     {
       "id": "medium",
       "label": "Medium",
-      "length_m": 20,
-      "diameter_m": 2.8,
-      "propellant_mass_kg": 112000,
+      "length_m": 18,
+      "diameter_m": 3,
+      "propellant_mass_kg": 115700,
       "description": "A solid all-rounder.",
       "verified": false,
       "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Propellant is 100% of what the tank holds at 1,000 kg/m3 with 10% ullage."
@@ -110,32 +110,32 @@
     {
       "id": "small_cheap",
       "label": "Small & cheap",
-      "engine_id": "redstone_class",
-      "count": 4,
-      "section_length_m": 3.5,
-      "description": "A cluster of four cheap Redstone-class engines. Plenty of push, but thirsty.",
+      "engine_id": "kerosene_booster",
+      "count": 1,
+      "section_length_m": 4,
+      "description": "One kerosene engine. Cheapest, and the hardest to get to orbit, but it can be done.",
       "verified": false,
-      "source": "Points at engines.json 'redstone_class' x 4 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
+      "source": "Points at engines.json 'kerosene_booster' x 1 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
     },
     {
       "id": "medium",
       "label": "Medium",
       "engine_id": "kerosene_booster",
-      "count": 1,
+      "count": 2,
       "section_length_m": 4,
-      "description": "One kerosene workhorse engine.",
+      "description": "Two kerosene engines side by side. A proper workhorse.",
       "verified": false,
-      "source": "Points at engines.json 'kerosene_booster' x 1 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
+      "source": "Points at engines.json 'kerosene_booster' x 2 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
     },
     {
       "id": "big_powerful",
       "label": "Big & powerful",
       "engine_id": "kerosene_booster",
-      "count": 2,
+      "count": 3,
       "section_length_m": 4,
-      "description": "Two kerosene engines side by side. Lots of push: make sure the rest of the rocket can take it.",
+      "description": "Three kerosene engines. Lots of push: make sure the rest of the rocket can take it.",
       "verified": false,
-      "source": "Points at engines.json 'kerosene_booster' x 2 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
+      "source": "Points at engines.json 'kerosene_booster' x 3 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
     }
   ],
   "material": [
@@ -171,8 +171,8 @@
       "engine_id": "hypergolic_upper",
       "count": 1,
       "section_length_m": 1.5,
-      "propellant_mass_kg": 11000,
-      "dry_mass_kg": 770,
+      "propellant_mass_kg": 9000,
+      "dry_mass_kg": 630,
       "propellant_density_kg_m3": 1200,
       "ullage_factor": 1.1,
       "description": "A little second stage for an extra push once the air is thin.",
@@ -185,8 +185,8 @@
       "engine_id": "hypergolic_upper",
       "count": 1,
       "section_length_m": 1.5,
-      "propellant_mass_kg": 13000,
-      "dry_mass_kg": 910,
+      "propellant_mass_kg": 18000,
+      "dry_mass_kg": 1260,
       "propellant_density_kg_m3": 1200,
       "ullage_factor": 1.1,
       "description": "A proper second stage. Heavy on the pad, but it gets you to orbit with fuel to spare.",

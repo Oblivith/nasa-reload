@@ -332,6 +332,8 @@ func _test_easy_presets() -> void:
 										large_big["pass"] = int(large_big["pass"]) + 1
 									if _status_of(r, "stability_burnout") == "warn":
 										large_big["over_stable"] = int(large_big["over_stable"]) + 1
+								if overall == "pass":
+									successes_by_option["clean:" + engine_id] = int(successes_by_option.get("clean:" + engine_id, 0)) + 1
 								if overall == "pass" and first_pass.is_empty():
 									first_pass = r
 							else:
@@ -368,6 +370,12 @@ func _test_easy_presets() -> void:
 	for engine_id in engines:
 		_expect_true("engine option '%s' has at least one successful combination (%d)" % [engine_id, int(successes_by_option.get("engine:" + engine_id, 0))],
 				int(successes_by_option.get("engine:" + engine_id, 0)) > 0)
+	for engine_id in engines:
+		_expect_true("engine option '%s' has at least one clean pass (%d)" % [engine_id, int(successes_by_option.get("clean:" + engine_id, 0))],
+				int(successes_by_option.get("clean:" + engine_id, 0)) > 0)
+	var small_up := float(DataLoader.presets["upper_stage"]["small"]["propellant_mass_kg"])
+	var big_up := float(DataLoader.presets["upper_stage"]["big"]["propellant_mass_kg"])
+	_expect_true("Big upper stage carries at least 1.8x the Small one (%.0f vs %.0f kg = %.2fx)" % [big_up, small_up, big_up / small_up], big_up >= 1.8 * small_up)
 	_expect_true("15-25%% of combinations succeed (%.1f%%)" % (100.0 * success_count / 486.0),
 			success_count >= 73 and success_count <= 121)
 	_expect_true("at least 10 clean passes (%d)" % passes.size(), passes.size() >= 10)
