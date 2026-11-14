@@ -8,6 +8,7 @@ signal level_changed(new_level: String)
 signal mode_changed(new_mode: Mode)
 signal part_unlocked(part_id: String)
 signal design_saved(design_name: String)
+signal design_changed
 
 enum Mode { CADET, ENGINEER, FLIGHT_DIRECTOR }
 
@@ -20,6 +21,12 @@ var budget: float = 0.0:
 		budget = value
 		budget_changed.emit(budget)
 var mode: Mode = Mode.CADET
+
+## The rocket on the Rocket Builder right now (real units, RocketEvaluator format),
+## its latest evaluator report, and the builder's own UI state (Easy selections etc.).
+var current_design: Dictionary = {}
+var current_report: Dictionary = {}
+var builder_state: Dictionary = {}
 
 
 func set_level(level_id: String) -> void:
@@ -42,6 +49,13 @@ func is_part_unlocked(part_id: String) -> bool:
 	return part_id in unlocked_parts
 
 
+func set_design(design: Dictionary, report: Dictionary, state: Dictionary) -> void:
+	current_design = design
+	current_report = report
+	builder_state = state
+	design_changed.emit()
+
+
 func save_design(design_name: String, design: Dictionary) -> void:
 	saved_designs[design_name] = design
 	design_saved.emit(design_name)
@@ -54,6 +68,8 @@ func to_dict() -> Dictionary:
 		"saved_designs": saved_designs,
 		"budget": budget,
 		"mode": mode,
+		"current_design": current_design,
+		"builder_state": builder_state,
 	}
 
 
@@ -63,3 +79,5 @@ func from_dict(d: Dictionary) -> void:
 	saved_designs = d.get("saved_designs", {})
 	budget = d.get("budget", 0.0)
 	mode = d.get("mode", Mode.CADET)
+	current_design = d.get("current_design", {})
+	builder_state = d.get("builder_state", {})

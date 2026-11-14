@@ -36,6 +36,7 @@ func _ready() -> void:
 	_test_mission_outcome()
 	_test_redstone_reference()
 	_test_easy_presets()
+	_test_design_modes()
 	print("\n================ RESULT: %d passed, %d failed ================" % [_passed, _failed])
 	if DisplayServer.get_name() == "headless":
 		get_tree().quit(1 if _failed > 0 else 0)
@@ -401,6 +402,68 @@ func _status_of(report: Dictionary, check_id: String) -> String:
 		if str(check["id"]) == check_id:
 			return str(check["status"])
 	return "missing"
+
+
+func _test_design_modes() -> void:
+	_section("DesignModes: switching between Easy, Medium and Hard")
+	var level: Dictionary = DataLoader.levels["L1"]
+	var payload := DesignModes.level_payload(level)
+	var mission := DesignModes.level_mission(level)
+	_expect_text("L1 mission profile", str(mission["profile"]), "leo")
+	_expect_close("L1 mission latitude from the launch site", float(mission["latitude_deg"]), 28.5, "deg")
+
+	# Every Easy rocket snaps back to exactly its own presets, with nothing changed.
+	var mismatches := 0
+	var combos := 0
+	for nose_id in DataLoader.presets["nose"]:
+		for body_id in DataLoader.presets["body"]:
+			for fins_id in DataLoader.presets["fins"]:
+				for engine_id in DataLoader.presets["engine"]:
+					for material_id in DataLoader.presets["material"]:
+						for upper_id in DataLoader.presets["upper_stage"]:
+							var picks := {"nose": nose_id, "body": body_id, "fins": fins_id, "engine": engine_id,
+									"material": material_id, "upper_stage": upper_id}
+							var design := DesignBuilder.from_easy(picks, DataLoader.presets, DataLoader.engines, payload, mission)
+							var snap := DesignModes.snap_to_easy(design, DataLoader.presets, DataLoader.engines, DataLoader.materials)
+							combos += 1
+							if snap["selections"] != picks or not (snap["changed"] as Array).is_empty() or not (snap["dropped"] as Array).is_empty():
+								mismatches += 1
+	_expect_true("all %d Easy rockets snap back to their own presets (%d mismatches)" % [combos, mismatches], mismatches == 0)
+
+	# Medium: the reference sits at 0.5 on every slider; a 2x value sits at 1.
+	var reference: Dictionary = DataLoader.reference_rockets["redstone_class"]
+	var sliders: Array = DataLoader.builder_ui["medium_sliders"]
+	var ref_values := DesignModes.reference_values(reference, DataLoader.engines, sliders)
+	var ref_design := DesignModes.reference_design(reference, DataLoader.engines, level, true)
+	var positions := DesignModes.slider_positions(ref_design, sliders, ref_values, 0.5, 2.0)
+	var all_half := positions.size() == sliders.size()
+	for id in positions:
+		all_half = all_half and is_equal_approx(float(positions[id]["slider"]), 0.5) and bool(positions[id]["in_range"])
+	_expect_true("reference rocket: every Medium slider at 0.5 and in range (%d sliders)" % positions.size(), all_half)
+	_expect_true("reference for an uncrewed level drops the escape tower", not (ref_design["options"] as Dictionary).has("escape_tower"))
+	DesignModes.path_set(ref_design, "stages/0/body/length_m", 24.0)
+	DesignModes.path_set(ref_design, "stages/0/body/propellant_mass_kg", 23600.0 * 8.0)
+	positions = DesignModes.slider_positions(ref_design, sliders, ref_values, 0.5, 2.0)
+	_expect_close("2x body length sits at slider 1", float(positions["body_length"]["slider"]), 1.0, "")
+	_expect_true("8x fuel is out of range but keeps its real value", not bool(positions["propellant"]["in_range"])
+			and is_equal_approx(float(positions["propellant"]["value"]), 188800.0))
+
+	# Hard -> Easy: a gimballed Redstone with a tower snaps and reports what it dropped.
+	var redstone := DesignModes.reference_design(reference, DataLoader.engines, DataLoader.levels["L1"], false)
+	redstone["options"]["escape_tower"] = {"length_m": 4.5, "mass_kg": 500.0}
+	var snap := DesignModes.snap_to_easy(redstone, DataLoader.presets, DataLoader.engines, DataLoader.materials)
+	_expect_text("Redstone snaps to the Short & thin body", str(snap["selections"]["body"]), "short_thin")
+	_expect_text("Redstone has no upper stage", str(snap["selections"]["upper_stage"]), "none")
+	_expect_true("snap reports the dropped gimbal and tower", (snap["dropped"] as Array).size() == 2)
+
+	# Cost: engines + walls + fins, in $M.
+	var easy := DesignBuilder.from_easy({"nose": "pointy", "body": "medium", "fins": "medium", "engine": "medium",
+			"material": "light", "upper_stage": "small"}, DataLoader.presets, DataLoader.engines, payload, mission)
+	var cost := DesignModes.design_cost(easy, DataLoader.engines, DataLoader.materials, DataLoader.builder_ui["cost_model"])
+	# 2 x 3.0 + 1 x 3.0 engines + aluminium walls 0.010 x pi x 3 x (18 + upper tank) + fins 4 x 2.94 m2 x 0.02
+	var upper_len := float(easy["stages"][1]["body"]["length_m"])
+	var expected := 9.0 + 0.010 * PI * 3.0 * (18.0 + upper_len) + 4.0 * 0.5 * (2.8 + 1.4) * 2.1 * 0.02
+	_expect_close("design cost", float(cost["total"]), expected, "$M")
 
 
 func _section(title: String) -> void:

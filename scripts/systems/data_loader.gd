@@ -10,6 +10,7 @@ const FILES: Array[String] = [
 	"engines", "tanks", "orbits", "power",
 	"instruments", "comms", "structures", "levels",
 	"materials", "nose_shapes", "reference_rockets", "presets", "delta_v_map",
+	"builder_ui",
 ]
 
 ## file name -> full parsed JSON Dictionary (includes "comment" and "notes").
@@ -45,6 +46,9 @@ var mission_profiles: Dictionary = {}
 
 ## Easy-mode presets: part name (nose, body, fins, engine, material) -> { id -> entry }.
 var presets: Dictionary = {}
+
+## Rocket Builder screen config (builder_ui.json, used as-is).
+var builder_ui: Dictionary = {}
 
 var loaded: bool = false
 
@@ -146,6 +150,7 @@ func _index_all() -> void:
 			struct_entries.append(structs[key])
 	tables["structures"] = _index(struct_entries)
 
+	builder_ui = raw.get("builder_ui", {})
 	engines = tables["engines"]
 	propellant_types = tables["propellant_types"]
 	tank_sizes = tables["tank_sizes"]

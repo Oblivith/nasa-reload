@@ -24,6 +24,15 @@
         "min_data_bits_downlinked": 100000
       },
       "payload_mass_kg": 20,
+      "payload_length_m": 1.0,
+      "mission": {
+        "profile": "leo",
+        "target_altitude_km": 400,
+        "needs_return": false,
+        "crewed": false,
+        "note": "The mission the Rocket Builder evaluates against. Same values tools/tune_easy_presets/tune.js balances Level 1 for; latitude comes from launch_site."
+      },
+      "reference_rocket": "redstone_class",
       "budget": 60,
       "launch_site": {
         "id": "cape_canaveral",
