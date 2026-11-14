@@ -164,9 +164,10 @@ static func value_to_slider(value: float, reference_value: float, min_factor: fl
 static func from_sliders(reference: Dictionary, sliders: Dictionary, engines: Dictionary,
 		with_upper_stage: bool) -> Dictionary:
 	var design: Dictionary = (reference.get("design", {}) as Dictionary).duplicate(true)
-	var upper: Dictionary = reference.get("optional_upper_stage", {})
-	if with_upper_stage and not upper.is_empty():
-		design = add_upper_stage(design, upper, engines)
+	var uppers := upper_stage_specs(reference)
+	if with_upper_stage:
+		for upper: Dictionary in uppers:
+			design = add_upper_stage(design, upper, engines)
 	var reference_design := design.duplicate(true)
 	var slider_range: Dictionary = reference.get("slider_range", {})
 	var min_factor := float(slider_range.get("min_factor", 0.5))
@@ -177,14 +178,38 @@ static func from_sliders(reference: Dictionary, sliders: Dictionary, engines: Di
 			push_warning("DesignBuilder: unknown slider path %s" % path)
 			continue
 		_set_path(design, str(path), slider_to_value(float(sliders[path]), float(ref_value), min_factor, max_factor))
-	if with_upper_stage and not upper.is_empty() and not sliders.has("stages/1/body/length_m"):
+	if with_upper_stage:
 		var stages: Array = design["stages"]
-		var body: Dictionary = (stages[1] as Dictionary)["body"]
-		if not (upper.get("body", {}) as Dictionary).has("length_m"):
-			body["length_m"] = tank_length(float(body["propellant_mass_kg"]),
-					float(body.get("propellant_density_kg_m3", DEFAULT_PROPELLANT_DENSITY)),
-					float(body.get("ullage_factor", DEFAULT_ULLAGE)), float(body["diameter_m"]))
+		for i in uppers.size():
+			if not (uppers[i].get("body", {}) as Dictionary).has("length_m") and not sliders.has("stages/%d/body/length_m" % (i + 1)):
+				recompute_tank_length((stages[i + 1] as Dictionary)["body"])
 	return design
+
+
+
+## Upper stages a reference rocket offers, bottom to top. Reads "optional_upper_stages"
+## (a list) or the older single "optional_upper_stage".
+static func upper_stage_specs(reference: Dictionary) -> Array:
+	var result: Array = []
+	for spec in reference.get("optional_upper_stages", []):
+		result.append(spec)
+	var single: Dictionary = reference.get("optional_upper_stage", {})
+	if result.is_empty() and not single.is_empty():
+		result.append(single)
+	return result
+
+
+## True if the reference flies with its upper stages unless the player removes them.
+static func upper_stages_default_on(reference: Dictionary) -> bool:
+	var specs := upper_stage_specs(reference)
+	return not specs.is_empty() and bool((specs[0] as Dictionary).get("enabled_by_default", false))
+
+
+## Sets a body's tank length from its propellant volume (stages without a fixed length).
+static func recompute_tank_length(body: Dictionary) -> void:
+	body["length_m"] = tank_length(float(body.get("propellant_mass_kg", 0.0)),
+			float(body.get("propellant_density_kg_m3", DEFAULT_PROPELLANT_DENSITY)),
+			float(body.get("ullage_factor", DEFAULT_ULLAGE)), float(body.get("diameter_m", 0.0)))
 
 
 # --- Helpers --------------------------------------------------------------------------

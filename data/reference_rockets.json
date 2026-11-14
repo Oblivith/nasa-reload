@@ -5,7 +5,7 @@
     {
       "id": "redstone_class",
       "name": "Redstone-class",
-      "level": "L1",
+      "level": "validation",
       "description": "A single-stage alcohol/LOX rocket carrying a small crewed capsule on a suborbital hop.",
       "slider_range": {
         "min_factor": 0.5,
@@ -106,6 +106,128 @@
         "verified": false,
         "source": "MADE UP: same as the presets.json 'big' upper stage. The real Mercury-Redstone had no upper stage; the Redstone-derived Jupiter-C / Juno I carried small solid-rocket upper stages instead."
       }
+    },
+    {
+      "id": "juno_class",
+      "name": "Juno-class",
+      "level": "L1",
+      "description": "A stretched Redstone-class booster with a stack of small solid-rocket upper stages: an orbital launcher for a small satellite, the way Juno I put Explorer 1 into orbit.",
+      "slider_range": {
+        "min_factor": 0.5,
+        "max_factor": 2
+      },
+      "design": {
+        "name": "Juno-class reference",
+        "nose": {
+          "shape": "cone",
+          "length_m": 2.0,
+          "mass_kg": 150
+        },
+        "payload": {
+          "length_m": 1.0,
+          "mass_kg": 20
+        },
+        "stages": [
+          {
+            "body": {
+              "length_m": 11.5,
+              "diameter_m": 2.0,
+              "material": "aluminium",
+              "propellant_mass_kg": 24000,
+              "dry_mass_kg": 3100
+            },
+            "engine": {
+              "engine_id": "redstone_class",
+              "count": 1,
+              "section_length_m": 3.5,
+              "thrust_sl_N": 400000,
+              "thrust_vac_N": 434200,
+              "isp_sl": 235,
+              "isp_vac": 255,
+              "mass_kg": 700
+            }
+          }
+        ],
+        "fins": {
+          "count": 4,
+          "root_chord_m": 2.4,
+          "tip_chord_m": 1.2,
+          "span_m": 1.25,
+          "sweep_m": 1.2,
+          "position_from_tail_m": 0,
+          "mass_kg": 300
+        },
+        "options": {
+          "gimballed": true
+        },
+        "mission": {
+          "profile": "leo",
+          "target_altitude_km": 400,
+          "latitude_deg": 28.5,
+          "needs_return": false,
+          "crewed": false
+        }
+      },
+      "geometry_notes": {
+        "overall": "Real Juno I / Jupiter-C: a Redstone with stretched tanks (about 17 m) carrying a spinning tub of clustered Sergeant solid rockets. Here: booster 19.5 m + two solid stages + payload and nose.",
+        "body": "ALL MADE UP / ESTIMATED: tank length 16 m, propellant 24,000 kg and dry mass 3,300 kg are tuned so the reference just reaches the Level 1 orbit (about 2 stars).",
+        "engine": "Redstone-class engine with a MADE UP uprate (380 kN sea level): the real Jupiter-C used a slightly uprated Rocketdyne A-7 on a stretched airframe.",
+        "upper_stages": "MADE UP. The real tub held 11 + 3 + 1 small solids. Two stacked solid stages stand in for it."
+      },
+      "real_flight": {
+        "mission": "Explorer 1 on Juno I, 31 January 1958",
+        "type": "orbital",
+        "perigee_km": 358,
+        "apogee_km": 2550,
+        "notes": "From memory: VERIFY. Explorer 1 weighed about 14 kg and reached roughly 358 x 2,550 km."
+      },
+      "verified": false,
+      "source": "Inspired by the real Juno I / Jupiter-C launch vehicle (Army Ballistic Missile Agency, 1956-58). Every number here is an estimate or made up for gameplay: see geometry_notes.",
+      "optional_upper_stages": [
+        {
+          "enabled_by_default": true,
+          "body": {
+            "diameter_m": 1.2,
+            "material": "aluminium",
+            "propellant_mass_kg": 4200,
+            "dry_mass_kg": 330,
+            "propellant_density_kg_m3": 1700,
+            "ullage_factor": 1.05
+          },
+          "engine": {
+            "count": 1,
+            "section_length_m": 0.6,
+            "thrust_vac_N": 70000,
+            "isp_vac": 245,
+            "mass_kg": 80,
+            "cost": 0.5
+          },
+          "verified": false,
+          "source": "MADE UP solid-rocket stage (no engine id: values inline). Isp 235 s is typical of 1950s solid propellant (Sergeant-class); everything else is a gameplay estimate."
+        },
+        {
+          "enabled_by_default": true,
+          "body": {
+            "diameter_m": 0.8,
+            "material": "aluminium",
+            "propellant_mass_kg": 1000,
+            "dry_mass_kg": 105,
+            "propellant_density_kg_m3": 1700,
+            "ullage_factor": 1.05
+          },
+          "engine": {
+            "count": 1,
+            "section_length_m": 0.4,
+            "thrust_vac_N": 15000,
+            "isp_vac": 255,
+            "mass_kg": 30,
+            "cost": 0.3
+          },
+          "verified": false,
+          "source": "MADE UP small solid-rocket stage. The real top stage was a single small Sergeant carrying Explorer 1."
+        }
+      ]
     }
+
   ]
 }

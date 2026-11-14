@@ -20,8 +20,11 @@
     {"id": "fin_tip", "group": "Fins", "label": "Fin tip chord", "unit": "m", "paths": ["fins/tip_chord_m"]},
     {"id": "fin_span", "group": "Fins", "label": "Fin span", "unit": "m", "paths": ["fins/span_m"]},
     {"id": "fin_sweep", "group": "Fins", "label": "Fin sweep", "unit": "m", "paths": ["fins/sweep_m"]},
-    {"id": "upper_propellant", "group": "Upper stage", "label": "Upper fuel load", "unit": "kg", "upper": true, "paths": ["stages/1/body/propellant_mass_kg"]},
-    {"id": "upper_thrust", "group": "Upper stage", "label": "Upper engine thrust", "unit": "kN", "display_divisor": 1000, "upper": true, "paths": ["stages/1/engine/thrust_vac_N"]}
+    {"id": "upper_propellant", "group": "Stage 2 (upper)", "label": "Fuel load", "unit": "kg", "upper": true, "paths": ["stages/1/body/propellant_mass_kg"]},
+    {"id": "upper_mass", "group": "Stage 2 (upper)", "label": "Stage mass (structure)", "unit": "kg", "upper": true, "paths": ["stages/1/body/dry_mass_kg"]},
+    {"id": "upper_thrust", "group": "Stage 2 (upper)", "label": "Engine thrust", "unit": "kN", "display_divisor": 1000, "upper": true, "paths": ["stages/1/engine/thrust_vac_N"]},
+    {"id": "upper2_propellant", "group": "Stage 3 (upper)", "label": "Fuel load", "unit": "kg", "upper": true, "paths": ["stages/2/body/propellant_mass_kg"]},
+    {"id": "upper2_mass", "group": "Stage 3 (upper)", "label": "Stage mass (structure)", "unit": "kg", "upper": true, "paths": ["stages/2/body/dry_mass_kg"]}
   ],
   "hard_fields": {
     "nose": [

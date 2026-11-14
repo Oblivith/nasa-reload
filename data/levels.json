@@ -32,7 +32,7 @@
         "crewed": false,
         "note": "The mission the Rocket Builder evaluates against. Same values tools/tune_easy_presets/tune.js balances Level 1 for; latitude comes from launch_site."
       },
-      "reference_rocket": "redstone_class",
+      "reference_rocket": "juno_class",
       "budget": 60,
       "launch_site": {
         "id": "cape_canaveral",

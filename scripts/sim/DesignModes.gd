@@ -203,7 +203,7 @@ static func design_cost(design: Dictionary, engines: Dictionary, materials: Dict
 		var count := int(engine.get("count", 1))
 		engine_total += count
 		var entry: Dictionary = engines.get(str(engine.get("engine_id", "")), {})
-		var unit_cost := float(entry.get("cost", cost_model.get("custom_engine_cost", 3.0)))
+		var unit_cost := float(engine.get("cost", entry.get("cost", cost_model.get("custom_engine_cost", 3.0))))
 		items.append({"label": "Stage %d engines (%d x $%.1fM)" % [i + 1, count, unit_cost], "cost": unit_cost * count})
 		var material: Dictionary = materials.get(str(body.get("material", "")), {})
 		var wall := RocketGeometry.body_wall_area(float(body.get("diameter_m", 0.0)), float(body.get("length_m", 0.0)))

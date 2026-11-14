@@ -37,6 +37,7 @@ func _ready() -> void:
 	_test_redstone_reference()
 	_test_easy_presets()
 	_test_design_modes()
+	_test_juno_reference()
 	print("\n================ RESULT: %d passed, %d failed ================" % [_passed, _failed])
 	if DisplayServer.get_name() == "headless":
 		get_tree().quit(1 if _failed > 0 else 0)
@@ -431,7 +432,7 @@ func _test_design_modes() -> void:
 	_expect_true("all %d Easy rockets snap back to their own presets (%d mismatches)" % [combos, mismatches], mismatches == 0)
 
 	# Medium: the reference sits at 0.5 on every slider; a 2x value sits at 1.
-	var reference: Dictionary = DataLoader.reference_rockets["redstone_class"]
+	var reference: Dictionary = DataLoader.reference_rockets[str(level["reference_rocket"])]
 	var sliders: Array = DataLoader.builder_ui["medium_sliders"]
 	var ref_values := DesignModes.reference_values(reference, DataLoader.engines, sliders)
 	var ref_design := DesignModes.reference_design(reference, DataLoader.engines, level, true)
@@ -444,12 +445,14 @@ func _test_design_modes() -> void:
 	DesignModes.path_set(ref_design, "stages/0/body/length_m", 24.0)
 	DesignModes.path_set(ref_design, "stages/0/body/propellant_mass_kg", 23600.0 * 8.0)
 	positions = DesignModes.slider_positions(ref_design, sliders, ref_values, 0.5, 2.0)
+	_expect_text("Level 1 Medium reference is the Juno-class", str(level["reference_rocket"]), "juno_class")
 	_expect_close("2x body length sits at slider 1", float(positions["body_length"]["slider"]), 1.0, "")
 	_expect_true("8x fuel is out of range but keeps its real value", not bool(positions["propellant"]["in_range"])
 			and is_equal_approx(float(positions["propellant"]["value"]), 188800.0))
 
 	# Hard -> Easy: a gimballed Redstone with a tower snaps and reports what it dropped.
-	var redstone := DesignModes.reference_design(reference, DataLoader.engines, DataLoader.levels["L1"], false)
+	var redstone := DesignModes.reference_design(DataLoader.reference_rockets["redstone_class"], DataLoader.engines,
+			DataLoader.levels["L1"], false)
 	redstone["options"]["escape_tower"] = {"length_m": 4.5, "mass_kg": 500.0}
 	var snap := DesignModes.snap_to_easy(redstone, DataLoader.presets, DataLoader.engines, DataLoader.materials)
 	_expect_text("Redstone snaps to the Short & thin body", str(snap["selections"]["body"]), "short_thin")
@@ -464,6 +467,68 @@ func _test_design_modes() -> void:
 	var upper_len := float(easy["stages"][1]["body"]["length_m"])
 	var expected := 9.0 + 0.010 * PI * 3.0 * (18.0 + upper_len) + 4.0 * 0.5 * (2.8 + 1.4) * 2.1 * 0.02
 	_expect_close("design cost", float(cost["total"]), expected, "$M")
+
+
+func _test_juno_reference() -> void:
+	_section("Medium reference (Juno-class) on Level 1: 20 kg to a 400 km orbit")
+	var level: Dictionary = DataLoader.levels["L1"]
+	var reference: Dictionary = DataLoader.reference_rockets[str(level["reference_rocket"])]
+	var sliders: Array = DataLoader.builder_ui["medium_sliders"]
+	var data := DataLoader.sim_data()
+
+	# All sliders at 0.5 = the reference: reaches orbit, tight, exactly one warning (range).
+	var report := _medium_report(reference, sliders, level, data, {})
+	print(RocketEvaluator.format_report(report))
+	_expect_text("reference settings succeed on Level 1", str(report["outcome"]), "success")
+	_expect_true("reference settings are a 2-star warn (tight but works)", int(report["stars"]) == 2)
+	_expect_text("the one warning is Range", str(_warned(report)), "range")
+	var ratio := float((report["numbers"] as Dictionary)["range_ratio"])
+	_expect_true("reference range ratio is tight: 1.0 to 1.05 (got %.3f)" % ratio, ratio >= 1.0 and ratio < 1.05)
+	_expect_true("reference rocket is 3 stages (booster + 2 solid stages)", ((report["geometry"] as Dictionary)["segments"] as Array).size() > 6
+			and (DesignBuilder.upper_stage_specs(reference) as Array).size() == 2)
+
+	# Sensible tweaks reach a clean pass: lighter upper stages, more fuel in them.
+	var tweak := {"upper_mass": 0.25, "upper2_mass": 0.25, "upper_propellant": 0.7, "upper2_propellant": 0.6, "thrust": 0.5}
+	var clean := _medium_report(reference, sliders, level, data, tweak)
+	_expect_true("lighter upper stages + more upper fuel = clean 3-star pass", int(clean["stars"]) == 3)
+	_expect_text("a modest fuel tweak still flies (+25% upper fuel)", str(_medium_report(reference, sliders, level, data,
+			{"upper_propellant": 0.62, "upper2_propellant": 0.62})["outcome"]), "success")
+
+	# Extremes clearly fail.
+	var all_low := {}
+	for slider: Dictionary in sliders:
+		all_low[slider["id"]] = 0.0
+	_expect_text("every slider at 0 fails", str(_medium_report(reference, sliders, level, data, all_low)["outcome"]), "failure")
+	for extreme in [["propellant", 0.0], ["propellant", 1.0], ["thrust", 0.0], ["thrust", 1.0], ["fin_span", 0.0],
+			["body_diameter", 0.0], ["body_diameter", 1.0], ["upper_propellant", 0.0], ["upper2_propellant", 0.0],
+			["upper_mass", 1.0], ["upper2_mass", 1.0]]:
+		var picks := {extreme[0]: extreme[1]}
+		var extreme_report := _medium_report(reference, sliders, level, data, picks)
+		_expect_text("%s at %.0f fails" % [extreme[0], extreme[1]], str(extreme_report["outcome"]), "failure")
+
+	# The suborbital Redstone-class stays available as the validation rocket.
+	_expect_true("Redstone-class is still a reference rocket", DataLoader.reference_rockets.has("redstone_class"))
+
+
+## Builds the Medium design for slider id -> 0..1 and evaluates it on Level 1.
+func _medium_report(reference: Dictionary, sliders: Array, level: Dictionary, data: Dictionary, picks: Dictionary) -> Dictionary:
+	var paths := {}
+	for slider: Dictionary in sliders:
+		if picks.has(slider["id"]):
+			for path in slider["paths"]:
+				paths[path] = picks[slider["id"]]
+	var design := DesignBuilder.from_sliders(reference, paths, DataLoader.engines, DesignBuilder.upper_stages_default_on(reference))
+	design["payload"] = DesignModes.level_payload(level)
+	design["mission"] = DesignModes.level_mission(level)
+	return RocketEvaluator.evaluate(design, data)
+
+
+func _warned(report: Dictionary) -> String:
+	var ids: PackedStringArray = []
+	for check: Dictionary in report["checks"]:
+		if str(check["status"]) != "pass":
+			ids.append(str(check["id"]))
+	return ",".join(ids)
 
 
 func _section(title: String) -> void:

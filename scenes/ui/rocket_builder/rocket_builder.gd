@@ -118,6 +118,9 @@ func _apply_cmdline() -> void:
 				_switch_mode(index, false)
 		elif arg == "--burnout":
 			_rocket_view.show_burnout = true
+		elif arg == "--reference":
+			_design = DesignModes.reference_design(_reference, DataLoader.engines, _level,
+					DesignBuilder.upper_stages_default_on(_reference))
 
 
 func _maybe_screenshot() -> void:
@@ -478,7 +481,8 @@ func _build_medium() -> void:
 	reset.text = "RESET TO %s" % str(_reference.get("name", "REFERENCE")).to_upper()
 	reset.custom_minimum_size = Vector2(0, 46)
 	reset.pressed.connect(func() -> void:
-		_design = DesignModes.reference_design(_reference, DataLoader.engines, _level, false)
+		_design = DesignModes.reference_design(_reference, DataLoader.engines, _level,
+					DesignBuilder.upper_stages_default_on(_reference))
 		_rebuild_left()
 		_refresh())
 	_left_content.add_child(reset)
@@ -529,9 +533,11 @@ func _build_hard() -> void:
 	var add := Button.new()
 	add.text = "+ ADD UPPER STAGE"
 	add.custom_minimum_size = Vector2(0, 44)
-	add.disabled = (_reference.get("optional_upper_stage", {}) as Dictionary).is_empty()
+	var offered := DesignBuilder.upper_stage_specs(_reference)
+	add.disabled = offered.is_empty()
 	add.pressed.connect(func() -> void:
-		_design = DesignBuilder.add_upper_stage(_design, _reference["optional_upper_stage"], DataLoader.engines)
+		var next := clampi((_design["stages"] as Array).size() - 1, 0, offered.size() - 1)
+		_design = DesignBuilder.add_upper_stage(_design, offered[next], DataLoader.engines)
 		_rebuild_left()
 		_refresh())
 	_left_content.add_child(add)
@@ -625,8 +631,8 @@ func _on_slider(value: float, slider_id: String) -> void:
 			continue   # e.g. a vacuum-only engine has no sea-level thrust to scale
 		var ref := float(_ref_values.get(str(path), float(current)))
 		DesignModes.path_set(_design, str(path), DesignBuilder.slider_to_value(value, ref, _min_factor, _max_factor))
-		if str(path).begins_with("stages/1/body/propellant"):
-			_recompute_upper_length()
+		if str(path).contains("/body/propellant"):
+			_recompute_upper_length(int(str(path).split("/")[1]))
 	var positions := _slider_positions()
 	_update_slider_label(slider_id, positions.get(slider_id, {}))
 	_refresh()
@@ -634,8 +640,9 @@ func _on_slider(value: float, slider_id: String) -> void:
 
 func _on_medium_upper(on: bool) -> void:
 	if on:
-		_design = DesignBuilder.add_upper_stage(DesignBuilder.without_upper_stages(_design),
-				_reference.get("optional_upper_stage", {}), DataLoader.engines)
+		_design = DesignBuilder.without_upper_stages(_design)
+		for spec: Dictionary in DesignBuilder.upper_stage_specs(_reference):
+			_design = DesignBuilder.add_upper_stage(_design, spec, DataLoader.engines)
 	else:
 		_design = DesignBuilder.without_upper_stages(_design)
 	_rebuild_left()
@@ -965,14 +972,11 @@ func _update_slider_label(slider_id: String, pos: Dictionary) -> void:
 	label.tooltip_text = slider.tooltip_text
 
 
-func _recompute_upper_length() -> void:
+func _recompute_upper_length(stage_index: int) -> void:
 	var stages: Array = _design.get("stages", [])
-	if stages.size() < 2:
+	if stage_index < 1 or stage_index >= stages.size():
 		return
-	var body: Dictionary = (stages[1] as Dictionary)["body"]
-	body["length_m"] = DesignBuilder.tank_length(float(body.get("propellant_mass_kg", 0.0)),
-			float(body.get("propellant_density_kg_m3", DesignBuilder.DEFAULT_PROPELLANT_DENSITY)),
-			float(body.get("ullage_factor", DesignBuilder.DEFAULT_ULLAGE)), float(body.get("diameter_m", 0.0)))
+	DesignBuilder.recompute_tank_length((stages[stage_index] as Dictionary)["body"])
 
 
 func _preset_scale(table: Dictionary) -> Dictionary:
