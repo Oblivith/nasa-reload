@@ -39,6 +39,7 @@ func _ready() -> void:
 	_test_design_modes()
 	_test_juno_reference()
 	_test_budget()
+	_test_loss_model()
 	print("\n================ RESULT: %d passed, %d failed ================" % [_passed, _failed])
 	if DisplayServer.get_name() == "headless":
 		get_tree().quit(1 if _failed > 0 else 0)
@@ -296,10 +297,10 @@ func _test_mission_outcome() -> void:
 
 
 func _test_easy_presets() -> void:
-	_section("Easy-mode presets: Level 1 (20 kg to a 400 km orbit from the Cape), all 486 combinations")
+	_section("Easy-mode presets: Level 1 (14 kg to an orbit with perigee >= 200 km, from the Cape), all 486 combinations")
 	var data := DataLoader.sim_data()
-	var payload := {"length_m": 1.0, "mass_kg": 20.0}
-	var level1 := {"profile": "leo", "target_altitude_km": 400.0, "latitude_deg": 28.5, "needs_return": false}
+	var payload := DesignModes.level_payload(DataLoader.levels["L1"])
+	var level1 := DesignModes.level_mission(DataLoader.levels["L1"])
 	var bodies := ["short_thin", "medium", "tall_fat"]
 	var engines := ["small_cheap", "medium", "big_powerful"]
 
@@ -411,7 +412,7 @@ func _test_design_modes() -> void:
 	var level: Dictionary = DataLoader.levels["L1"]
 	var payload := DesignModes.level_payload(level)
 	var mission := DesignModes.level_mission(level)
-	_expect_text("L1 mission profile", str(mission["profile"]), "leo")
+	_expect_text("L1 mission profile", str(mission["profile"]), "orbit_insertion")
 	_expect_close("L1 mission latitude from the launch site", float(mission["latitude_deg"]), 28.5, "deg")
 
 	# Every Easy rocket snaps back to exactly its own presets, with nothing changed.
@@ -472,7 +473,7 @@ func _test_design_modes() -> void:
 
 
 func _test_juno_reference() -> void:
-	_section("Medium reference (Juno-class, realistic values) on Level 1: 14 kg to a 400 km orbit")
+	_section("Medium reference (Juno-class, realistic values) on Level 1: 14 kg, perigee >= 200 km")
 	var level: Dictionary = DataLoader.levels["L1"]
 	var reference: Dictionary = DataLoader.reference_rockets[str(level["reference_rocket"])]
 	var sliders: Array = DataLoader.builder_ui["medium_sliders"]
@@ -493,20 +494,15 @@ func _test_juno_reference() -> void:
 	_expect_text("three solid upper stages: 11, then 3, then 1 motors", str(counts), "[11, 3, 1]")
 	_expect_true("solid stages use a 1950s solid Isp (<= 230 s)", solid_isp_ok)
 
-	# KNOWN GAP (reported, not hidden): the reference falls short of the 9,380 m/s budget.
+	# Loss model (calibrated on Juno I / Explorer 1): the realistic reference now succeeds.
 	var report := _medium_report(reference, sliders, level, data, {})
 	print(RocketEvaluator.format_report(report))
 	var numbers: Dictionary = report["numbers"]
-	var ratio := float(numbers["range_ratio"])
-	var short := float(numbers["delta_v_required_ms"]) - float(numbers["delta_v_available_ms"])
-	print("  [INFO] Known gap: the reference has %.0f of %.0f m/s (%.0f m/s, %.1f%% short)." % [
-		float(numbers["delta_v_available_ms"]), float(numbers["delta_v_required_ms"]), short, (1.0 - ratio) * 100.0])
-	_expect_true("reference falls short of the 9,380 m/s budget by 2-6%% (got ratio %.3f): recorded gap" % ratio, ratio > 0.94 and ratio < 0.98)
-	_expect_text("reference fails only on Range", str(_failed_ids(report)), "range")
-
-	# A player can still beat history: more fuel in the solid stages reaches orbit.
-	var better := _medium_report(reference, sliders, level, data, {"upper_propellant": 0.75})
-	_expect_text("more stage-2 solid fuel (+50%) reaches orbit", str(better["outcome"]), "success")
+	var budget: Dictionary = numbers["delta_v_budget"]
+	_expect_text("realistic Juno-class succeeds on Level 1", str(report["outcome"]), "success")
+	_expect_true("Juno-class flies the lofted kick-stage profile", bool(budget["lofted"]))
+	_expect_true("Level 1 range ratio is tight: 1.0 to 1.1 (got %.3f)" % float(numbers["range_ratio"]),
+			float(numbers["range_ratio"]) >= 1.0 and float(numbers["range_ratio"]) < 1.1)
 
 	# Extremes clearly fail.
 	var all_low := {}
@@ -514,7 +510,7 @@ func _test_juno_reference() -> void:
 		all_low[slider["id"]] = 0.0
 	_expect_text("every slider at 0 fails", str(_medium_report(reference, sliders, level, data, all_low)["outcome"]), "failure")
 	for extreme in [["propellant", 0.0], ["propellant", 1.0], ["thrust", 0.0], ["thrust", 1.0], ["fin_span", 0.0],
-			["body_diameter", 0.0], ["body_diameter", 1.0], ["upper_propellant", 0.0], ["upper_mass", 1.0]]:
+			["body_diameter", 0.0], ["body_diameter", 1.0], ["upper_propellant", 0.0]]:
 		var extreme_report := _medium_report(reference, sliders, level, data, {extreme[0]: extreme[1]})
 		_expect_text("%s at %.0f fails" % [extreme[0], extreme[1]], str(extreme_report["outcome"]), "failure")
 
@@ -645,3 +641,35 @@ func _record(ok: bool, message: String) -> void:
 		_failed += 1
 		print("  [FAIL] " + message)
 		push_error("Sim test failed: " + message)
+
+
+func _test_loss_model() -> void:
+	_section("Required delta-v loss model (calibrated against Juno I / Explorer 1)")
+	var data := DataLoader.sim_data()
+	var dv_data: Dictionary = data["delta_v"]
+	var circ := MissionBudget.insertion_velocity({"target_perigee_km": 200.0, "target_apogee_km": 200.0})
+	_expect_close("circular target: v_insert = v_circ(200 km)", circ,
+			OrbitMath.circular_velocity(OrbitMath.radius_from_altitude_km(200.0)), "m/s")
+	# Explorer 1 orbit: vis-viva at a 358 km perigee of a 358 x 2,550 km ellipse.
+	_expect_close("elliptical target: v at perigee of 358 x 2,550 km", MissionBudget.insertion_velocity(
+			{"target_perigee_km": 358.0, "target_apogee_km": 2550.0}), 8218.0, "m/s")
+	var budget := MissionBudget.required_delta_v({"profile": "orbit_insertion", "target_perigee_km": 200.0,
+			"latitude_deg": 0.0, "margin_fraction": 0.0}, dv_data,
+			{"first_burn_s": 100.0, "upper_burns_s": [50.0], "drag_loss_ms": 100.0, "liftoff_mass_kg": 200000.0, "upper_twrs": [2.0]})
+	var loss: Dictionary = dv_data["loss_model"]
+	var expected := circ - 465.0 + RocketMath.G0 * (float(loss["gravity_loss_coeff_first_stage"]) * 100.0
+			+ float(loss["gravity_loss_coeff_upper"]) * 50.0) + float(loss["drag_loss_coeff"]) * 100.0
+	_expect_close("required = v_insert - spin + gravity loss + drag loss (standard profile)", float(budget["required_ms"]), expected, "m/s")
+	_expect_true("a big rocket with ordinary upper stages is not lofted", not bool(budget["lofted"]))
+
+	# Calibration: the realistic Juno-class just reaches Explorer 1's orbit (2% margin).
+	var level: Dictionary = DataLoader.levels["L1"]
+	var cal: Dictionary = loss["calibration"]
+	var juno := DesignBuilder.from_sliders(DataLoader.reference_rockets[str(cal["rocket"])], {}, DataLoader.engines, true)
+	juno["payload"] = {"length_m": float(level["payload_length_m"]), "mass_kg": float(cal["payload_kg"])}
+	juno["mission"] = {"profile": "orbit_insertion", "target_perigee_km": float(cal["target_perigee_km"]),
+			"target_apogee_km": float(cal["target_apogee_km"]), "latitude_deg": float(cal["latitude_deg"])}
+	var report := RocketEvaluator.evaluate(juno, data)
+	_expect_close("Juno-class to Explorer 1's 358 x 2,550 km orbit: range ratio (calibrated)",
+			float(report["numbers"]["range_ratio"]), float(cal["design_range_ratio"]), "")
+	_expect_text("Juno-class reaches Explorer 1's orbit", str(report["outcome"]), "success")

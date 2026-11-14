@@ -176,10 +176,10 @@ func _build_brief() -> void:
 func _brief_info_text() -> String:
 	var site: Dictionary = _level.get("launch_site", {})
 	var mission := DesignModes.level_mission(_level)
-	return "Payload %d kg  |  Budget $%.1fM  |  %s, %.1f deg N  |  Checked for: %s %d km" % [
+	return "Payload %d kg  |  Budget $%.1fM  |  %s, %.1f deg N  |  Checked for: orbit, perigee %d km" % [
 			int(_level.get("payload_mass_kg", 0)), _budget_limit(), str(site.get("name", "")),
-			float(site.get("latitude_deg", 0.0)), str(mission.get("profile", "")).to_upper(),
-			int(mission.get("target_altitude_km", 0))]
+			float(site.get("latitude_deg", 0.0)),
+			int(mission.get("target_perigee_km", mission.get("target_altitude_km", 0)))]
 
 
 func _build_mode_switch() -> void:

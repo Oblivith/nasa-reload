@@ -9,10 +9,11 @@
       "year": 1962,
       "description": "Put the first satellite in orbit and keep it talking.",
       "required_goal": {
-        "id": "orbit_transmit_30_days",
-        "description": "Orbit and transmit for 30 days",
+        "id": "stable_orbit_transmit",
+        "description": "Reach a stable orbit (elliptical allowed) and transmit for 30 days",
         "type": "orbit_and_transmit",
-        "min_perigee_km": 150,
+        "min_perigee_km": 200,
+        "elliptical_allowed": true,
         "min_orbit_lifetime_days": 30,
         "transmit_days": 30
       },
@@ -26,11 +27,12 @@
       "payload_mass_kg": 14,
       "payload_length_m": 1.0,
       "mission": {
-        "profile": "leo",
-        "target_altitude_km": 400,
+        "profile": "orbit_insertion",
+        "target_perigee_km": 200,
+        "target_apogee_km": 200,
         "needs_return": false,
         "crewed": false,
-        "note": "The mission the Rocket Builder evaluates against. Same values tools/tune_easy_presets/tune.js balances Level 1 for; latitude comes from launch_site."
+        "note": "The mission the Rocket Builder evaluates against: the cheapest orbit that meets the goal (perigee 200 km; any higher apogee also counts). Required delta-v uses delta_v_map.json loss_model. Latitude comes from launch_site."
       },
       "reference_rocket": "juno_class",
       "budget": 15,

@@ -108,6 +108,7 @@ func sim_data() -> Dictionary:
 			"mission_profiles": mission_profiles,
 			"earth_rotation": dv_raw.get("earth_rotation", {}),
 			"margins": dv_raw.get("margins", {}),
+			"loss_model": dv_raw.get("loss_model", {}),
 		},
 	}
 

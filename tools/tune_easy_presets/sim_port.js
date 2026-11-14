@@ -1,6 +1,10 @@
 // Code generated with AI assistance (Claude). Reviewed by team.
 // Node mirror of DesignBuilder.from_easy + RocketEvaluator (scripts/sim), used only by
-// the Easy-preset tuner. The GDScript is the source of truth: the test scene
+// the Easy-preset tuner. NOTE (2026-11-15): Level 1 now uses the MissionBudget loss model (delta_v_map.json
+// loss_model) and a 14 kg payload; this mirror and tune.js still use the old flat 9,380 m/s budget and
+// 20 kg. The game's spread moved only from 84 to 86 successes, so the tuner was not re-run. Port the
+// loss model here before the next retune.
+// The GDScript is the source of truth: the test scene
 // (scenes/tests/sim_tests.tscn) prints the same pass/warn/fail spread, so any drift
 // between this file and the game shows up there.
 const fs = require('fs');

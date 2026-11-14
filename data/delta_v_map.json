@@ -15,6 +15,29 @@
     "verified": false,
     "source": "safe_range_ratio is from Sim Spec v2 section 2.3. default_margin_fraction (3%) is MADE UP: the spec says 'plus a margin' without a number."
   },
+  "loss_model": {
+    "id": "loss_model",
+    "formula": "required = v_insert(target perigee, vis-viva) - spin bonus + g0 * (k_first * first-stage burn time + k_upper * upper-stage burn times) + k_drag * first-stage drag loss (vertical-ascent estimate), x (1 + margin)",
+    "gravity_loss_coeff_first_stage": 0.428,
+    "gravity_loss_coeff_upper": 0.2,
+    "drag_loss_coeff": 1.0,
+    "lofted": {
+      "max_liftoff_mass_kg": 50000,
+      "min_upper_stage_twr": 5.0,
+      "gravity_loss_coeff_upper": 0.0
+    },
+    "calibration": {
+      "rocket": "juno_class",
+      "payload_kg": 14,
+      "target_perigee_km": 358,
+      "target_apogee_km": 2550,
+      "latitude_deg": 28.5,
+      "design_range_ratio": 1.02,
+      "tool": "tools/calibrate_losses/calibrate.gd"
+    },
+    "verified": false,
+    "source": "Calibrated against Juno I / Explorer 1; launch sim will replace this estimate. gravity_loss_coeff_first_stage is CALIBRATED: the realistic Juno-class (reference_rockets.json) flying the lofted profile reaches Explorer 1's ~358 x 2,550 km orbit with a 2% margin (range ratio 1.02 including the 3% game margin). It also absorbs everything the estimate leaves out (the real pitched, lofted trajectory and the real Juno's hydyne uprate), so it is a fitted number, not a measured one. drag_loss_coeff 1.0 uses the vertical-ascent drag estimate (Cd x area / mass, integrated) as is: MADE UP. gravity_loss_coeff_upper 0.2 (upper stages of a normal ascent still climb a little) is MADE UP. Lofted profile: liftoff <= 50 t and every upper stage a kick stage (vacuum TWR >= 5) is a MADE UP rule for small rockets like Juno; its kick stages fire horizontally at the top of the lofted coast, so their gravity loss is 0."
+  },
   "legs": [
     {
       "id": "ground_to_suborbital",
@@ -81,6 +104,17 @@
     }
   ],
   "mission_profiles": [
+    {
+      "id": "orbit_insertion",
+      "name": "Orbit insertion (loss model)",
+      "loss_model": true,
+      "outbound_legs": [],
+      "return_legs": ["leo_deorbit", "earth_reentry"],
+      "spin_bonus": true,
+      "orbit_raise": false,
+      "verified": false,
+      "source": "Replaces the flat 9,400 m/s ground-to-LEO leg for Level 1: v_insert at the target perigee - spin bonus + gravity and drag losses from the rocket itself (see loss_model). Calibrated against Juno I / Explorer 1; launch sim will replace this estimate."
+    },
     {
       "id": "suborbital",
       "name": "Suborbital hop",

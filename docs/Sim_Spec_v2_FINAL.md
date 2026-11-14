@@ -90,6 +90,15 @@ All distances measured from the nose tip. d = body diameter, R = d/2.
 ### 2.3 Range: Δv (can it get there and back?)
 - Per stage: Δv = Isp · g₀ · ln(m₀ / m_f)
 - Total Δv = Σ stages
+- **Required Δv, loss model (Level 1 onwards; calibrated against Juno I / Explorer 1; launch sim will replace this estimate):**
+  required = v_insert − Earth-spin bonus + gravity loss + drag loss (+ return legs), × (1 + 3% margin)
+  - v_insert = vis-viva speed at the target perigee (circular, or elliptical with a higher apogee). Level 1: perigee ≥ 200 km, elliptical allowed, so the requirement uses the cheapest orbit, 200 km circular.
+  - gravity loss = g₀ · (k_first · first-stage burn time + k_upper · upper-stage burn times). Burn time = propellant fraction · Isp / liftoff TWR, so a heavier, slower rocket loses more.
+  - drag loss = k_drag · the first-stage drag loss from the vertical-ascent estimate (∫ ½ρv²·Cd·A / m dt: size and Cd).
+  - **Lofted kick-stage profile** for small rockets (liftoff ≤ 50 t and every upper stage a kick stage, vacuum TWR ≥ 5): the booster lofts the stack and the kick stages fire horizontally at the top, so k_upper = 0. Juno-class qualifies; the Easy rockets do not.
+  - **Calibration:** k_first = 0.428 is solved (`tools/calibrate_losses/calibrate.gd`) so the realistic Juno-class (Redstone-class booster at 215/235 s, three Baby-Sergeant-class solid stages at 220 s, 14 kg payload) reaches Explorer 1's ~358 × 2,550 km orbit with a 2% margin (range ratio 1.02). It is a fitted number: it also absorbs what the estimate leaves out (the real pitched, lofted trajectory and the real Juno's hydyne uprate). k_upper = 0.2 and k_drag = 1.0 are made up. All in `delta_v_map.json` → `loss_model`.
+  - Result on Level 1: Juno-class range ratio 1.07 (succeeds, tight).
+- Later levels (Moon) still use the leg-based Δv map below until they get the loss model.
 - **Required Δv** = mission Δv budget from the map (ground→orbit ≈ 9,400 m/s incl. losses, minus Earth-spin bonus 465·cos(lat); Moon legs per the old spec section 2), **plus return legs if the mission needs a return**, plus a margin.
 - Range ratio = Δv_available / Δv_required. ≥ 1.0 = can make it; ≥ 1.1 = safe margin.
 - *The launch sim then tells the real story:* actual gravity/drag losses from the player's real shape replace the 9,400 estimate.
@@ -139,7 +148,7 @@ Players see plain words and pictures, not part names or numbers. Each option sec
 | Engine | Small & cheap · Medium · Big & powerful |
 | Fins | Small · Medium · Large (fixed count 4, preset shape) |
 | Upper stage | None · Small upper stage · Big upper stage (hypergolic-class engine, sits on top of the body) |
-**Balance (Level 1):** the preset values are tuned by `tools/tune_easy_presets/tune.js` so about 17% of the 486 combinations succeed (25 with three stars), every body and engine option has successful combinations, every engine option has at least one three-star rocket, the Big upper stage carries at least 1.8x the Small one's propellant, and obvious mistakes fail (no upper stage, Small fins on a Fat nose, Tall & fat body on the Small engine). Large fins + Big upper stage stays over-stable on purpose. The test scene prints the full spread.
+**Balance (Level 1):** the preset values are tuned by `tools/tune_easy_presets/tune.js` so about 17% of the 486 combinations succeed (the tuner used the old flat 9,380 m/s budget; with the loss model and the 14 kg payload the game gives 86 successes, 17.7%, 30 with three stars), every body and engine option has successful combinations, every engine option has at least one three-star rocket, the Big upper stage carries at least 1.8x the Small one's propellant, and obvious mistakes fail (no upper stage, Small fins on a Fat nose, Tall & fat body on the Small engine). Large fins + Big upper stage stays over-stable on purpose. The test scene prints the full spread.
 
 **Output:** ✓/✗ per check with a plain-English reason: *"Your rocket tips over: the fins are too small to keep the back behind the front. Try bigger fins, or put heavy parts higher up."*
 

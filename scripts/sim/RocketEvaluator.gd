@@ -115,8 +115,18 @@ static func evaluate(design: Dictionary, data: Dictionary) -> Dictionary:
 	checks.append(_stability_check("stability_burnout", "Stability at burnout", margin_burnout,
 			class_burnout, x_cp, x_cg_burnout, diameter, gimballed))
 
-	# --- 3. Range (2.3) -------------------------------------------------------------
+	# --- Drag + ascent estimate (2.5): needed by the range loss model and by Max-Q ----
+	var nose_entry: Dictionary = nose_shapes.get(str(nose.get("shape", "")), {})
+	var ref_area := Aero.reference_area(float(geometry["max_diameter_m"]))
+	var fin_area := Aero.fin_planform_area(int(fins.get("count", 0)), float(fins.get("root_chord_m", 0.0)),
+			float(fins.get("tip_chord_m", 0.0)), float(fins.get("span_m", 0.0)))
+	var marginal := str(class_liftoff["class"]) == "marginal" or str(class_burnout["class"]) == "marginal"
+	var cd := Aero.drag_coefficient(float(nose_entry.get("base_cd", 0.5)), fin_area, ref_area, marginal, drag_model)
 	var stage_masses := RocketGeometry.stage_masses(segments, stages.size())
+	var ascent := Aero.vertical_ascent_estimate(liftoff_mass, float((stage_masses[0] as Dictionary)["propellant_mass_kg"]),
+			thrust_sl, thrust_vac, isp_sl, isp_vac, cd, ref_area)
+
+	# --- 3. Range (2.3) -------------------------------------------------------------
 	var burn_times: Array = []
 	for i in stages.size():
 		var engine: Dictionary = (stages[i] as Dictionary).get("engine", {})
@@ -133,7 +143,18 @@ static func evaluate(design: Dictionary, data: Dictionary) -> Dictionary:
 	var delta_v := RocketMath.total_delta_v(stage_masses, payload_mass)
 	var dv_stages: Array = delta_v["stages"]
 	var dv_available := float(delta_v["total_ms"])
-	var budget := MissionBudget.required_delta_v(mission, dv_data)
+	var upper_twrs: Array = []
+	for i in range(1, stages.size()):
+		var upper_engine: Dictionary = (stages[i] as Dictionary).get("engine", {})
+		upper_twrs.append(RocketMath.twr(_number(upper_engine, "thrust_vac_N") * float(upper_engine.get("count", 1)),
+				float((dv_stages[i] as Dictionary)["m0_kg"])))
+	var budget := MissionBudget.required_delta_v(mission, dv_data, {
+		"first_burn_s": float(burn_times[0]),
+		"upper_burns_s": burn_times.slice(1),
+		"drag_loss_ms": float(ascent["drag_loss_ms"]),
+		"liftoff_mass_kg": liftoff_mass,
+		"upper_twrs": upper_twrs,
+	})
 	var dv_required := float(budget["required_ms"])
 	var margins: Dictionary = dv_data.get("margins", {})
 	var safe_ratio := float(margins.get("safe_range_ratio", MissionBudget.DEFAULT_SAFE_RATIO))
@@ -147,15 +168,7 @@ static func evaluate(design: Dictionary, data: Dictionary) -> Dictionary:
 	numbers["burn_times_s"] = burn_times
 	checks.append(_range_check(ratio, dv_available, budget, safe_ratio, dv_stages))
 
-	# --- 4. Drag + structure (2.4, 2.5) ---------------------------------------------
-	var nose_entry: Dictionary = nose_shapes.get(str(nose.get("shape", "")), {})
-	var ref_area := Aero.reference_area(float(geometry["max_diameter_m"]))
-	var fin_area := Aero.fin_planform_area(int(fins.get("count", 0)), float(fins.get("root_chord_m", 0.0)),
-			float(fins.get("tip_chord_m", 0.0)), float(fins.get("span_m", 0.0)))
-	var marginal := str(class_liftoff["class"]) == "marginal" or str(class_burnout["class"]) == "marginal"
-	var cd := Aero.drag_coefficient(float(nose_entry.get("base_cd", 0.5)), fin_area, ref_area, marginal, drag_model)
-	var ascent := Aero.vertical_ascent_estimate(liftoff_mass, float((stage_masses[0] as Dictionary)["propellant_mass_kg"]),
-			thrust_sl, thrust_vac, isp_sl, isp_vac, cd, ref_area)
+	# --- 4. Structure (2.4) ------------------------------------------------------------
 	var material_id := str(first_body.get("material", ""))
 	var material: Dictionary = materials.get(material_id, {})
 	var q_limit := Aero.q_limit(material, length, diameter, q_model)
@@ -315,6 +328,11 @@ static func _range_check(ratio: float, available: float, budget: Dictionary, saf
 		available, "; ".join(stage_parts), float(budget["outbound_ms"]), float(budget["rotation_bonus_ms"]),
 		float(budget["orbit_raise_ms"]), float(budget["return_ms"]), float(budget["margin_fraction"]) * 100.0,
 		float(budget["required_ms"]), ratio]
+	if bool(budget.get("loss_model", false)):
+		technical = "Available dv = %.0f m/s (%s). Required = v_insert %.0f - spin %.0f + gravity loss %.0f + drag loss %.0f (%s profile) + return %.0f, + %.0f%% margin = %.0f m/s. Range ratio = %.3f. Loss model calibrated against Juno I / Explorer 1; the launch sim will replace it." % [
+			available, "; ".join(stage_parts), float(budget["insertion_ms"]), float(budget["rotation_bonus_ms"]),
+			float(budget["gravity_loss_ms"]), float(budget["drag_loss_ms"]), "lofted" if bool(budget["lofted"]) else "standard",
+			float(budget["return_ms"]), float(budget["margin_fraction"]) * 100.0, float(budget["required_ms"]), ratio]
 	var status := MissionBudget.classify_range(ratio, safe_ratio)
 	var plain := ""
 	match status:
