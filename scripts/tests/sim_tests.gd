@@ -33,6 +33,7 @@ func _ready() -> void:
 	_test_aero()
 	_test_twr_thresholds()
 	_test_design_builder()
+	_test_mission_outcome()
 	_test_redstone_reference()
 	_test_easy_presets()
 	print("\n================ RESULT: %d passed, %d failed ================" % [_passed, _failed])
@@ -274,44 +275,40 @@ func _test_design_builder() -> void:
 	_expect_true("upper-stage thrust check is reported", _status_of(hard_report, "upper_twr_stage_2") != "missing")
 
 
+func _test_mission_outcome() -> void:
+	_section("Gameplay rule: WARN still succeeds (fewer stars), only FAIL fails")
+	var check := func(status: String) -> Dictionary:
+		return {"status": status, "plain": "reason " + status}
+	var all_pass := RocketEvaluator._finish({"checks": [check.call("pass"), check.call("pass")]})
+	_expect_text("all pass: success", str(all_pass["outcome"]), "success")
+	_expect_true("all pass: 3 stars, no tips", int(all_pass["stars"]) == 3 and (all_pass["tips"] as Array).is_empty())
+	var one_warn := RocketEvaluator._finish({"checks": [check.call("pass"), check.call("warn")]})
+	_expect_text("one warning: still a success", str(one_warn["outcome"]), "success")
+	_expect_true("one warning: 2 stars and 1 tip", int(one_warn["stars"]) == 2 and (one_warn["tips"] as Array).size() == 1)
+	var two_warn := RocketEvaluator._finish({"checks": [check.call("warn"), check.call("warn")]})
+	_expect_true("two warnings: success with 1 star", str(two_warn["outcome"]) == "success" and int(two_warn["stars"]) == 1)
+	var failed := RocketEvaluator._finish({"checks": [check.call("warn"), check.call("fail")]})
+	_expect_text("any fail: mission failure", str(failed["outcome"]), "failure")
+	_expect_true("failure: 0 stars, the fail reason is reported", int(failed["stars"]) == 0 and (failed["failures"] as Array).size() == 1)
+
+
 func _test_easy_presets() -> void:
-	_section("Easy-mode presets: sanity runs")
+	_section("Easy-mode presets: Level 1 (20 kg to a 400 km orbit from the Cape), all 486 combinations")
 	var data := DataLoader.sim_data()
 	var payload := {"length_m": 1.0, "mass_kg": 20.0}
-	var hop := {"profile": "suborbital", "target_altitude_km": 187.0, "latitude_deg": 28.5}
-	var sensible := _easy("rounded", "medium", "medium", "small_cheap", "light", "none", payload, hop)
-	var report := RocketEvaluator.evaluate(sensible, data)
-	print(RocketEvaluator.format_report(report))
-	_expect_text("Rounded / Medium / Medium fins / Small engine / Light passes every check", str(report["overall"]), "pass")
-
-	var tiny_fins := _easy("rounded", "medium", "small", "small_cheap", "light", "none", payload, hop)
-	_expect_text("same rocket with Small fins is unstable", _status_of(RocketEvaluator.evaluate(tiny_fins, data), "stability_liftoff"), "fail")
-	var too_heavy := _easy("rounded", "tall_fat", "large", "small_cheap", "light", "none", payload, hop)
-	_expect_text("Tall & fat body on the Small engine cannot lift off", _status_of(RocketEvaluator.evaluate(too_heavy, data), "liftoff"), "fail")
-	var too_hot := _easy("rounded", "medium", "medium", "medium", "light", "none", payload, hop)
-	_expect_text("Medium body on the Medium engine breaks up at Max-Q", _status_of(RocketEvaluator.evaluate(too_hot, data), "structure"), "fail")
-
-	_section("Easy-mode presets: Level 1 orbit (20 kg to 400 km from the Cape)")
 	var level1 := {"profile": "leo", "target_altitude_km": 400.0, "latitude_deg": 28.5, "needs_return": false}
-	var single := RocketEvaluator.evaluate(_easy("rounded", "tall_fat", "large", "medium", "light", "none", payload, level1), data)
-	var single_ratio := float((single["numbers"] as Dictionary)["range_ratio"])
-	_expect_true("best single-stage preset cannot reach orbit (ratio %.3f)" % single_ratio, single_ratio < 1.0)
+	var bodies := ["short_thin", "medium", "tall_fat"]
+	var engines := ["small_cheap", "medium", "big_powerful"]
 
-	var best := _easy("rounded", "tall_fat", "large", "medium", "light", "big", payload, level1)
-	var best_report := RocketEvaluator.evaluate(best, data)
-	print(RocketEvaluator.format_report(best_report))
-	var best_ratio := float((best_report["numbers"] as Dictionary)["range_ratio"])
-	_expect_true("Tall & fat + Medium engine + Large fins + Light + Big upper reaches LEO with ratio >= 1.05 (got %.3f)" % best_ratio,
-			best_ratio >= 1.05)
-	_expect_true("...and fails no check (overall '%s')" % str(best_report["overall"]), str(best_report["overall"]) != "fail")
-
-	# Every Easy combination (all 486), sorted into pass / warn / fail for Level 1.
 	var lists := {"pass": [], "warn": [], "fail": []}
 	var fail_reasons := {}
+	var successes_by_option := {}
+	var bad_successes: Array = []
+	var large_big := {"pass": 0, "over_stable": 0}
 	var first_pass: Dictionary = {}
 	for nose_id in ["pointy", "rounded", "fat"]:
-		for body_id in ["short_thin", "medium", "tall_fat"]:
-			for engine_id in ["small_cheap", "medium", "big_powerful"]:
+		for body_id in bodies:
+			for engine_id in engines:
 				for fins_id in ["small", "medium", "large"]:
 					for material_id in ["light", "strong"]:
 						for upper_id in ["none", "small", "big"]:
@@ -320,31 +317,64 @@ func _test_easy_presets() -> void:
 							var n: Dictionary = r["numbers"]
 							var overall := str(r["overall"])
 							var flagged: PackedStringArray = []
-							for check: Dictionary in r["checks"]:
-								if str(check["status"]) == overall and overall != "pass":
-									flagged.append(str(check["id"]))
-							if overall == "fail":
+							for c: Dictionary in r["checks"]:
+								if str(c["status"]) == overall and overall != "pass":
+									flagged.append(str(c["id"]))
+							var label := "%-8s %-10s %-13s %-7s %-7s %-6s" % [nose_id, body_id, engine_id, fins_id, material_id, upper_id]
+							if str(r["outcome"]) == "success":
+								for option in ["body:" + body_id, "engine:" + engine_id]:
+									successes_by_option[option] = int(successes_by_option.get(option, 0)) + 1
+								if upper_id == "none" or (fins_id == "small" and nose_id == "fat") \
+										or (body_id == "tall_fat" and engine_id == "small_cheap"):
+									bad_successes.append(label)
+								if fins_id == "large" and upper_id == "big":
+									if overall == "pass":
+										large_big["pass"] = int(large_big["pass"]) + 1
+									if _status_of(r, "stability_burnout") == "warn":
+										large_big["over_stable"] = int(large_big["over_stable"]) + 1
+								if overall == "pass" and first_pass.is_empty():
+									first_pass = r
+							else:
 								for id in flagged:
 									fail_reasons[id] = int(fail_reasons.get(id, 0)) + 1
-							elif overall == "pass" and first_pass.is_empty():
-								first_pass = r
-							(lists[overall] as Array).append("%-8s %-10s %-13s %-7s %-7s %-6s  TWR %5.2f  SM %5.2f/%5.2f  ratio %5.3f  %s" % [
-									nose_id, body_id, engine_id, fins_id, material_id, upper_id,
-									float(n["twr_liftoff"]), float(n["static_margin_liftoff_cal"]),
+							(lists[overall] as Array).append("%s  %d*  TWR %5.2f  SM %5.2f/%5.2f  ratio %5.3f  %s" % [
+									label, int(r["stars"]), float(n["twr_liftoff"]), float(n["static_margin_liftoff_cal"]),
 									float(n["static_margin_burnout_cal"]), float(n["range_ratio"]), ", ".join(flagged)])
+
+	var passes: Array = lists["pass"]
+	var warns: Array = lists["warn"]
+	var fails: Array = lists["fail"]
+	var success_count := passes.size() + warns.size()
+	print("\n  Spread: %d pass (3 stars) + %d warn (1-2 stars) = %d successes (%.1f%%), %d fail" % [
+			passes.size(), warns.size(), success_count, 100.0 * success_count / 486.0, fails.size()])
+	for option in ["body:short_thin", "body:medium", "body:tall_fat", "engine:small_cheap", "engine:medium", "engine:big_powerful"]:
+		print("    successes with %-20s %d" % [option, int(successes_by_option.get(option, 0))])
 	for status in ["pass", "warn"]:
 		var rows: Array = lists[status]
-		print("\n  Level 1 Easy combinations: %s (%d)" % [status.to_upper(), rows.size()])
+		print("\n  SUCCESS, %s (%d):" % [status.to_upper(), rows.size()])
 		for row in rows:
 			print("    " + str(row))
-	var fails: Array = lists["fail"]
-	print("\n  Level 1 Easy combinations: FAIL (%d). Failing checks (a rocket can fail several):" % fails.size())
+	print("\n  FAIL (%d). Failing checks (a rocket can fail several):" % fails.size())
 	for id in fail_reasons:
 		print("    %-20s %d" % [id, int(fail_reasons[id])])
 	if not first_pass.is_empty():
 		print(RocketEvaluator.format_report(first_pass))
-	_expect_true("at least one Easy combination passes every Level 1 check with no warnings (%d found)" % (lists["pass"] as Array).size(),
-			not (lists["pass"] as Array).is_empty())
+
+	_expect_true("at least one Easy combination passes every Level 1 check with no warnings (%d found)" % passes.size(),
+			not passes.is_empty())
+	for body_id in bodies:
+		_expect_true("body option '%s' has at least one successful combination (%d)" % [body_id, int(successes_by_option.get("body:" + body_id, 0))],
+				int(successes_by_option.get("body:" + body_id, 0)) > 0)
+	for engine_id in engines:
+		_expect_true("engine option '%s' has at least one successful combination (%d)" % [engine_id, int(successes_by_option.get("engine:" + engine_id, 0))],
+				int(successes_by_option.get("engine:" + engine_id, 0)) > 0)
+	_expect_true("15-25%% of combinations succeed (%.1f%%)" % (100.0 * success_count / 486.0),
+			success_count >= 73 and success_count <= 121)
+	_expect_true("at least 10 clean passes (%d)" % passes.size(), passes.size() >= 10)
+	_expect_true("obvious mistakes fail: no upper stage, Small fins + Fat nose, Tall & fat + Small engine (%d slipped through: %s)" % [
+			bad_successes.size(), ", ".join(PackedStringArray(bad_successes.slice(0, 3)))], bad_successes.is_empty())
+	_expect_true("Large fins + Big upper stage stays an over-stable lesson (%d clean passes, %d over-stable warnings)" % [
+			int(large_big["pass"]), int(large_big["over_stable"])], int(large_big["pass"]) == 0 and int(large_big["over_stable"]) > 0)
 
 
 func _easy(nose_id: String, body_id: String, fins_id: String, engine_id: String, material_id: String,

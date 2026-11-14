@@ -13,6 +13,7 @@ extends RefCounted
 ##
 ## Report:
 ##   {design_name, overall: "pass"/"warn"/"fail",
+##    outcome: "success"/"failure", stars: 0-3, tips: [String], failures: [String],
 ##    checks: [{id, name, value, unit, threshold, status, plain, technical}],
 ##    numbers: {...every raw value...}, geometry: RocketGeometry.build() output}
 
@@ -45,6 +46,10 @@ static func evaluate(design: Dictionary, data: Dictionary) -> Dictionary:
 	var report := {
 		"design_name": str(design.get("name", "Unnamed rocket")),
 		"overall": "fail",
+		"outcome": "failure",
+		"stars": 0,
+		"tips": [],
+		"failures": [],
 		"checks": checks,
 		"numbers": numbers,
 		"geometry": geometry,
@@ -53,7 +58,7 @@ static func evaluate(design: Dictionary, data: Dictionary) -> Dictionary:
 		checks.append(_check("design", "Design", 0.0, "", "at least 1 stage", "fail",
 				"There is no rocket here yet. Add a body and an engine.",
 				"Design has no stages."))
-		return report
+		return _finish(report)
 
 	var segments: Array = geometry["segments"]
 	var diameter := float(geometry["diameter_m"])
@@ -181,7 +186,31 @@ static func evaluate(design: Dictionary, data: Dictionary) -> Dictionary:
 				else "There are people on board and no escape tower. If the launch goes wrong they have no quick way out.",
 				"Escape tower fitted." if has_tower else "Crewed mission without a launch escape system."))
 
+	return _finish(report)
+
+
+## Gameplay rule: only a FAIL check fails the mission. WARN checks still succeed, but
+## cost stars and come back as improvement tips (their plain-English reasons).
+##   stars: 3 = every check passes, 2 = one warning, 1 = two or more, 0 = failure.
+static func _finish(report: Dictionary) -> Dictionary:
+	var checks: Array = report["checks"]
+	var tips: Array = []
+	var failures: Array = []
+	for check: Dictionary in checks:
+		match str(check["status"]):
+			"warn":
+				tips.append(str(check["plain"]))
+			"fail":
+				failures.append(str(check["plain"]))
 	report["overall"] = _worst(checks)
+	report["tips"] = tips
+	report["failures"] = failures
+	if not failures.is_empty():
+		report["outcome"] = "failure"
+		report["stars"] = 0
+	else:
+		report["outcome"] = "success"
+		report["stars"] = 3 if tips.is_empty() else (2 if tips.size() == 1 else 1)
 	return report
 
 
@@ -190,6 +219,7 @@ static func format_report(report: Dictionary) -> String:
 	var lines: PackedStringArray = []
 	var numbers: Dictionary = report.get("numbers", {})
 	lines.append("=== %s: %s ===" % [str(report.get("design_name", "")), str(report.get("overall", "")).to_upper()])
+	lines.append("  Mission: %s, %d / 3 stars" % [str(report.get("outcome", "")).to_upper(), int(report.get("stars", 0))])
 	if numbers.has("liftoff_mass_kg"):
 		lines.append("  Length %.2f m | diameter %.2f m | liftoff mass %.0f kg (dry %.0f + propellant %.0f)" % [
 			float(numbers["length_m"]), float(numbers["diameter_m"]), float(numbers["liftoff_mass_kg"]),
@@ -207,6 +237,9 @@ static func format_report(report: Dictionary) -> String:
 			str(check["unit"]), str(check["threshold"])])
 		lines.append("         Plain:     %s" % str(check["plain"]))
 		lines.append("         Technical: %s" % str(check["technical"]))
+	var tips: Array = report.get("tips", [])
+	for tip in tips:
+		lines.append("  Tip: %s" % str(tip))
 	return "\n".join(lines)
 
 

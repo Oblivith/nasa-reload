@@ -34,32 +34,32 @@
     {
       "id": "short_thin",
       "label": "Short & thin",
-      "length_m": 10,
-      "diameter_m": 1.5,
-      "propellant_mass_kg": 15000,
-      "description": "A slim little rocket. Light and cheap, with not much fuel.",
+      "length_m": 15,
+      "diameter_m": 2.4,
+      "propellant_mass_kg": 61700,
+      "description": "The slimmest, shortest tank. Light and cheap, with the least fuel.",
       "verified": false,
-      "source": "MADE UP: sized so the Redstone-class engine lifts it at a thrust-to-weight ratio of about 1.9 (lively, and hard on a light structure)."
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Propellant is 100% of what the tank holds at 1,000 kg/m3 with 10% ullage."
     },
     {
       "id": "medium",
       "label": "Medium",
-      "length_m": 12,
-      "diameter_m": 1.78,
-      "propellant_mass_kg": 23600,
+      "length_m": 20,
+      "diameter_m": 2.8,
+      "propellant_mass_kg": 112000,
       "description": "A solid all-rounder.",
       "verified": false,
-      "source": "Same tank section as the Redstone-class reference rocket (see reference_rockets.json)."
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Propellant is 100% of what the tank holds at 1,000 kg/m3 with 10% ullage."
     },
     {
       "id": "tall_fat",
       "label": "Tall & fat",
-      "length_m": 20,
-      "diameter_m": 3.05,
-      "propellant_mass_kg": 110000,
+      "length_m": 27,
+      "diameter_m": 3.2,
+      "propellant_mass_kg": 197400,
       "description": "A great big fuel tank. Goes far, if the engine can lift it.",
       "verified": false,
-      "source": "Inspired by the Atlas booster (3.05 m diameter, roughly 110 t of propellant). Length is an ESTIMATE; numbers from memory: verify."
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Propellant is 100% of what the tank holds at 1,000 kg/m3 with 10% ullage."
     }
   ],
   "fins": [
@@ -81,15 +81,15 @@
       "id": "medium",
       "label": "Medium",
       "count": 4,
-      "root_chord_m": 2.4,
-      "tip_chord_m": 1.2,
-      "span_m": 1.3,
-      "sweep_m": 1.2,
+      "root_chord_m": 2.8,
+      "tip_chord_m": 1.4,
+      "span_m": 2.1,
+      "sweep_m": 1.4,
       "position_from_tail_m": 0,
-      "mass_kg": 300,
-      "description": "Sensible fins for a sensible rocket.",
+      "mass_kg": 560,
+      "description": "Sensible fins for a sensible rocket. Wide enough for most bodies.",
       "verified": false,
-      "source": "MADE UP, close to the estimated Redstone-class fin; tuned so the Medium body is stable (about 1.4-1.8 calibres)."
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Same shape as the other presets (tip and sweep = root / 2); mass 32 kg per m2 of total planform, like the Large fins."
     },
     {
       "id": "large",
@@ -111,11 +111,11 @@
       "id": "small_cheap",
       "label": "Small & cheap",
       "engine_id": "redstone_class",
-      "count": 1,
+      "count": 4,
       "section_length_m": 3.5,
-      "description": "A modest engine that will not break the bank.",
+      "description": "A cluster of four cheap Redstone-class engines. Plenty of push, but thirsty.",
       "verified": false,
-      "source": "Points at engines.json 'redstone_class' (350 kN). Section length is an ESTIMATE."
+      "source": "Points at engines.json 'redstone_class' x 4 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
     },
     {
       "id": "medium",
@@ -123,19 +123,19 @@
       "engine_id": "kerosene_booster",
       "count": 1,
       "section_length_m": 4,
-      "description": "A proper workhorse.",
+      "description": "One kerosene workhorse engine.",
       "verified": false,
-      "source": "Points at engines.json 'kerosene_booster' (1,500 kN). Section length is an ESTIMATE."
+      "source": "Points at engines.json 'kerosene_booster' x 1 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
     },
     {
       "id": "big_powerful",
       "label": "Big & powerful",
-      "engine_id": "heavy_booster",
-      "count": 1,
-      "section_length_m": 5.8,
-      "description": "A monster. Make sure the rest of the rocket can take it.",
+      "engine_id": "kerosene_booster",
+      "count": 2,
+      "section_length_m": 4,
+      "description": "Two kerosene engines side by side. Lots of push: make sure the rest of the rocket can take it.",
       "verified": false,
-      "source": "Points at engines.json 'heavy_booster' (6,700 kN, F-1 class; the real F-1 is about 5.8 m long). Note engines.json unlocks it at level 5."
+      "source": "Points at engines.json 'kerosene_booster' x 2 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
     }
   ],
   "material": [
@@ -171,13 +171,13 @@
       "engine_id": "hypergolic_upper",
       "count": 1,
       "section_length_m": 1.5,
-      "propellant_mass_kg": 6000,
-      "dry_mass_kg": 420,
+      "propellant_mass_kg": 11000,
+      "dry_mass_kg": 770,
       "propellant_density_kg_m3": 1200,
       "ullage_factor": 1.1,
       "description": "A little second stage for an extra push once the air is thin.",
       "verified": false,
-      "source": "MADE UP sizes (structure 7% of propellant), loosely Able/Agena-class (a few tonnes of storable propellant). Propellant density from tanks.json 'hypergolic'; engine from engines.json 'hypergolic_upper'. Tuned so exactly one Easy rocket passes every Level 1 check with no warnings: Fat nose + Tall & fat body + Medium engine + Large fins + Light + Small upper stage (range ratio 1.13, static margin 1.78 / 2.62 cal)."
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Structure is 7% of propellant; propellant density from tanks.json 'hypergolic'; engine from engines.json 'hypergolic_upper'."
     },
     {
       "id": "big",
@@ -185,13 +185,13 @@
       "engine_id": "hypergolic_upper",
       "count": 1,
       "section_length_m": 1.5,
-      "propellant_mass_kg": 12000,
-      "dry_mass_kg": 840,
+      "propellant_mass_kg": 13000,
+      "dry_mass_kg": 910,
       "propellant_density_kg_m3": 1200,
       "ullage_factor": 1.1,
       "description": "A proper second stage. Heavy on the pad, but it gets you to orbit with fuel to spare.",
       "verified": false,
-      "source": "MADE UP sizes (structure about 7% of propellant), loosely between Agena and the Titan II second stage (which used a roughly 445 kN storable engine like engines.json 'hypergolic_upper'). Tuned so Tall & fat body + Medium engine + Large fins + Light + Big upper stage reaches a 400 km orbit with a range ratio above 1.05."
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Structure is 7% of propellant; propellant density from tanks.json 'hypergolic'; engine from engines.json 'hypergolic_upper'."
     }
   ]
 }
