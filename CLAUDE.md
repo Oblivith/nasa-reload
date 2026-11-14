@@ -31,6 +31,11 @@ Entry point: `res://scenes/main.tscn` (script `scripts/main.gd`).
 ## Autoloads
 - `GameState` (`scripts/systems/game_state.gd`): current level, unlocked parts, saved designs, budget, mode (`GameState.Mode.CADET/ENGINEER/FLIGHT_DIRECTOR`).
 - `SceneManager` (`scripts/systems/scene_manager.gd`): `SceneManager.change_scene("res://...tscn")`. Main registers a container node; scenes are swapped inside it.
+- `DataLoader` (`scripts/systems/data_loader.gd`): loads every JSON file in /data.
+- `StoryTriggers` (`scripts/systems/story_triggers.gd`): `enter_area(id)` / `fire(event_id)`; world scenes report, story systems listen.
+
+## Facility
+Title -> `scenes/world/facility/facility.tscn` (rooms from `data/facility.json`). Rooms share one rocket through `DesignSession` (`scripts/systems/design_session.gd`), which writes to `GameState`. F1 opens the RocketBuilder sheet as a debug/fallback view. Headless check: `-- --selftest` on the facility scene.
 
 ## Rules
 1. All game data (parts, levels, dialogue, events) lives in JSON files under `/data`. Never hardcode it in scripts.

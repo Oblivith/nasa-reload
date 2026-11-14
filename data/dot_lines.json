@@ -1,0 +1,120 @@
+{
+  "comment": "Dialogue. Story Bible: Dot Okafor, chief engineer. Eight coffee mugs, genius, chaotic. Worked under Dad.",
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. What Dot says when the player talks to her in the Design Bay. Her lines turn the RocketEvaluator report into speech: one line per check, picked at random from the list for that check's result. Placeholders (filled from the report): {twr} liftoff thrust-to-weight; {margin} static margin in calibres; {when} 'on the pad' or 'once the fuel's gone'; {pct} range as % of what the trip needs; {short} % of the needed speed missing; {spare} % to spare; {q} max-Q kPa; {limit} structure limit kPa; {load} % of the limit; {stage} upper-stage number; {upper_twr} its thrust-to-weight; {cost} rocket cost $M; {budget} budget $M; {mug} a mug number 1-8. Stability uses the worse of liftoff/burnout; 'warn_wobbly' is a margin below 1 calibre, 'warn_stiff' above 3.",
+  "speaker": "DOT",
+  "greeting": [
+    "Ah. You've brought me a rocket. Hold on, let me find a mug that isn't cold. ...Mug {mug}. Right.",
+    "Show me what you've got. And mind the mugs, they're load-bearing.",
+    "Let's have a look at her. Don't tell me the numbers, I like to guess first.",
+    "Your dad used to stand exactly there and wait for me to say something nice. Let's see if I can."
+  ],
+  "no_rocket": [
+    "That's a workbench with nothing on it. I can't check nothing. Well, I can. It passes."
+  ],
+  "checks": {
+    "liftoff": {
+      "pass": [
+        "Thrust-to-weight of {twr}. She'll jump off the pad. Good.",
+        "{twr} times her own weight in push. That's a rocket that wants to leave."
+      ],
+      "warn": [
+        "Liftoff's {twr}. She'll go up the way I get out of bed: slowly, and wasting a lot of energy.",
+        "{twr} to one. She'll lift, but she'll spend half her fuel just arguing with gravity."
+      ],
+      "fail": [
+        "Thrust-to-weight {twr}. That's not a launch, that's a very loud sit-down. More engine or less rocket.",
+        "She's heavier than her engines can push. {twr}. Under one means she stays exactly where she is."
+      ]
+    },
+    "stability": {
+      "pass": [
+        "Static margin {margin} calibres {when}. She'll fly straight as an arrow. Fins are doing their job.",
+        "{margin} calibres. Centre of pressure nicely behind the centre of mass. That's how you keep the pointy end in front."
+      ],
+      "warn_wobbly": [
+        "Margin's only {margin} calibres {when}. She'll wobble like mug {mug} on a Friday. Bigger fins, or move the weight up.",
+        "{margin} calibres {when}. Close to the line. I'd want a bit more fin back there."
+      ],
+      "warn_stiff": [
+        "{margin} calibres {when}. Too steady, if you can believe it. She'll weathervane into every gust. Trim those fins.",
+        "That's a weathervane, not a rocket. {margin} calibres. Smaller fins, she'll thank you."
+      ],
+      "fail": [
+        "Margin {margin} calibres {when}. Negative-ish means she flips. Tail first. Every time. Bigger fins.",
+        "{margin} calibres {when}. Centre of pressure's ahead of the weight. She'll tumble before she clears the tower."
+      ]
+    },
+    "range": {
+      "pass": [
+        "Range is {pct}% of what the trip needs. {spare}% spare. Your dad would call that 'barely enough'. I call it plenty.",
+        "{pct}% of the delta-v we need. She gets there with fuel to spare. Lovely."
+      ],
+      "warn": [
+        "{pct}% of what we need. She'll make it if nothing goes wrong. Something always goes wrong.",
+        "Just over the line at {pct}%. Margins. Leave more than you think you need."
+      ],
+      "fail": [
+        "She runs dry at {pct}% of the speed we need. About {short}% short. More fuel, better engine, or lose some weight.",
+        "{pct}%. She'll go up, she'll come down, she won't stay up. Orbit's a speed, not a height."
+      ]
+    },
+    "structure": {
+      "pass": [
+        "Max-Q about {q} kPa against a limit of {limit}. The skin holds. Good.",
+        "Air pushes {load}% as hard as she can take. She's tough enough."
+      ],
+      "warn": [
+        "Max-Q {q} kPa, limit {limit}. That's {load}%. She'll hold, but I'll be holding my breath.",
+        "{load}% of her limit at max-Q. One gust and I'm on mug {mug}."
+      ],
+      "fail": [
+        "Max-Q {q} kPa. Limit's {limit}. She folds up like a paper cup. Stronger skin, or don't go so fast so low.",
+        "{load}% of what the structure can take. That's not a rocket, that's confetti."
+      ]
+    },
+    "upper_twr": {
+      "pass": [
+        "Stage {stage} pushes at {upper_twr}. Enough to keep her climbing.",
+        "Stage {stage}'s fine. {upper_twr} to one up there where it counts."
+      ],
+      "warn": [
+        "Stage {stage} only gets {upper_twr}. She'll sag back toward Earth while it builds speed. Heavier engine, or a lighter stage.",
+        "Stage {stage} at {upper_twr}. Weak little thing. It'll get there, eventually, maybe."
+      ]
+    },
+    "escape_tower": {
+      "pass": [
+        "Escape tower's on. If it goes wrong, they come home. That's the bit that matters."
+      ],
+      "warn": [
+        "People on board and no escape tower. No. Coming back is harder than going up. Don't save weight on what keeps someone alive."
+      ]
+    }
+  },
+  "budget": {
+    "over": [
+      "Lovely rocket. Costs ${cost}M. Pike gave us ${budget}M. I'm not the one telling him."
+    ],
+    "ok": [
+      "And she's ${cost}M of Pike's ${budget}M. He'll still grumble."
+    ]
+  },
+  "summary": {
+    "3": [
+      "Not one thing I'd change. ...Don't tell anyone I said that.",
+      "That's a good rocket. Your dad would have stood there grinning like an idiot. So go on. Grin."
+    ],
+    "2": [
+      "One thing to fix and she's perfect. Or fly her as she is. Your call.",
+      "Nearly there. One warning. Fix it if you've got the money."
+    ],
+    "1": [
+      "She'll fly. She'll complain the whole way, but she'll fly.",
+      "A few warnings. Nothing that kills her. Everything that annoys me."
+    ],
+    "0": [
+      "Not yet. Fix the red ones. Take your time. Coffee helps. I'm told.",
+      "She won't make it like this. That's what the bench is for. Try again."
+    ]
+  }
+}
