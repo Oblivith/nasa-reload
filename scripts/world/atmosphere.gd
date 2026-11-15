@@ -34,6 +34,7 @@ var _fog_color_target: Color = Color("d9c9a8")
 var _sun_rooms: Array = []
 var _slow_time: float = 0.0
 var _fps_grace: float = 6.0
+var _sheen: float = -1.0
 
 
 func setup(facility_world: FacilityWorld) -> void:
@@ -191,6 +192,10 @@ func _process(delta: float) -> void:
 	env.ambient_light_energy = lerpf(env.ambient_light_energy, _ambient_target, k)
 	env.fog_density = lerpf(env.fog_density, _fog_target, k)
 	env.fog_light_color = env.fog_light_color.lerp(_fog_color_target, k)
+	var sheen := clampf(env.ambient_light_energy * 1.6, 0.25, 1.0)
+	if absf(sheen - _sheen) > 0.01:
+		_sheen = sheen
+		BrickMesh.set_sheen(sheen)
 	var sunny := world.visible_rooms.has(FacilityWorld.EXTERIOR)
 	if not sunny:
 		for id: String in _sun_rooms:

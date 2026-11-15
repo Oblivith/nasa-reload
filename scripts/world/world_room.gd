@@ -35,6 +35,8 @@ var _solid: BrickMesh = BrickMesh.new()
 var _flickers: Array = []
 var _prop_lights: int = 0
 var _kit_cache: Dictionary = {}
+var _solids_seen: Array = []     # every shell box, shared by the chunk meshes (stud placement)
+var _stud_shell: bool = false     # true while building floors and platforms: they get studs
 
 
 func setup(entry: Dictionary, bit: int) -> void:
@@ -63,7 +65,11 @@ func local_point(lx: float, ly: float, lz: float) -> Vector3:
 func _bm_at(center: Vector3) -> BrickMesh:
 	var key := Vector2i(int(floor(center.x / CHUNK)), int(floor(center.z / CHUNK)))
 	if not _chunks.has(key):
-		_chunks[key] = BrickMesh.new()
+		var bm := BrickMesh.new()
+		bm.stud_world_grid = true
+		bm.solids = _solids_seen
+		bm.auto_studs = false
+		_chunks[key] = bm
 	return _chunks[key]
 
 
@@ -77,7 +83,10 @@ func shell(a: Vector3, b: Vector3, color: Color, surface: String = "matte", lo: 
 		for j in nz:
 			var q0 := Vector3(lerpf(p0.x, p1.x, float(i) / nx), p0.y, lerpf(p0.z, p1.z, float(j) / nz))
 			var q1 := Vector3(lerpf(p0.x, p1.x, float(i + 1) / nx), p1.y, lerpf(p0.z, p1.z, float(j + 1) / nz))
-			_bm_at((q0 + q1) * 0.5).slab(q0, q1, color, surface, lo, hi)
+			var bm := _bm_at((q0 + q1) * 0.5)
+			bm.auto_studs = _stud_shell
+			bm.slab(q0, q1, color, surface, lo, hi)
+			bm.auto_studs = false
 
 
 func solid(a: Vector3, b: Vector3) -> void:
@@ -90,7 +99,9 @@ func build_shell(openings: Array) -> void:
 	var z0 := rect.position.y
 	var z1 := rect.end.y
 	if bool(data.get("has_floor", true)):
+		_stud_shell = true
 		shell(Vector3(x0, base_y - 0.2, z0), Vector3(x1, base_y, z1), Color(str(data.get("floor", "c9b28a"))), str(data.get("floor_surface", "tile")))
+		_stud_shell = false
 		solid(Vector3(x0, base_y - 0.5, z0), Vector3(x1, base_y, z1))
 	if bool(data.get("has_ceiling", true)):
 		var top := base_y + height
@@ -231,7 +242,9 @@ func build_structure(e: Dictionary) -> void:
 		"platform":
 			var a := v3(e["a"])
 			var b := v3(e["b"])
+			_stud_shell = bool(e.get("studs", true))
 			shell(a, b, color, surface, float(e.get("lo", 1.0)), 1.0)
+			_stud_shell = false
 			if bool(e.get("solid", true)):
 				solid(Vector3(minf(a.x, b.x), minf(a.y, b.y), minf(a.z, b.z)), Vector3(maxf(a.x, b.x), maxf(a.y, b.y), maxf(a.z, b.z)))
 		"stairs":
@@ -259,11 +272,13 @@ func _build_stairs(e: Dictionary, color: Color, surface: String) -> void:
 	var basis := Basis(side, Vector3.UP, dir)
 	var bm := _bm_at((from + to) * 0.5)
 	for i in steps:
+		bm.auto_studs = true
 		var top := from.y + rise * (i + 1) / steps
 		var bottom := float(e.get("base", from.y)) if fill else top - 0.1
 		var pos := from + dir * (tread * (i + 0.5))
 		pos.y = (top + bottom) / 2.0
 		bm.box(pos, Vector3(width, top - bottom, tread), color if i % 2 == 0 else color.darkened(0.06), surface, basis)
+	bm.auto_studs = false
 	# One smooth ramp to walk on: the step line shifted back half a tread, so it meets
 	# the floor at the bottom and the landing at the top with no lip.
 	var slope := (to - from).normalized()
@@ -428,8 +443,16 @@ func build_lights() -> void:
 
 ## Commits the shell meshes and colliders. Call once, after everything is added.
 func finish() -> void:
+	# Flat things on the floor (rugs) hide the floor studs under them and show their own.
+	var flat: Array = []
+	for prop in props:
+		if prop.mesh_instance != null:
+			var box: AABB = prop.transform * prop.mesh_instance.get_aabb()
+			if box.size.y < 0.2 and box.size.x * box.size.z > 0.5:
+				flat.append(box)
 	var index := 0
 	for key: Vector2i in _chunks:
+		(_chunks[key] as BrickMesh).stud_exclude = flat
 		var mi := (_chunks[key] as BrickMesh).commit(self, layer_bit, "Shell%d" % index)
 		if mi != null:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED

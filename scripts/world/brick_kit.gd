@@ -204,18 +204,21 @@ static func mesh(kind: String) -> ArrayMesh:
 
 
 ## Glossy ABS-plastic look; colour comes from each brick instance.
-static func material(transparent: bool = false) -> StandardMaterial3D:
+static func material(transparent: bool = false) -> Material:
 	if _materials.has(transparent):
 		return _materials[transparent]
+	if not transparent:
+		var sm := ShaderMaterial.new()
+		sm.shader = load("res://scripts/world/shaders/brick.gdshader")
+		_materials[transparent] = sm
+		return sm
 	var m := StandardMaterial3D.new()
 	m.vertex_color_use_as_albedo = true
 	m.vertex_color_is_srgb = true
-	m.roughness = 0.3
-	m.metallic_specular = 0.45
+	m.roughness = 0.08
+	m.metallic_specular = 0.8
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	if transparent:
-		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		m.roughness = 0.1
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_materials[transparent] = m
 	return m
 
@@ -231,8 +234,8 @@ static func single(kind: String, size: Vector3, color: Color, mat: Material = nu
 	if mat == null:
 		var m := StandardMaterial3D.new()
 		m.albedo_color = color
-		m.roughness = 0.3
-		m.metallic_specular = 0.45
+		m.roughness = 0.16
+		m.metallic_specular = 0.75
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		if color.a < 1.0:
 			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA

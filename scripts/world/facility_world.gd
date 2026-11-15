@@ -185,9 +185,17 @@ func _build_exterior() -> void:
 	add_child(exterior)
 	var ext: Dictionary = cfg.get("exterior", {})
 	var bm := BrickMesh.new()
+	# Studded baseplate, but only on the forecourt you can actually see up close.
+	bm.stud_world_grid = true
+	var clip: Array = ext.get("stud_area", [-6, 44, 70, 62])
+	bm.stud_clip = Rect2(float(clip[0]), float(clip[1]), float(clip[2]) - float(clip[0]), float(clip[3]) - float(clip[1]))
 	for g: Dictionary in ext.get("ground", []):
 		bm.slab(WorldRoom.v3(g["a"]), WorldRoom.v3(g["b"]), Color(str(g.get("color", "7f9a6a"))), str(g.get("surface", "matte")))
-	bm.commit(exterior, EXTERIOR_BIT, "Ground")
+	var ground := 	bm.commit(exterior, EXTERIOR_BIT, "Ground")
+	if ground != null:
+		for child in ground.get_children():
+			if child is GeometryInstance3D:
+				(child as GeometryInstance3D).visibility_range_end = 0.0
 	for p: Array in ext.get("props", []):
 		var prop := KitProp.new()
 		prop.position = Vector3(float(p[1]), 0.0, float(p[2]))
