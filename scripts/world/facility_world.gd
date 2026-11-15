@@ -230,6 +230,20 @@ func spawn_people(people_cfg: Dictionary, barks_cfg: Dictionary) -> void:
 		npc.name = "Npc_%s_%d" % [npc.role, npcs.size()]
 		npc.setup(self, roles.get(npc.role, {}), pose, layers, barks.get(str(spec.get("bark", "")), []))
 		npcs.append(npc)
+		if spec.has("talk"):
+			_npc_talk(npc, spec["talk"])
+		if str(spec.get("name", "")) != "":
+			var tag := Label3D.new()
+			tag.text = str(spec["name"])
+			tag.font = ConsoleTheme.typewriter()
+			tag.font_size = 56
+			tag.pixel_size = 0.005
+			tag.outline_size = 10
+			tag.outline_modulate = Color("2b2622")
+			tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			tag.position = Vector3(0, 2.2 if pose == "stand" or pose == "talk" else 1.95, 0)
+			tag.visibility_range_end = 14.0
+			npc.add_child(tag)
 		return npc
 	for room in room_list:
 		for prop in room.props:
@@ -272,6 +286,17 @@ func spawn_people(people_cfg: Dictionary, barks_cfg: Dictionary) -> void:
 		add_child(npc)
 		npc.set_route(spec.get("route", []))
 		walkers.append(npc)
+
+
+## An NPC option "talk": {id, prompt, at?} lets the player talk to them: the camera frames
+## the two of you and the world fires StoryTriggers.fire(id); the story answers.
+func _npc_talk(npc: WorldNpc, spec: Dictionary) -> void:
+	var at: Array = spec.get("at", [0, 1.25, 0])
+	var it := WorldInteract.make(npc, str(spec.get("id", "talk_" + npc.role)), str(spec.get("prompt", "E  Talk")),
+			Vector3(float(at[0]), float(at[1]), float(at[2])))
+	it.framing = Interactable.Framing.TWO_SHOT
+	it.radius = float(spec.get("radius", 3.0))
+	it.used.connect(func(_by: Player) -> void: StoryTriggers.fire(str(it.get_meta("interact_id")), {"role": npc.role}))
 
 
 # --- Queries -------------------------------------------------------------------------

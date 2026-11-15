@@ -36,7 +36,7 @@ const KINDS: Array[String] = [
 	"teletype", "pike_desk", "chart_board", "bookshelf", "moon_poster", "model_rocket", "tape_player",
 	"dust_boxes", "coat_rack", "mc_console", "wall_screen", "status_board", "ceiling_fan", "sofa", "rug",
 	"safe", "pa_speaker", "exit_sign", "trash_can", "floor_open", "tree", "flagpole", "car", "pad_plinth",
-	"rail", "desk_lamp", "photo_frame", "window_blind",
+	"rail", "desk_lamp", "photo_frame", "window_blind", "bag",
 ]
 
 
@@ -109,6 +109,7 @@ static func build(kind: String, o: Dictionary, prop: KitProp) -> BrickMesh:
 		"desk_lamp": _desk_lamp(bm, Vector3.ZERO, prop)
 		"photo_frame": _photo_frame(bm, prop)
 		"window_blind": _window_blind(bm, o)
+		"bag": _bag(bm, prop)
 		_:
 			push_warning("KitLibrary: unknown prop kind '%s'" % kind)
 			b(bm, 0, 0.5, 0, 1, 1, 1, Color("ff00ff"))
@@ -387,6 +388,16 @@ static func _photo_frame(bm: BrickMesh, prop: KitProp) -> void:
 	prop.lod_range = 15.0
 	bm.box(Vector3(0, 0.1, 0), Vector3(0.18, 0.2, 0.02), WOOD_D, "wood", Basis(Vector3.RIGHT, -0.2))
 	bm.box(Vector3(0, 0.1, 0.012), Vector3(0.14, 0.16, 0.01), Color("d8cdb4"), "matte", Basis(Vector3.RIGHT, -0.2))
+
+
+## A canvas satchel with a folded note tucked under the flap (Mom's note, in the lobby).
+static func _bag(bm: BrickMesh, prop: KitProp) -> void:
+	prop.lod_range = 20.0
+	b(bm, 0, 0.14, 0, 0.42, 0.28, 0.16, WOOD)
+	b(bm, 0, 0.23, 0.085, 0.42, 0.12, 0.02, WOOD_D)
+	b(bm, 0, 0.19, 0.1, 0.06, 0.05, 0.02, MUSTARD, "metal")
+	b(bm, 0, 0.3, 0, 0.3, 0.04, 0.04, WOOD_D)
+	bm.box(Vector3(0.1, 0.3, 0.05), Vector3(0.13, 0.1, 0.01), PAPER, "matte", Basis(Vector3.BACK, -0.25))
 
 
 static func _window_blind(bm: BrickMesh, o: Dictionary) -> void:

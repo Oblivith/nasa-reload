@@ -1,6 +1,6 @@
 {
   "comment": "Level layout of the Center Campus building: rooms, doors, windows, lift, props.",
-  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Metres. x runs east, z runs south, y is up; the ground floor is y = 0 and the upper floor y = 4. ROOMS: rect is [x_min, z_min, x_max, z_max]; y is the floor level and h the clear height. A room's 'props' are [kind, x, z, rotation_deg, {options}] with x and z measured from the room's north-west corner (option 'y' lifts a prop off the floor); rotation 0 means the side a person uses faces south. Kinds are the scenes in /scenes/world/kit. A prop option 'npc' seats or stands a person at that prop (roles are in facility_npcs.json); 'interact' makes it usable and fires StoryTriggers.fire(id). 'structures' (platforms, stairs, rails), DOORS and WINDOWS are in world coordinates; a door or window with axis 'x' sits in a wall that runs east-west. Doors list the rooms whose walls they cut; the first two rooms are joined for culling. A room id is sent to StoryTriggers.enter_area() when the player walks in. Rooms are checked in order, so a room inside another (the gallery inside Mission Control) is listed first. 'stations' are where facility.gd puts the gameplay pieces (rocket bench, wind tunnel, keypunch, FLIGHT console). 'story_unlocks' turn a StoryTriggers event into a GameState flag (Dad's office door reads 'dad_office_unlocked').",
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Metres. x runs east, z runs south, y is up; the ground floor is y = 0 and the upper floor y = 4. ROOMS: rect is [x_min, z_min, x_max, z_max]; y is the floor level and h the clear height. A room's 'props' are [kind, x, z, rotation_deg, {options}] with x and z measured from the room's north-west corner (option 'y' lifts a prop off the floor); rotation 0 means the side a person uses faces south. Kinds are the scenes in /scenes/world/kit. A prop option 'npc' seats or stands a person at that prop (roles are in facility_npcs.json); an npc may carry 'talk': {id, prompt} (press E to talk: fires StoryTriggers.fire(id)) and 'name' (a floating name tag); 'interact' makes a prop usable and fires StoryTriggers.fire(id). What is said in answer to those ids is in story_level1.json 'triggers'. 'structures' (platforms, stairs, rails), DOORS and WINDOWS are in world coordinates; a door or window with axis 'x' sits in a wall that runs east-west. Doors list the rooms whose walls they cut; the first two rooms are joined for culling. A room id is sent to StoryTriggers.enter_area() when the player walks in. Rooms are checked in order, so a room inside another (the gallery inside Mission Control) is listed first. 'stations' are where facility.gd puts the gameplay pieces (rocket bench, wind tunnel, keypunch, FLIGHT console). 'story_unlocks' turn a StoryTriggers event into a GameState flag (Dad's office door reads 'dad_office_unlocked').",
   "atmosphere": {
     "quality": 2, "exposure": 1.0, "white": 5.0, "ambient": 0.45, "ambient_color": "fff0da",
     "glow_intensity": 0.4, "glow_bloom": 0.04, "glow_threshold": 1.0,
@@ -48,7 +48,7 @@
      "lights": {"kind": "fluoro", "nx": 2, "nz": 2, "energy": 0.7, "color": "fff3dc"},
      "entry": [8, 8.5],
      "props": [
-       ["security_desk", 8, 4.2, 0, {"npc": {"role": "guard", "bark": "guard"},
+       ["security_desk", 8, 4.2, 0, {"npc": {"role": "guard", "bark": "guard", "talk": {"id": "talk_guard", "prompt": "E  Talk to security"}},
          "interact": {"id": "sign_in_book", "prompt": "E  Sign the visitors' book", "at": [-1.0, 1.2, 0.4], "from": [-1.0, 1.75, 1.7],
            "say": "You sign in. Somebody has written the same surname forty lines up, in a hand you know."}}],
        ["display_case", 2.2, 6.5, 90, {"npc": {"role": "visitor", "pose": "stand", "bark": "visitor"},
@@ -56,6 +56,8 @@
            "say": "Four rockets, smallest to tallest. The brass plate under the last one is blank."}}],
        ["bench_seat", 14.2, 6.5, -90, {}],
        ["bench_seat", 14.2, 9.2, -90, {}],
+       ["bag", 14.15, 9.75, -90, {"y": 0.46,
+         "interact": {"id": "moms_bag", "prompt": "E  Read Mom's note", "at": [0, 0.2, 0.05], "from": [0.25, 0.75, 1.25]}}],
        ["plant", 1.0, 10.9, 0, {}],
        ["plant", 15.0, 10.9, 0, {}],
        ["plant", 12.0, 0.8, 0, {}],

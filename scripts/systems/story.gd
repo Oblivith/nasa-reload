@@ -33,6 +33,7 @@ var _host: Node = null                 # the facility scene, while one is runnin
 var _captions: StoryDialogueBox = null
 var _queue: Array = []                 # trigger ids waiting for the screen to be free
 var _tracker: ObjectiveTracker
+var _selftest: bool = false
 
 
 func _ready() -> void:
@@ -40,6 +41,7 @@ func _ready() -> void:
 	dialogue = DataLoader.raw.get(DIALOGUE_FILE, {})
 	flow = DataLoader.raw.get(FLOW_FILE, {})
 	autoplay = OS.get_cmdline_user_args().is_empty()
+	_selftest = "--storytest" in OS.get_cmdline_user_args()
 	for file: String in flow.get("line_refs_in", []):
 		if DataLoader.raw.has(file):
 			DataLoader.raw[file] = _resolve_refs(DataLoader.raw[file])
@@ -255,6 +257,14 @@ func _process(_delta: float) -> void:
 
 func _on_area(area_id: String, _first_time: bool) -> void:
 	_objective_signal("area", area_id)
+	if not autoplay:
+		return
+	for auto: Dictionary in flow.get("autoplay", []):
+		if str(auto.get("area", "")) == area_id and _all_set(auto.get("if")) and _none_set(auto.get("unless")):
+			var trigger_id := str(auto.get("trigger", ""))
+			get_tree().create_timer(float(auto.get("delay", 1.0))).timeout.connect(func() -> void:
+				if _none_set(auto.get("unless")):
+					play_when_free(trigger_id))
 
 
 # --- Facility ------------------------------------------------------------------------
@@ -266,6 +276,9 @@ func attach_facility(facility: Node) -> void:
 	_host = facility
 	_tracker.visible = true
 	_tracker.show_objective(objective_text())
+	if _selftest:
+		_selftest = false
+		StorySelfTest.new().run.call_deferred(self, facility)
 
 
 func _on_scene_changed(path: String) -> void:
