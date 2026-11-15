@@ -1,11 +1,11 @@
 # Code generated with AI assistance (Claude). Reviewed by team.
 class_name RocketModel
 extends Node3D
-## Placeholder 3D model of a rocket design (toy bricks: cylinders, cones, flat fins),
+## 3D model of a rocket design built from toy bricks (BrickKit: round brick stacks,
+## stepped round-plate noses and engine bells, fins of sideways plates),
 ## built from RocketEvaluator's geometry so it matches the sheet's side view exactly.
 ## Stands on its tail at the node origin, nose up, scaled to `model_height` metres.
 ## Also builds the little catalogue pieces that sit on the Design Bay shelves.
-## Swap for .glb models later: only build() and part_piece() need to change.
 
 const STAGE_COLORS := [Color("fbf5e6"), Color("e9c46a"), Color("8fc1b5"), Color("e7a17a")]
 const ENGINE_COLOR := Color("8c8577")
@@ -51,6 +51,7 @@ func build(design: Dictionary, report: Dictionary) -> void:
 	var stages: Array = design.get("stages", [])
 	var nose_shape := str((design.get("nose", {}) as Dictionary).get("shape", "cone"))
 
+	var kit := BrickKit.new(model_height / 32.0)
 	for segment: Dictionary in segments:
 		var kind := str(segment["kind"])
 		var top: float = to_y.call(float(segment["x_top_m"]))
@@ -59,31 +60,29 @@ func build(design: Dictionary, report: Dictionary) -> void:
 		var stage := int(segment.get("stage", -1))
 		match kind:
 			"nose":
-				var nose := MeshInstance3D.new()
-				nose.mesh = lathe(nose_profile(nose_shape, 14), r, seg_len)
-				nose.material_override = mat(NOSE_COLOR)
-				nose.position.y = top - seg_len
-				add_child(nose)
+				kit.add_profile(Vector3(0, top - seg_len, 0), nose_profile(nose_shape, 14), r, seg_len, NOSE_COLOR)
 			"payload":
-				_cylinder(r, seg_len, top - seg_len / 2.0, PAYLOAD_COLOR)
+				kit.add_cylinder(Vector3(0, top - seg_len / 2.0, 0), r, seg_len, PAYLOAD_COLOR)
 			"body":
 				var color: Color = STAGE_COLORS[clampi(stage, 0, STAGE_COLORS.size() - 1)]
 				if stage >= 0 and stage < stages.size():
 					var material_id := str(((stages[stage] as Dictionary).get("body", {}) as Dictionary).get("material", ""))
 					if material_id == "steel":
 						color = color.lerp(STEEL_TINT, 0.35)
-				_cylinder(r, seg_len, top - seg_len / 2.0, color)
-				# Toy-brick band at the top of each tank.
-				_cylinder(r * 1.02, minf(seg_len * 0.06, 0.08), top - minf(seg_len * 0.03, 0.04), Color("2b2622"))
+				var band := minf(seg_len * 0.06, kit.pitch * BrickKit.PLATE_H)
+				kit.add_cylinder(Vector3(0, top - band - (seg_len - band) / 2.0, 0), r, seg_len - band, color)
+				# Dark round plate at the top of each tank.
+				kit.add_cylinder(Vector3(0, top - band / 2.0, 0), r * 1.02, band, Color("2b2622"))
 			"engine":
-				_cylinder(r, seg_len, top - seg_len / 2.0, ENGINE_COLOR)
+				kit.add_cylinder(Vector3(0, top - seg_len / 2.0, 0), r, seg_len, ENGINE_COLOR)
 				var count := 1
 				if stage >= 0 and stage < stages.size():
 					count = maxi(1, int(((stages[stage] as Dictionary).get("engine", {}) as Dictionary).get("count", 1)))
-				_bells(Vector3(0, top - seg_len, 0), r, count, (bell if stage == 0 else bell * 0.6) * s)
+				bells_into(kit, Vector3(0, top - seg_len, 0), r, count, (bell if stage == 0 else bell * 0.6) * s)
 			"escape_tower":
-				_cylinder(maxf(r * 0.12, 0.01), seg_len, top - seg_len / 2.0, TOWER_COLOR)
-	_fins(design.get("fins", {}), to_y.call(float(geometry.get("fin_root_le_x_m", length))), d0 * s * 0.5, s)
+				kit.add_cylinder(Vector3(0, top - seg_len / 2.0, 0), maxf(r * 0.12, 0.01), seg_len, TOWER_COLOR)
+	_fins(kit, design.get("fins", {}), to_y.call(float(geometry.get("fin_root_le_x_m", length))), d0 * s * 0.5, s)
+	kit.commit(self)
 
 
 ## Top-of-model height in local space (for labels and the hover ring).
@@ -97,62 +96,46 @@ func top_y() -> float:
 ## in that part's presets (so pieces compare honestly); `size` = the biggest piece's height.
 static func part_piece(part: String, preset: Dictionary, scale_ref: Dictionary, size: float) -> Node3D:
 	var root := Node3D.new()
+	var kit := BrickKit.new(size / 12.0)
 	match part:
 		"nose":
 			var r := size * 0.22
 			var ld := float(preset.get("length_to_diameter", 1.0))
 			var length := minf(size, r * 2.0 * ld * 0.5)
-			var mesh := MeshInstance3D.new()
-			mesh.mesh = lathe(nose_profile(str(preset.get("shape", "cone")), 14), r, length)
-			mesh.material_override = mat(NOSE_COLOR)
-			root.add_child(mesh)
-			_add_cyl(root, r, 0.05, 0.025, FIN_COLOR)
+			kit.add_profile(Vector3(0, 0.05, 0), nose_profile(str(preset.get("shape", "cone")), 14), r, length - 0.05, NOSE_COLOR)
+			kit.add_cylinder(Vector3(0, 0.025, 0), r, 0.05, FIN_COLOR)
 		"body":
 			var h := size * float(preset.get("length_m", 1.0)) / maxf(float(scale_ref.get("length_m", 1.0)), 0.01)
 			var r := size * 0.2 * float(preset.get("diameter_m", 1.0)) / maxf(float(scale_ref.get("diameter_m", 1.0)), 0.01)
-			_add_cyl(root, r, h, h / 2.0, STAGE_COLORS[0])
-			_add_cyl(root, r * 1.03, 0.04, h - 0.02, Color("2b2622"))
+			kit.add_cylinder(Vector3(0, (h - 0.04) / 2.0, 0), r, h - 0.04, STAGE_COLORS[0])
+			kit.add_cylinder(Vector3(0, h - 0.02, 0), r * 1.03, 0.04, Color("2b2622"))
 		"engine":
 			var count := maxi(1, int(preset.get("count", 1)))
-			var holder := Node3D.new()
-			root.add_child(holder)
-			var r := size * 0.14
-			_add_cyl(holder, r * (1.0 if count == 1 else 1.9), size * 0.25, size * 0.6, ENGINE_COLOR)
-			bells_into(holder, Vector3(0, size * 0.48, 0), r * (1.0 if count == 1 else 1.9), count, size * 0.45)
+			var r := size * 0.14 * (1.0 if count == 1 else 1.9)
+			kit.add_cylinder(Vector3(0, size * 0.6, 0), r, size * 0.25, ENGINE_COLOR)
+			bells_into(kit, Vector3(0, size * 0.48, 0), r, count, size * 0.45)
 		"fins":
 			var max_root := maxf(float(scale_ref.get("root_chord_m", 1.0)), 0.01)
 			var k := size / max_root * 0.8
-			var fin := MeshInstance3D.new()
-			fin.mesh = fin_mesh(float(preset.get("root_chord_m", 1.0)) * k, float(preset.get("tip_chord_m", 0.5)) * k,
-					float(preset.get("span_m", 0.5)) * k, float(preset.get("sweep_m", 0.5)) * k, 0.04)
-			fin.material_override = mat(FIN_COLOR)
-			fin.position = Vector3(-0.1, float(preset.get("root_chord_m", 1.0)) * k, 0)
-			root.add_child(fin)
+			kit.xform = Transform3D(Basis.IDENTITY, Vector3(-0.1, float(preset.get("root_chord_m", 1.0)) * k, 0))
+			kit.add_fin(float(preset.get("root_chord_m", 1.0)) * k, float(preset.get("tip_chord_m", 0.5)) * k,
+					float(preset.get("span_m", 0.5)) * k, float(preset.get("sweep_m", 0.5)) * k, 0.04, FIN_COLOR)
 		"material":
 			var steel := str(preset.get("material", "")) == "steel"
-			var box := MeshInstance3D.new()
-			var bm := BoxMesh.new()
-			bm.size = Vector3(size * 0.6, size * (0.12 if steel else 0.06), size * 0.4)
-			box.mesh = bm
-			box.material_override = mat(STEEL_TINT.darkened(0.25) if steel else Color("dfe3e6"), 0.25 if steel else 0.6)
-			box.position.y = bm.size.y / 2.0
-			root.add_child(box)
+			var box := Vector3(size * 0.6, size * (0.12 if steel else 0.06), size * 0.4)
+			kit.add_box(Vector3(0, box.y / 2.0, 0), box, STEEL_TINT.darkened(0.25) if steel else Color("dfe3e6"))
 		"upper_stage":
 			if preset.get("engine_id") == null:
-				var crate := MeshInstance3D.new()
-				var cm := BoxMesh.new()
-				cm.size = Vector3(size * 0.4, size * 0.25, size * 0.4)
-				crate.mesh = cm
-				crate.material_override = mat(Color("6b5f53"))
-				crate.position.y = cm.size.y / 2.0
-				root.add_child(crate)
+				var crate := Vector3(size * 0.4, size * 0.25, size * 0.4)
+				kit.add_box(Vector3(0, crate.y / 2.0, 0), crate, Color("6b5f53"))
 			else:
 				var max_prop := maxf(float(scale_ref.get("propellant_mass_kg", 1.0)), 1.0)
 				var h := size * 0.75 * sqrt(float(preset.get("propellant_mass_kg", 0.0)) / max_prop)
 				var r := size * 0.17
-				_add_cyl(root, r, h, size * 0.2 + h / 2.0, STAGE_COLORS[1])
-				_add_cyl(root, r, size * 0.08, size * 0.16, ENGINE_COLOR)
-				bells_into(root, Vector3(0, size * 0.12, 0), r, 1, size * 0.12)
+				kit.add_cylinder(Vector3(0, size * 0.2 + h / 2.0, 0), r, h, STAGE_COLORS[1])
+				kit.add_cylinder(Vector3(0, size * 0.16, 0), r, size * 0.08, ENGINE_COLOR)
+				bells_into(kit, Vector3(0, size * 0.12, 0), r, 1, size * 0.12)
+	kit.commit(root)
 	return root
 
 
@@ -235,59 +218,33 @@ static func mat(color: Color, roughness: float = 0.55) -> StandardMaterial3D:
 	return m
 
 
-static func _add_cyl(parent: Node3D, radius: float, height: float, y: float, color: Color) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = radius
-	cm.bottom_radius = radius
-	cm.height = maxf(height, 0.001)
-	cm.radial_segments = 20
-	mi.mesh = cm
-	mi.material_override = mat(color)
-	mi.position.y = y
-	parent.add_child(mi)
-	return mi
-
-
-func _cylinder(radius: float, height: float, y: float, color: Color) -> void:
-	_add_cyl(self, radius, height, y, color)
-
-
-func _bells(at: Vector3, radius: float, count: int, height: float) -> void:
-	bells_into(self, at, radius, count, height)
-
-
-static func bells_into(parent: Node3D, at: Vector3, radius: float, count: int, height: float) -> void:
+## Engine bells as stepped cones of dark round plates, hanging below `at`.
+static func bells_into(kit: BrickKit, at: Vector3, radius: float, count: int, height: float) -> void:
 	var ring := 0.0 if count == 1 else radius * 0.55
 	var bell_r := radius * (0.75 if count == 1 else clampf(1.2 / float(count), 0.3, 0.5))
 	for i in count:
 		var a := TAU * float(i) / float(count)
-		var mi := MeshInstance3D.new()
-		var cm := CylinderMesh.new()
-		cm.top_radius = bell_r * 0.35
-		cm.bottom_radius = bell_r
-		cm.height = maxf(height, 0.001)
-		cm.radial_segments = 14
-		mi.mesh = cm
-		mi.material_override = mat(Color("4a443d"), 0.35)
-		mi.position = at + Vector3(cos(a) * ring, -height / 2.0, sin(a) * ring)
-		parent.add_child(mi)
+		kit.add_cone(at + Vector3(cos(a) * ring, -height, sin(a) * ring), bell_r, bell_r * 0.35, maxf(height, 0.001), Color("4a443d"))
 
 
-func _fins(fins: Dictionary, top_y: float, body_r: float, s: float) -> void:
+func _fins(kit: BrickKit, fins: Dictionary, top_y: float, body_r: float, s: float) -> void:
 	var count := int(fins.get("count", 0))
 	var span := float(fins.get("span_m", 0.0)) * s
 	if count <= 0 or span <= 0.0:
 		return
-	var mesh := fin_mesh(float(fins.get("root_chord_m", 0.0)) * s, float(fins.get("tip_chord_m", 0.0)) * s,
-			span, float(fins.get("sweep_m", 0.0)) * s, maxf(0.02, body_r * 0.08))
-	var material := mat(FIN_COLOR)
 	for i in count:
-		var holder := Node3D.new()
-		holder.rotation.y = TAU * float(i) / float(count) + PI / 4.0
-		add_child(holder)
-		var fin := MeshInstance3D.new()
-		fin.mesh = mesh
-		fin.material_override = material
-		fin.position = Vector3(body_r * 0.95, top_y, 0)
-		holder.add_child(fin)
+		var spin := Transform3D(Basis(Vector3.UP, TAU * float(i) / float(count) + PI / 4.0), Vector3.ZERO)
+		kit.xform = spin * Transform3D(Basis.IDENTITY, Vector3(body_r * 0.95, top_y, 0))
+		kit.add_fin(float(fins.get("root_chord_m", 0.0)) * s, float(fins.get("tip_chord_m", 0.0)) * s,
+				span, float(fins.get("sweep_m", 0.0)) * s, maxf(0.02, body_r * 0.08), FIN_COLOR)
+	kit.xform = Transform3D.IDENTITY
+
+
+## Number of bricks in the current model (for tests).
+func brick_count() -> int:
+	var n := 0
+	for holder in get_children():
+		for mmi in holder.get_children():
+			if mmi is MultiMeshInstance3D:
+				n += (mmi as MultiMeshInstance3D).multimesh.instance_count
+	return n

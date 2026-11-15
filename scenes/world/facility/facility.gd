@@ -56,6 +56,8 @@ var _tunnel_margin: float = 0.0
 
 var _blinkers: Array[StandardMaterial3D] = []
 var _reels: Array[Node3D] = []
+## Static scenery (floors, walls, furniture) as one brick kit, committed after building.
+var _bricks := BrickKit.new(0.4)
 var _blink_t: float = 0.0
 
 
@@ -70,6 +72,7 @@ func _ready() -> void:
 	_build_wind_tunnel(_room("wind_tunnel"))
 	_build_computer_room(_room("computer_room"))
 	_build_launch_office(_room("launch_office"))
+	_bricks.commit(self, "Scenery")
 	_ui_layer = CanvasLayer.new()
 	add_child(_ui_layer)
 	_hud = FacilityHud.new()
@@ -378,16 +381,15 @@ func _build_rooms() -> void:
 		var w := x1 - x0
 		var cx := (x0 + x1) / 2.0
 		var wall_color := Color(str(room.get("wall", "8fc1b5")))
-		var floor_mesh := MeshInstance3D.new()
-		var plane := PlaneMesh.new()
-		plane.size = Vector2(w, depth)
-		floor_mesh.mesh = plane
-		floor_mesh.material_override = RocketModel.mat(Color(str(room.get("floor", "d8c9a8"))), 0.9)
-		floor_mesh.position = Vector3(cx, 0, 0)
-		add_child(floor_mesh)
-		# Floor tiles (toy-brick look): a darker grid line every 2 m.
-		for gx in range(int(x0) + 2, int(x1), 2):
-			_box(Vector3(gx, 0.005, 0), Vector3(0.04, 0.01, depth), Color(str(room.get("floor", "d8c9a8"))).darkened(0.12), false)
+		# Studded baseplate floor in ~2 m checker tiles of plates (top of the plates at y = 0).
+		var floor_color := Color(str(room.get("floor", "d8c9a8")))
+		var tiles_x := maxi(1, roundi(w / 2.0))
+		var tiles_z := maxi(1, roundi(depth / 2.0))
+		for tx in tiles_x:
+			for tz in tiles_z:
+				var tile := Vector3(w / tiles_x, 0.16, depth / tiles_z)
+				var at := Vector3(x0 + tile.x * (tx + 0.5), -0.08, -half + tile.z * (tz + 0.5))
+				_bricks.add_box(at, tile, floor_color.darkened(0.08) if (tx + tz) % 2 == 1 else floor_color)
 		_box(Vector3(cx, height / 2.0, -half), Vector3(w, height, 0.3), wall_color, true)    # back wall
 		_box(Vector3(cx, 0.25, half), Vector3(w, 0.5, 0.3), wall_color.darkened(0.2), true)  # front kerb
 		if i == 0:
@@ -447,10 +449,10 @@ func _build_player() -> void:
 
 ## A toy-brick person: block legs, torso, round head.
 func _mini_figure(parent: Node3D, shirt: Color, head: Color) -> void:
-	var legs := _mesh_box(Vector3(0.5, 0.75, 0.3), Color("2b2622"))
+	var legs := _figure_box(Vector3(0.5, 0.75, 0.3), Color("2b2622"))
 	legs.position.y = 0.375
 	parent.add_child(legs)
-	var torso := _mesh_box(Vector3(0.62, 0.65, 0.36), shirt)
+	var torso := _figure_box(Vector3(0.62, 0.65, 0.36), shirt)
 	torso.position.y = 1.08
 	parent.add_child(torso)
 	var face := MeshInstance3D.new()
@@ -540,15 +542,8 @@ func _build_design_bay(room: Dictionary) -> void:
 	var dot_pos := Vector3(x1 - 2.2, 0, 1.0)
 	_box(dot_pos + Vector3(0.9, 0.4, -0.2), Vector3(1.4, 0.8, 1.0), Color("6b4f36"), true)
 	for m in 8:
-		var mug := MeshInstance3D.new()
-		var cm := CylinderMesh.new()
-		cm.top_radius = 0.07
-		cm.bottom_radius = 0.06
-		cm.height = 0.14
-		mug.mesh = cm
-		mug.material_override = RocketModel.mat([Color("c8551f"), Color("fbf5e6"), Color("e9c46a"), Color("2a7b7b")][m % 4])
-		mug.position = dot_pos + Vector3(0.4 + (m % 4) * 0.3, 0.87, -0.5 + (m / 4) * 0.45)
-		add_child(mug)
+		var mug_color: Color = [Color("c8551f"), Color("fbf5e6"), Color("e9c46a"), Color("2a7b7b")][m % 4]
+		_bricks.add_cylinder(dot_pos + Vector3(0.4 + (m % 4) * 0.3, 0.87, -0.5 + (m / 4) * 0.45), 0.07, 0.14, mug_color, 0.14)
 	var dot := Node3D.new()
 	dot.position = dot_pos
 	dot.rotation.y = -0.4
@@ -594,8 +589,6 @@ func _build_wind_tunnel(room: Dictionary) -> void:
 	var z := -3.0
 	var length := x1 - x0 - 3.0
 	var glass := _mesh_box(Vector3(length, 2.4, 2.6), Color(0.7, 0.9, 0.95, 0.18))
-	var glass_mat := glass.material_override as StandardMaterial3D
-	glass_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	glass.position = Vector3(cx, 1.5, z)
 	add_child(glass)
 	_box(Vector3(cx, 0.15, z), Vector3(length, 0.3, 2.8), Color("4d5b63"), true)
@@ -611,7 +604,6 @@ func _build_wind_tunnel(room: Dictionary) -> void:
 		_tunnel_fan.add_child(blade)
 	for i in 6:
 		var streak := _mesh_box(Vector3(0.9, 0.03, 0.03), Color(1, 1, 1, 0.6))
-		(streak.material_override as StandardMaterial3D).transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		streak.position = Vector3(x0 + 2.0 + i * 1.6, 0.8 + (i % 3) * 0.6, z + (float(i % 2) - 0.5) * 1.4)
 		streak.visible = false
 		add_child(streak)
@@ -718,15 +710,11 @@ func _build_computer_room(room: Dictionary) -> void:
 			for r in 2:
 				var reel := Node3D.new()
 				reel.position = Vector3(cx + (r - 0.5) * 0.6, 1.5, -half + 1.27)
-				var disc := MeshInstance3D.new()
-				var cm := CylinderMesh.new()
-				cm.top_radius = 0.26
-				cm.bottom_radius = 0.26
-				cm.height = 0.05
-				disc.mesh = cm
-				disc.rotation.x = PI / 2.0
-				disc.material_override = RocketModel.mat(Color("2b2622"))
-				reel.add_child(disc)
+				# Reel: a round 2x2-style plate standing on edge, studs facing the room.
+				var disc := BrickKit.new(0.13)
+				disc.xform = Transform3D(Basis(Vector3.RIGHT, PI / 2.0), Vector3.ZERO)
+				disc.add_cylinder(Vector3.ZERO, 0.26, 0.05, Color("2b2622"))
+				disc.commit(reel, "Disc")
 				var spoke := _mesh_box(Vector3(0.5, 0.05, 0.07), Color("d9a42b"))
 				spoke.position.z = 0.04
 				reel.add_child(spoke)
@@ -734,15 +722,13 @@ func _build_computer_room(room: Dictionary) -> void:
 				_reels.append(reel)
 		else:
 			for i in 12:
-				var light := MeshInstance3D.new()
-				var bm := BoxMesh.new()
-				bm.size = Vector3(0.12, 0.12, 0.04)
-				light.mesh = bm
+				var light := BrickKit.single("plate1", Vector3(0.12, 0.04, 0.12), Color("3a3326"))
 				var m := RocketModel.mat(Color("3a3326"))
 				m.emission = Color("ffcf5a")
 				m.emission_energy_multiplier = 2.0
 				m.emission_enabled = randf() < 0.4
 				light.material_override = m
+				light.rotation.x = PI / 2.0
 				light.position = Vector3(cx - 0.3 + (i % 4) * 0.2, 1.4 + (i / 4) * 0.22, -half + 1.27)
 				add_child(light)
 				_blinkers.append(m)
@@ -774,15 +760,7 @@ func _build_launch_office(room: Dictionary) -> void:
 	var console := Vector3(cx + 2.5, 0, -1.0)
 	_box(console + Vector3(0, 0.5, 0), Vector3(2.6, 1.0, 1.2), Color("4d5b63"), true)
 	_box(console + Vector3(0, 1.25, -0.45), Vector3(2.6, 0.6, 0.2), Color("2b2622"), false)
-	var button := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.16
-	cm.bottom_radius = 0.18
-	cm.height = 0.1
-	button.mesh = cm
-	button.material_override = RocketModel.mat(Color("c0392b"))
-	button.position = console + Vector3(0, 1.05, 0.1)
-	add_child(button)
+	_bricks.add_cylinder(console + Vector3(0, 1.05, 0.1), 0.17, 0.1, Color("c0392b"), 0.3)
 	_label("LAUNCH REQUEST  >>  MISSION CONTROL", console + Vector3(0, 1.0, 0.62), 46)
 	_interactables.append({"id": "launch", "position": console, "prompt": str((_cfg.get("prompts", {}) as Dictionary).get("launch", "[E]"))})
 
@@ -796,7 +774,16 @@ func _room(id: String) -> Dictionary:
 	return {}
 
 
-func _mesh_box(size: Vector3, color: Color) -> MeshInstance3D:
+## A free-standing brick-built box (its own node, for parts that move or hide).
+## Translucent colours give clear "glass" bricks.
+func _mesh_box(size: Vector3, color: Color) -> Node3D:
+	var kit := BrickKit.new(clampf(minf(size.x, size.z), 0.05, 0.4))
+	kit.add_box(Vector3.ZERO, size, color)
+	return kit.commit(null, "BrickBox")
+
+
+## Plain box for the placeholder mini-figures (characters stay un-bricked).
+func _figure_box(size: Vector3, color: Color) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	bm.size = size
@@ -805,11 +792,9 @@ func _mesh_box(size: Vector3, color: Color) -> MeshInstance3D:
 	return mi
 
 
-## A coloured box; `solid` boxes also block the player.
-func _box(center: Vector3, size: Vector3, color: Color, solid: bool) -> MeshInstance3D:
-	var mi := _mesh_box(size, color)
-	mi.position = center
-	add_child(mi)
+## A coloured brick-built box in the static scenery; `solid` boxes also block the player.
+func _box(center: Vector3, size: Vector3, color: Color, solid: bool) -> void:
+	_bricks.add_box(center, size, color)
 	if solid:
 		var body := StaticBody3D.new()
 		body.collision_layer = 1
@@ -821,7 +806,6 @@ func _box(center: Vector3, size: Vector3, color: Color, solid: bool) -> MeshInst
 		body.add_child(shape)
 		body.position = center
 		add_child(body)
-	return mi
 
 
 func _label(text: String, at: Vector3, font_size: int) -> Label3D:
@@ -895,7 +879,7 @@ func _run_selftest() -> void:
 			failures.append(what)
 	print("FACILITY SELFTEST")
 	expect.call(_shelf_items.size() >= 12, "shelves hold every preset (%d pieces)" % _shelf_items.size())
-	expect.call(_bench_rocket.get_child_count() > 3, "bench rocket model built (%d parts)" % _bench_rocket.get_child_count())
+	expect.call(_bench_rocket.brick_count() > 3, "bench rocket model built (%d bricks)" % _bench_rocket.brick_count())
 	expect.call(StoryTriggers.has_visited("design_bay") and _room_id == "design_bay", "enter_area fired for %s" % _room_id)
 
 	var before := int(session.report.get("stars", 0))
