@@ -23,7 +23,8 @@ const EYE := 1.62
 var camera: Camera3D
 var input_enabled: bool = true
 var flying: bool = false
-var surface_hint: String = ""
+## Tests can drive the walk without a keyboard: a world-space direction to walk in.
+var auto_wish: Vector3 = Vector3.ZERO
 
 var _yaw: float = 0.0
 var _pitch: float = 0.0
@@ -73,11 +74,14 @@ func _ready() -> void:
 	layer.add_child(_crosshair)
 
 
-func set_yaw(yaw: float) -> void:
-	_yaw = yaw
-	_pitch = 0.0
+## Points the view. Pass INF to leave yaw or pitch alone. Yaw 0 looks north (-z).
+func set_look(yaw: float, pitch: float = INF) -> void:
+	if yaw != INF:
+		_yaw = yaw
+	if pitch != INF:
+		_pitch = pitch
 	rotation.y = _yaw
-	camera.rotation.x = 0.0
+	camera.rotation.x = _pitch
 
 
 func mouse_captured() -> bool:
@@ -131,6 +135,8 @@ func _physics_process(delta: float) -> void:
 		wish = (global_transform.basis * Vector3(x, 0, z))
 		wish.y = 0.0
 		wish = wish.normalized()
+	if auto_wish != Vector3.ZERO:
+		wish = auto_wish.normalized()
 	var running := Input.is_physical_key_pressed(KEY_SHIFT)
 	if flying:
 		var up := float(Input.is_physical_key_pressed(KEY_SPACE)) - float(Input.is_physical_key_pressed(KEY_CTRL))

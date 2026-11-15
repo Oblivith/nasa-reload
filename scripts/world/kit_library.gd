@@ -499,17 +499,18 @@ static func _dir_sign(bm: BrickMesh, o: Dictionary, prop: KitProp) -> void:
 	var lines: Array = o.get("lines", [str(o.get("text", ""))])
 	var w := float(o.get("w", 2.6))
 	var h := 0.2 + 0.26 * lines.size()
-	var y := float(o.get("y", 2.45))
+	var y := float(o.get("mount", 2.45))
 	var col := Color(str(o.get("color", "2a7b7b")))
 	if bool(o.get("hanging", false)):
 		# Hangs from the ceiling across a corridor; text on both faces.
 		b(bm, 0, y, 0, w, h, 0.05, col)
 		for sx: float in [-1.0, 1.0]:
 			b(bm, sx * (w / 2 - 0.15), y + h / 2 + 0.2, 0, 0.02, 0.4, 0.02, STEEL, "metal")
+		var back: Array = o.get("lines_back", lines)
 		for i in lines.size():
 			var ly := y + h / 2 - 0.23 - i * 0.26
 			prop.label(str(lines[i]), Vector3(0, ly, 0.03), 46, PAPER, 0.0, 0.0, 40.0)
-			prop.label(str(lines[i]), Vector3(0, ly, -0.03), 46, PAPER, PI, 0.0, 40.0)
+			prop.label(str(back[mini(i, back.size() - 1)]), Vector3(0, ly, -0.03), 46, PAPER, PI, 0.0, 40.0)
 	else:
 		b(bm, 0, y, 0.02, w, h, 0.03, col)
 		for i in lines.size():
@@ -525,7 +526,7 @@ static func _fire_extinguisher(bm: BrickMesh, prop: KitProp) -> void:
 
 static func _exit_sign(bm: BrickMesh, o: Dictionary, prop: KitProp) -> void:
 	prop.lod_range = 45.0
-	var y := float(o.get("y", 2.75))
+	var y := float(o.get("mount", 2.75))
 	b(bm, 0, y, 0.04, 0.62, 0.24, 0.07, INK)
 	b(bm, 0, y, 0.08, 0.56, 0.18, 0.01, Color("ff5a3a"), "glow")
 	prop.label(str(o.get("text", "EXIT")), Vector3(0, y, 0.09), 38, INK)
@@ -856,7 +857,7 @@ static func _moon_poster(bm: BrickMesh, o: Dictionary, prop: KitProp) -> void:
 
 static func _model_rocket(bm: BrickMesh, o: Dictionary, prop: KitProp) -> void:
 	prop.lod_range = 25.0
-	var y := float(o.get("y", 0.0))
+	var y := 0.0
 	bm.cyl(Vector3(0, y + 0.02, 0), 0.1, 0.04, WOOD_D, "wood", 1, 8)
 	if bool(o.get("broken", false)):
 		bm.cyl(Vector3(0, y + 0.16, 0), 0.035, 0.24, CREAM, "gloss", 1, 8)
@@ -930,7 +931,8 @@ static func _mc_console(bm: BrickMesh, o: Dictionary, prop: KitProp, rng: Random
 	bm.collide(Vector3(0, 0.62, 0), Vector3(w, 1.24, 1.0))
 	_chair(bm, Vector3(0, 0, 0.95), TEAL)
 	prop.spot(Vector3(0, 0, 0.95), PI, "sit")
-	prop.lamp(Vector3(0, 1.15, 0.45), screen_col.lerp(Color.WHITE, 0.35), 0.45, 2.6)
+	if bool(o.get("lamp", false)):
+		prop.lamp(Vector3(0, 1.15, 0.45), screen_col.lerp(Color.WHITE, 0.35), 0.6, 3.0)
 	if o.has("label"):
 		b(bm, 0, 1.5, -0.42, 0.9, 0.2, 0.03, INK)
 		prop.label(str(o["label"]), Vector3(0, 1.5, -0.4), 40, MUSTARD, 0.0, 0.0, 30.0)
@@ -942,7 +944,7 @@ static func _wall_screen(bm: BrickMesh, o: Dictionary, prop: KitProp, rng: Rando
 	prop.lod_range = 0.0
 	var w := float(o.get("w", 6.0))
 	var h := float(o.get("h", 3.4))
-	var y := float(o.get("y", 1.6))
+	var y := float(o.get("mount", 1.6))
 	b(bm, 0, y + h / 2, 0.05, w + 0.3, h + 0.3, 0.1, INK)
 	var mode := str(o.get("mode", "data"))
 	if mode == "map":
@@ -988,7 +990,7 @@ static func _wall_screen(bm: BrickMesh, o: Dictionary, prop: KitProp, rng: Rando
 static func _status_board(bm: BrickMesh, o: Dictionary, prop: KitProp, rng: RandomNumberGenerator) -> void:
 	prop.lod_range = 50.0
 	var rows: Array = o.get("rows", ["BOOSTER", "RETRO", "FIDO", "GUIDO", "SURGEON", "CAPCOM", "EECOM", "NETWORK"])
-	var y := float(o.get("y", 1.4))
+	var y := float(o.get("mount", 1.4))
 	var h := 0.3 + rows.size() * 0.3
 	b(bm, 0, y + h / 2, 0.04, 2.4, h, 0.08, INK)
 	for r in rows.size():

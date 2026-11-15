@@ -11,6 +11,7 @@ const FILES: Array[String] = [
 	"instruments", "comms", "structures", "levels",
 	"materials", "nose_shapes", "reference_rockets", "presets", "delta_v_map",
 	"builder_ui", "costs", "pike_lines", "dot_lines", "facility",
+	"facility_world", "facility_npcs", "facility_audio", "npc_barks",
 ]
 
 ## file name -> full parsed JSON Dictionary (includes "comment" and "notes").

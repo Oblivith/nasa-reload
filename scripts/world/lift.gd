@@ -345,8 +345,10 @@ func _apply_doors() -> void:
 		if indicator.text != label:
 			indicator.text = label
 		var called := i in _queue
-		var mat := (landing["lamp"] as MeshInstance3D).material_override as StandardMaterial3D
-		mat.albedo_color = Color("ffd27a") * 1.6 if called else Color("5a4a2a")
+		if bool(landing.get("called", false)) != called:
+			landing["called"] = called
+			var mat := (landing["lamp"] as MeshInstance3D).material_override as StandardMaterial3D
+			mat.albedo_color = Color("ffd27a") * 1.6 if called else Color("5a4a2a")
 
 
 func _sound(id: String) -> void:
