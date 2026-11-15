@@ -144,15 +144,9 @@ func _build_shelf() -> void:
 			if (row + col) % 2 == 0:
 				_deco(at + Vector3(x, y + 0.2, 0.02), Vector3(0.3, 0.34, 0.3), color)
 			else:
-				var cyl := MeshInstance3D.new()
-				var mesh := CylinderMesh.new()
-				mesh.top_radius = 0.11
-				mesh.bottom_radius = 0.14
-				mesh.height = 0.4
-				cyl.mesh = mesh
-				cyl.material_override = _mat(color)
-				cyl.position = at + Vector3(x, y + 0.23, 0.02)
-				add_child(cyl)
+				var cyl := BrickKit.new(0.14)
+				cyl.add_cylinder(at + Vector3(x, y + 0.23, 0.02), 0.13, 0.4, color)
+				cyl.commit(self, "RoundBrick")
 	_sign("PARTS", at + Vector3(0, 2.3, 0.05), 64)
 
 	var camera_point := Marker3D.new()
@@ -187,12 +181,14 @@ func _build_terminal() -> void:
 	var keys := _deco(at + Vector3(0.15, 0.86, 0.26), Vector3(0.62, 0.05, 0.24), INK)
 	keys.rotation.x = 0.2
 	_deco(at + Vector3(-0.6, 0.9, 0.05), Vector3(0.4, 0.16, 0.2), CREAM)       # card stack
-	var lamp := _deco(at + Vector3(0.5, 1.12, 0.17), Vector3(0.08, 0.08, 0.03), MUSTARD)
-	var lamp_mat := (lamp.material_override as StandardMaterial3D).duplicate() as StandardMaterial3D
+	var lamp_mat := _mat(MUSTARD).duplicate() as StandardMaterial3D
 	lamp_mat.emission_enabled = true
 	lamp_mat.emission = Color("ffcf5a")
 	lamp_mat.emission_energy_multiplier = 2.0
-	lamp.material_override = lamp_mat
+	var lamp := BrickKit.single("plate1", Vector3(0.08, 0.03, 0.08), MUSTARD, lamp_mat)
+	lamp.rotation.x = PI / 2.0
+	lamp.position = at + Vector3(0.5, 1.12, 0.17)
+	add_child(lamp)
 	_sign("KEYPUNCH", at + Vector3(0, 1.85, -0.35), 56)
 
 	var stand := Marker3D.new()
@@ -240,15 +236,9 @@ func _build_dot() -> void:
 	_dot_figure.animator.idle_glance = true
 	body.add_child(_dot_figure)
 	# A mug, of course.
-	var mug := MeshInstance3D.new()
-	var mesh := CylinderMesh.new()
-	mesh.top_radius = 0.06
-	mesh.bottom_radius = 0.05
-	mesh.height = 0.12
-	mug.mesh = mesh
-	mug.material_override = _mat(MUSTARD)
-	mug.position = Vector3(0, -0.1, 0.06)
-	_dot_figure.part(&"HandL").add_child(mug)
+	var mug := BrickKit.new(0.12)
+	mug.add_cylinder(Vector3(0, -0.1, 0.06), 0.06, 0.12, MUSTARD)
+	mug.commit(_dot_figure.part(&"HandL"), "Mug")
 
 	_dot = Interactable.new()
 	_dot.name = "DotInteractable"
@@ -382,10 +372,6 @@ func _build_rooms() -> void:
 	_deco(Vector3(0, 0.55, -4.99), Vector3(12, 1.1, 0.02), TEAL_LIGHT)
 	_deco(Vector3(0, 0.55, 4.99), Vector3(12, 1.1, 0.02), TEAL_LIGHT)
 	_deco(Vector3(-5.99, 0.55, 0), Vector3(0.02, 1.1, 10), TEAL_LIGHT)
-	for i in range(-5, 6):
-		_deco(Vector3(i, 0.003, 0), Vector3(0.03, 0.006, 10), LINO.darkened(0.14))
-	for i in range(-4, 5):
-		_deco(Vector3(0, 0.003, i), Vector3(12, 0.006, 0.03), LINO.darkened(0.14))
 	# Corridor: 2 m wide, 2.5 m high.
 	_solid(Vector3(9.15, -0.1, 0), Vector3(5.7, 0.2, 2), Color("7a8f6e"), &"carpet")
 	_solid(Vector3(9.15, 2.6, 0), Vector3(5.7, 0.2, 2.6), CREAM)
@@ -460,16 +446,11 @@ func _build_ui() -> void:
 	_ui.add_child(_readout)
 
 
-## A coloured box with a collider. The StaticBody3D is returned; child 0 is the mesh.
+## A brick-built box with a collider. The StaticBody3D is returned; child 0 is the bricks.
 func _solid(center: Vector3, size: Vector3, color: Color, surface: StringName = &"") -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.position = center
-	var mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = size
-	mesh.mesh = box
-	mesh.material_override = _mat(color)
-	body.add_child(mesh)
+	body.add_child(_brick_box(size, color))
 	var shape := CollisionShape3D.new()
 	var bs := BoxShape3D.new()
 	bs.size = size
@@ -481,15 +462,18 @@ func _solid(center: Vector3, size: Vector3, color: Color, surface: StringName = 
 	return body
 
 
-func _deco(center: Vector3, size: Vector3, color: Color) -> MeshInstance3D:
-	var mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = size
-	mesh.mesh = box
-	mesh.material_override = _mat(color)
-	mesh.position = center
-	add_child(mesh)
-	return mesh
+## A brick-built decorative box (no collider).
+func _deco(center: Vector3, size: Vector3, color: Color) -> Node3D:
+	var bricks := _brick_box(size, color)
+	bricks.position = center
+	add_child(bricks)
+	return bricks
+
+
+func _brick_box(size: Vector3, color: Color) -> Node3D:
+	var kit := BrickKit.new(clampf(minf(size.x, size.z), 0.12, 0.4), int(size.length() * 1000.0))
+	kit.add_box(Vector3.ZERO, size, color)
+	return kit.commit(null, "Bricks")
 
 
 func _sign(text: String, at: Vector3, font_size: int, yaw: float = 0.0) -> Label3D:
