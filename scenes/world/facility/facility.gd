@@ -93,6 +93,7 @@ func _ready() -> void:
 	GameState.design_changed.connect(_on_design_changed)
 	GameState.budget_changed.connect(func(_b: float) -> void: _on_design_changed())
 	_on_design_changed()
+	Story.attach_facility(self)
 	_apply_cmdline.call_deferred()
 
 
@@ -301,6 +302,16 @@ func _open_overlay(control: Control, kind: String) -> void:
 			_overlay_kind = ""
 			_set_player_input(true))
 	_ui_layer.add_child(control)
+
+
+## For the Story autoload: shows a story screen (dialogue box, tape deck, ending card) as
+## this scene's overlay, so the player is held and any other screen closes first.
+func open_story_overlay(control: Control) -> void:
+	_open_overlay(control, "story")
+
+
+func story_overlay_open() -> bool:
+	return _overlay != null
 
 
 func _close_overlay() -> void:

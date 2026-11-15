@@ -1,6 +1,6 @@
 {
   "comment": "Level 1 story flow: which lines play, on which trigger, in what order.",
-  "notes": "Code generated with AI assistance (Claude). Reviewed by team. The words are in story_dialogue.json; this file only refers to them as 'scene.line_id'. 'line_refs_in' lists other data files in which a string '@scene.line_id' is swapped for that line's text at load (Pike's budget refusals, NPC barks, PA calls). OPENING: 'beats' run in order: 'narrate' types one line over the stars, 'stars' fades the star field (alpha 0 = black), 'dialogue' plays lines in the dialogue box ('auto' = seconds each line stays if the player does not press E), 'sfx' plays /assets/audio/<file>.wav, 'title' shows the title card. 'ui' holds dialogue box timings.",
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. The words are in story_dialogue.json; this file only refers to them as 'scene.line_id'. 'line_refs_in' lists other data files in which a string '@scene.line_id' is swapped for that line's text at load (Pike's budget refusals, NPC barks, PA calls). OPENING: 'beats' run in order: 'narrate' types one line over the stars, 'stars' fades the star field (alpha 0 = black), 'dialogue' plays lines in the dialogue box ('auto' = seconds each line stays if the player does not press E), 'sfx' plays /assets/audio/<file>.wav, 'title' shows the title card. 'ui' holds dialogue box timings. OBJECTIVES: the tracker's steps in order; the text is story_dialogue.json 'objectives.<id>'. A step is done when its 'complete_on' happens: {'event': id} (a StoryTriggers.fire) or {'area': room id}. Doing a later step early also ticks off the ones before it, but a 'required' step is never skipped. 'done_if_flag' completes a step at once if that flag is already set.",
   "line_refs_in": ["pike_lines", "npc_barks", "facility_audio"],
   "ui": {
     "chars_per_second": 60,
@@ -25,5 +25,15 @@
       { "type": "title", "line": "opening.title", "hold": 3.5 }
     ]
   },
+  "objectives": [
+    { "id": "report_to_pike", "complete_on": { "event": "pike_brief_done" }, "required": true },
+    { "id": "visit_design_bay", "complete_on": { "area": "design_bay" } },
+    { "id": "talk_to_dot", "complete_on": { "event": "talked_to_dot" } },
+    { "id": "build_beacon", "complete_on": { "event": "rocket_ready" } },
+    { "id": "run_ibm", "complete_on": { "event": "ibm_run_ok" } },
+    { "id": "launch", "complete_on": { "event": "orbit_achieved" }, "required": true },
+    { "id": "dads_office", "complete_on": { "area": "dad_office" }, "required": true },
+    { "id": "listen_tapes", "complete_on": { "event": "tapes_all_heard" }, "done_if_flag": "tapes_all_heard", "required": true }
+  ],
   "triggers": {}
 }

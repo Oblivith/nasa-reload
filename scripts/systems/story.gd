@@ -15,6 +15,9 @@ extends Node
 ##   Story.present(lines)                      show them (freezes the player in the facility)
 ##   Story.play("talk_guard")                  run a trigger from story_level1.json
 
+## The current objective changed ("" when every step is done).
+signal objective_changed(id: String, text: String)
+
 const DIALOGUE_FILE := "story_dialogue"
 const FLOW_FILE := "story_level1"
 ## A string of this form in another data file is replaced by that line's text at load.
@@ -29,6 +32,7 @@ var _layer: CanvasLayer
 var _host: Node = null                 # the facility scene, while one is running
 var _captions: StoryDialogueBox = null
 var _queue: Array = []                 # trigger ids waiting for the screen to be free
+var _tracker: ObjectiveTracker
 
 
 func _ready() -> void:
@@ -43,7 +47,13 @@ func _ready() -> void:
 	_layer.name = "StoryLayer"
 	_layer.layer = 20
 	add_child(_layer)
+	_tracker = ObjectiveTracker.new()
+	_tracker.visible = false
+	_layer.add_child(_tracker)
+	_tracker.set_labels(text("ui.tracker_title"), text("ui.tracker_done"))
 	StoryTriggers.event_fired.connect(_on_event)
+	StoryTriggers.area_entered.connect(_on_area)
+	SceneManager.scene_changed.connect(_on_scene_changed)
 
 
 # --- Lines ---------------------------------------------------------------------------
@@ -233,6 +243,7 @@ func _finish_case(case: Dictionary) -> void:
 
 
 func _on_event(event_id: String, payload: Dictionary) -> void:
+	_objective_signal("event", event_id)
 	if (flow.get("triggers", {}) as Dictionary).has(event_id):
 		play(event_id, payload)
 
@@ -240,3 +251,92 @@ func _on_event(event_id: String, payload: Dictionary) -> void:
 func _process(_delta: float) -> void:
 	if not _queue.is_empty() and not _screen_busy():
 		play(str(_queue.pop_front()))
+
+
+func _on_area(area_id: String, _first_time: bool) -> void:
+	_objective_signal("area", area_id)
+
+
+# --- Facility ------------------------------------------------------------------------
+
+## Called by the facility scene once it is built. From here on dialogue opens through
+## the facility (so the player is held and its other screens close) and the objective
+## tracker is on screen.
+func attach_facility(facility: Node) -> void:
+	_host = facility
+	_tracker.visible = true
+	_tracker.show_objective(objective_text())
+
+
+func _on_scene_changed(path: String) -> void:
+	# Menus and cutscenes hide the tracker; the facility switches it back on.
+	if not _has_host() or path.contains("title") or path.contains("cutscenes"):
+		_tracker.visible = false
+
+
+# --- Objectives ----------------------------------------------------------------------
+# story_level1.json "objectives" is the ordered list. A step is done when its
+# "complete_on" happens ({"event": id} from StoryTriggers.fire, or {"area": room id}).
+# Doing a later step's thing early ticks off the steps before it too, except that a
+# "required" step can never be skipped. Progress is the GameState flags "obj_<id>".
+
+func objectives() -> Array:
+	return flow.get("objectives", [])
+
+
+## Index of the current step, or -1 when all are done.
+func objective_index() -> int:
+	var steps := objectives()
+	for i in steps.size():
+		if not GameState.has_flag("obj_" + str((steps[i] as Dictionary)["id"])):
+			return i
+	return -1
+
+
+func objective_id() -> String:
+	var i := objective_index()
+	return str((objectives()[i] as Dictionary)["id"]) if i >= 0 else ""
+
+
+func objective_text() -> String:
+	var i := objective_index()
+	return _step_text(objectives()[i]) if i >= 0 else ""
+
+
+func objective_done(id: String) -> bool:
+	return GameState.has_flag("obj_" + id)
+
+
+func _step_text(step: Dictionary) -> String:
+	return text(str(step.get("line", "objectives." + str(step["id"]))))
+
+
+func _objective_signal(kind: String, value: String) -> void:
+	var steps := objectives()
+	var first := objective_index()
+	if first < 0:
+		return
+	for j in range(first, steps.size()):
+		var step: Dictionary = steps[j]
+		if str((step.get("complete_on", {}) as Dictionary).get(kind, "")) == value:
+			_complete_steps(first, j)
+			return
+		if bool(step.get("required", false)):
+			return
+
+
+func _complete_steps(from: int, to: int) -> void:
+	var steps := objectives()
+	var last_done := ""
+	for k in range(from, to + 1):
+		GameState.set_flag("obj_" + str((steps[k] as Dictionary)["id"]))
+		last_done = _step_text(steps[k])
+	# A step whose work is already done (all tapes heard before the launch worked).
+	var next := objective_index()
+	while next >= 0 and GameState.has_flag(str((steps[next] as Dictionary).get("done_if_flag", "-"))):
+		GameState.set_flag("obj_" + str((steps[next] as Dictionary)["id"]))
+		last_done = _step_text(steps[next])
+		next = objective_index()
+	_tracker.show_objective(objective_text(), last_done)
+	objective_changed.emit(objective_id(), objective_text())
+	StoryTriggers.fire("objective_changed", {"id": objective_id()})
