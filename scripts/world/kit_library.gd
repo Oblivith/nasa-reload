@@ -650,6 +650,7 @@ static func _work_light(bm: BrickMesh, o: Dictionary, prop: KitProp) -> void:
 	b(bm, 0, h + drop / 2, 0, 0.03, drop, 0.03, INK)
 	bm.cyl(Vector3(0, h - 0.12, 0), 0.42, 0.3, TEAL, "metal", 1, 12, 0.14)
 	bm.cyl(Vector3(0, h - 0.275, 0), 0.38, 0.01, Color("fff6dc"), "glow", 1, 12)
+	bm.cyl(Vector3(0, (h - 0.3) / 2.0, 0), (h - 0.3) * 0.62, h - 0.3, Color(1.0, 0.95, 0.82, 0.016), "beam", 1, 14, 0.36)
 	prop.lamp(Vector3(0, h - 0.4, 0), Color(str(o.get("color", "fff1d6"))), float(o.get("energy", 2.4)), float(o.get("range", 13.0)), true)
 
 

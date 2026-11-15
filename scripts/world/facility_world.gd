@@ -307,6 +307,18 @@ func best_stub(from: Vector3, forward: Vector3) -> InteractStub:
 	return best
 
 
+## Puts a moving body's meshes on the render layer of the room it is in (plus layer 1),
+## so it is lit by that room's lights and by the sun only where the sun reaches.
+func _adopt(body: Node, room_id: String) -> void:
+	var bit := LIFT_BIT if room_id == LIFT else (rooms[room_id] as WorldRoom).layer_bit
+	var stack: Array = [body]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is GeometryInstance3D:
+			(node as GeometryInstance3D).layers = bit | 1
+		stack.append_array(node.get_children())
+
+
 func stats() -> Dictionary:
 	var prop_count := 0
 	var light_count := 0
@@ -331,6 +343,7 @@ func _process(_delta: float) -> void:
 	var here := room_at(body.global_position + Vector3(0, 0.9, 0))
 	if here != "" and here != current_room:
 		current_room = here
+		_adopt(body, here)
 		room_changed.emit(here, room_data(here))
 	var starts: Array = [current_room]
 	var camera := get_viewport().get_camera_3d()

@@ -1,6 +1,236 @@
 {
-  "comment": "Facility sound: room ambience, footsteps, PA lines.",
-  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Filled in at stage 3.",
-  "ambience": {},
-  "pa_lines": []
+  "comment": "Facility sound: room ambience, prop emitters, footsteps, PA lines.",
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Files are /assets/audio/<name>.wav (synthesised by tools/gen_audio; replace with recordings of the same name). 'ambience' maps a room's ambience id (facility_world.json) to layers of [file, volume_db] that cross-fade over fade_seconds when the player changes room. 'emitters' are sounds props make: 'loop' ones play from the nearest props in visible rooms (max per kind), ones with 'every' [min_s, max_s] fire now and then from a random prop. 'footsteps' picks files by the room's floor surface; stride_m is the distance between steps. 'pa' lines are shown as a caption while the chime plays.",
+  "fade_seconds": 1.4,
+  "ambience": {
+    "lobby": [
+      [
+        "amb_lobby",
+        -9
+      ],
+      [
+        "amb_hum",
+        -32
+      ]
+    ],
+    "corridor": [
+      [
+        "amb_air",
+        -15
+      ],
+      [
+        "amb_hum",
+        -25
+      ]
+    ],
+    "cafeteria": [
+      [
+        "amb_cafe",
+        -8
+      ],
+      [
+        "amb_hum",
+        -30
+      ]
+    ],
+    "store": [
+      [
+        "amb_air",
+        -13
+      ],
+      [
+        "amb_hum",
+        -22
+      ]
+    ],
+    "wind_tunnel": [
+      [
+        "amb_tunnel",
+        -15
+      ],
+      [
+        "amb_air",
+        -18
+      ]
+    ],
+    "design_bay": [
+      [
+        "amb_bay",
+        -7
+      ]
+    ],
+    "mission_control": [
+      [
+        "amb_mission",
+        -8
+      ]
+    ],
+    "stairwell": [
+      [
+        "amb_air",
+        -11
+      ]
+    ],
+    "computer_room": [
+      [
+        "amb_ibm",
+        -8
+      ]
+    ],
+    "office": [
+      [
+        "amb_office",
+        -10
+      ],
+      [
+        "amb_hum",
+        -28
+      ]
+    ],
+    "office_quiet": [
+      [
+        "amb_air",
+        -17
+      ],
+      [
+        "amb_office",
+        -27
+      ]
+    ],
+    "dad_office": [
+      [
+        "amb_hiss",
+        -36
+      ],
+      [
+        "amb_air",
+        -20
+      ]
+    ],
+    "typing_pool": [
+      [
+        "amb_typing",
+        -8
+      ],
+      [
+        "amb_hum",
+        -28
+      ]
+    ],
+    "lift": [
+      [
+        "amb_air",
+        -20
+      ]
+    ]
+  },
+  "emitters": {
+    "phone": {
+      "file": "phone_ring",
+      "every": [
+        22,
+        65
+      ],
+      "db": -9,
+      "range": 18
+    },
+    "vending": {
+      "file": "vending",
+      "every": [
+        35,
+        90
+      ],
+      "db": -8,
+      "range": 12
+    },
+    "teletype": {
+      "file": "loop_teletype",
+      "loop": true,
+      "db": -15,
+      "range": 9,
+      "max": 1
+    },
+    "tape": {
+      "file": "loop_tape",
+      "loop": true,
+      "db": -19,
+      "range": 6,
+      "max": 2
+    },
+    "clock_tick": {
+      "file": "loop_clock",
+      "loop": true,
+      "db": -20,
+      "range": 5,
+      "max": 1
+    },
+    "crane": {
+      "file": "loop_crane",
+      "loop": true,
+      "db": -13,
+      "range": 28,
+      "max": 1
+    },
+    "printer": {
+      "file": "loop_printer",
+      "loop": true,
+      "db": -16,
+      "range": 8,
+      "max": 1
+    },
+    "coffee": {
+      "file": "loop_coffee",
+      "loop": true,
+      "db": -18,
+      "range": 5,
+      "max": 1
+    }
+  },
+  "footsteps": {
+    "stride_m": 0.8,
+    "db": -11,
+    "lino": [
+      "step_lino_1",
+      "step_lino_2"
+    ],
+    "concrete": [
+      "step_concrete_1",
+      "step_concrete_2"
+    ],
+    "carpet": [
+      "step_carpet_1",
+      "step_carpet_2"
+    ],
+    "metal": [
+      "step_metal_1",
+      "step_metal_2"
+    ],
+    "raised": [
+      "step_raised_1",
+      "step_raised_2"
+    ]
+  },
+  "lift": {
+    "muffle_hz": 700,
+    "ride_db": -11
+  },
+  "pa": {
+    "first": 28,
+    "every": [
+      55,
+      120
+    ],
+    "db": -8,
+    "prefix": "PA:  ",
+    "lines": [
+      "Dr. Okafor, your coffee is ready. All eight of them.",
+      "Will the owner of the teal sedan please move it. You are parked on the countdown clock cable.",
+      "Tape reel fourteen to the computer room. Reel fourteen. Not thirteen. We remember thirteen.",
+      "The cafeteria regrets that today's special is, again, the special.",
+      "Wind tunnel run in five minutes. Secure all hats.",
+      "Director Pike reminds all staff that pencils are a budget item.",
+      "Slide rule found in the upper corridor. Describe it to claim it.",
+      "Mission Control, your quiet sign is not a suggestion."
+    ]
+  }
 }

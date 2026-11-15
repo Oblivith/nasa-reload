@@ -26,6 +26,8 @@ const ROOM_ALIASES := {"launch_office": "mission_control"}
 
 var session: DesignSession
 var world: FacilityWorld
+var atmosphere: WorldAtmosphere
+var audio: WorldAudio
 var _cfg: Dictionary = {}
 var _player: CharacterBody3D
 var _camera: Camera3D
@@ -74,6 +76,13 @@ func _ready() -> void:
 	add_child(_ui_layer)
 	_hud = FacilityHud.new()
 	_ui_layer.add_child(_hud)
+	audio = WorldAudio.new()
+	audio.name = "Audio"
+	add_child(audio)
+	audio.setup(world, DataLoader.raw.get("facility_audio", {}))
+	audio.announcement.connect(func(text: String) -> void:
+		if _overlay == null:
+			_hud.notice(text))
 	world.room_changed.connect(_on_room_changed)
 	world.door_locked_tried.connect(_on_door_locked)
 	StoryTriggers.event_fired.connect(_on_story_event)
@@ -356,15 +365,10 @@ func _on_design_changed() -> void:
 # --- World building ------------------------------------------------------------------
 
 func _build_environment() -> void:
-	var env := WorldEnvironment.new()
-	var e := Environment.new()
-	e.background_mode = Environment.BG_COLOR
-	e.background_color = Color("a9c9d8")
-	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color("f2e8cf")
-	e.ambient_light_energy = 0.45
-	env.environment = e
-	add_child(env)
+	atmosphere = WorldAtmosphere.new()
+	atmosphere.name = "Atmosphere"
+	add_child(atmosphere)
+	atmosphere.setup(world)
 
 
 ## Makes the container a station's pieces are built into, at the station's place in the
@@ -924,6 +928,9 @@ func _run_selftest() -> void:
 	print("  launch blocker: '%s'" % session.launch_blocker())
 	print("  tunnel: margin %.2f -> %s" % [_tunnel_margin, tunnel_verdict(_tunnel_margin)])
 	expect.call(tunnel_verdict(-0.5) == "tumbles" and tunnel_verdict(2.0) == "steady" and tunnel_verdict(4.0) == "stiff", "tunnel verdicts")
+
+	expect.call(audio.ambience_playing().has("amb_ibm") and audio.surface_at(_player.global_position) == "raised", "computer room ambience and floor surface (%s)" % ", ".join(audio.ambience_playing()))
+	expect.call(atmosphere.env.tonemap_mode == Environment.TONE_MAPPER_FILMIC and atmosphere.env.glow_enabled, "atmosphere: filmic tonemap and glow are on")
 
 	# Story hooks: Dad's office is locked until a story event sets the GameState flag.
 	var dad: WorldDoor = world.doors_by_id.get("dad")

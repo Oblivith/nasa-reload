@@ -12,7 +12,8 @@ extends RefCounted
 ##   bm.commit(self); bm.build_body(self)
 ##
 ## Surfaces: matte, gloss, metal, tile, grid, concrete, carpet, wood (lit, see
-## surface.gdshader); glow, screen, blink (unshaded emissive, glow.gdshader); glass.
+## surface.gdshader); glow, screen, blink (unshaded emissive, glow.gdshader); glass;
+## beam (additive haze for fake light cones).
 
 const SHADER_DIR := "res://scripts/world/shaders/"
 const OPAQUE := {
@@ -51,6 +52,10 @@ static func material(surface: String) -> Material:
 		sm.set_shader_parameter("rough", spec[2])
 		sm.set_shader_parameter("metal", spec[3])
 		result = sm
+	elif surface == "beam":
+		var beam := ShaderMaterial.new()
+		beam.shader = load(SHADER_DIR + "beam.gdshader")
+		result = beam
 	elif surface == "glass":
 		var gm := StandardMaterial3D.new()
 		gm.vertex_color_use_as_albedo = true

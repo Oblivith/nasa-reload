@@ -306,6 +306,8 @@ func add_prop(kind: String, at: Vector3, rot_deg: float, options: Dictionary, wo
 	if not opts.has("seed"):
 		opts["seed"] = props.size() + hash(room_id) % 1000
 	prop.setup(kind, opts, layer_bit)
+	if cast_shadows and prop.mesh_instance != null:
+		prop.mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	add_child(prop)
 	props.append(prop)
 	for lamp: Dictionary in prop.lamps:
