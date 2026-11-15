@@ -1,0 +1,16 @@
+{
+  "cost_model": {
+    "id": "cost_model",
+    "engine_thrust_exponent": 0.7,
+    "fin_cost_per_m2": 0.02,
+    "gimbal_cost_per_engine": 0.5,
+    "custom_engine_cost": 3.0,
+    "escape_tower_cost": 1.0,
+    "budget_star_min_left_fraction": 0.1,
+    "verified": false,
+    "source": "MADE UP for gameplay. engine_thrust_exponent: an engine run at a different thrust than its catalogue entry costs (thrust ratio)^0.7, in the spirit of real cost-estimating relationships, where cost grows with size to a power below 1. Fin, gimbal, tower and custom-engine costs are placeholders. budget_star_min_left_fraction: keep at least 10% of the budget unspent to earn the budget star (MADE UP). Moved here from builder_ui.json so the sim does not read UI config."
+  },
+  "metadata": {
+    "si_assistance": "This file was developed with the help of SI."
+  }
+}

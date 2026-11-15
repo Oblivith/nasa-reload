@@ -1,0 +1,53 @@
+{
+  "q_limit_model": {
+    "id": "q_limit_model",
+    "formula": "q_limit = max_q_pa * clamp(reference_fineness / (length / diameter), min_factor, max_factor)",
+    "reference_fineness": 12.0,
+    "min_factor": 0.5,
+    "max_factor": 1.5,
+    "warn_fraction": 0.85,
+    "verified": false,
+    "source": "MADE UP for gameplay. Captures the real trend that long, thin rockets bend more easily (bending moment grows with length, section stiffness with diameter). Reference fineness 12 is roughly Redstone / Thor class."
+  },
+  "materials": [
+    {
+      "id": "aluminium",
+      "name": "Aluminium alloy",
+      "easy_label": "Light",
+      "areal_density_kg_m2": 45.0,
+      "max_q_pa": 45000,
+      "cost_per_m2": 0.01,
+      "bulk_density_kg_m3": 2800,
+      "description": "Light and easy to work. The standard choice for 1960s tanks.",
+      "verified": false,
+      "source": "Areal density CALIBRATED so a Redstone-class tank section (1.78 m x 12 m, 67 m2) weighs about 3.0 t dry. Max q is a MADE-UP limit set above the roughly 30-35 kPa max-Q that real aluminium launchers (Saturn, Titan) flew through. Bulk density is 2014/2219-type alloy (about 2.8 g/cc). Cost is made up."
+    },
+    {
+      "id": "steel",
+      "name": "Stainless steel",
+      "easy_label": "Strong",
+      "areal_density_kg_m2": 63.0,
+      "max_q_pa": 75000,
+      "cost_per_m2": 0.006,
+      "bulk_density_kg_m3": 7900,
+      "description": "Heavy but tough and cheap. Shrugs off a rough ride through the air.",
+      "verified": false,
+      "source": "MADE UP: 1.4x the aluminium areal density and about 1.7x its q limit, for a clear light-vs-strong trade-off. Note the real Atlas used very thin pressure-stabilised stainless steel and was LIGHTER than aluminium designs; the game deliberately uses a conventional thick-wall steel structure instead. Bulk density is 301 stainless (about 7.9 g/cc)."
+    },
+    {
+      "id": "titanium",
+      "name": "Titanium alloy",
+      "easy_label": "Exotic",
+      "areal_density_kg_m2": 38.0,
+      "max_q_pa": 70000,
+      "cost_per_m2": 0.05,
+      "bulk_density_kg_m3": 4430,
+      "description": "Nearly as strong as steel at close to aluminium weight. Eye-wateringly expensive.",
+      "verified": false,
+      "source": "MADE UP ratios (0.85x aluminium mass, about 1.55x its q limit, 5x cost) based on the real high strength-to-weight ratio of Ti-6Al-4V (about 4.43 g/cc), which was used in 1960s pressure vessels and the Mercury/Gemini capsule structure."
+    }
+  ],
+  "metadata": {
+    "si_assistance": "This file was developed with the help of SI."
+  }
+}

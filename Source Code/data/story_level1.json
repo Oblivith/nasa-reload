@@ -1,0 +1,288 @@
+{
+  "metadata": {
+    "si_assistance": "This file was developed with the help of SI."
+  },
+  "line_refs_in": [
+    "pike_lines",
+    "npc_barks",
+    "facility_audio"
+  ],
+  "ui": {
+    "chars_per_second": 60,
+    "caption_seconds": 2.6
+  },
+  "opening": {
+    "next_scene": "res://scenes/world/facility/facility.tscn",
+    "chars_per_second": 30,
+    "hold_seconds": 1.9,
+    "beats": [
+      {
+        "type": "narrate",
+        "line": "opening.line_1"
+      },
+      {
+        "type": "narrate",
+        "line": "opening.line_2"
+      },
+      {
+        "type": "narrate",
+        "line": "opening.line_3"
+      },
+      {
+        "type": "narrate",
+        "line": "opening.line_4"
+      },
+      {
+        "type": "stars",
+        "alpha": 0.0,
+        "seconds": 1.2
+      },
+      {
+        "type": "dialogue",
+        "auto": 2.2,
+        "lines": [
+          "opening.fight_1",
+          "opening.fight_2",
+          "opening.fight_3",
+          "opening.fight_4",
+          "opening.fight_5"
+        ]
+      },
+      {
+        "type": "sfx",
+        "file": "door_close",
+        "wait": 1.8
+      },
+      {
+        "type": "stars",
+        "alpha": 1.0,
+        "seconds": 1.2
+      },
+      {
+        "type": "narrate",
+        "line": "opening.line_5"
+      },
+      {
+        "type": "narrate",
+        "line": "opening.line_6"
+      },
+      {
+        "type": "narrate",
+        "line": "opening.line_7"
+      },
+      {
+        "type": "title",
+        "line": "opening.title",
+        "hold": 3.5
+      }
+    ]
+  },
+  "objectives": [
+    {
+      "id": "report_to_pike",
+      "complete_on": {
+        "event": "pike_brief_done"
+      },
+      "required": true
+    },
+    {
+      "id": "visit_design_bay",
+      "complete_on": {
+        "area": "design_bay"
+      }
+    },
+    {
+      "id": "talk_to_dot",
+      "complete_on": {
+        "event": "talked_to_dot"
+      }
+    },
+    {
+      "id": "build_beacon",
+      "complete_on": {
+        "event": "fitted_part"
+      }
+    },
+    {
+      "id": "run_ibm",
+      "complete_on": {
+        "event": "ibm_run_ok"
+      }
+    },
+    {
+      "id": "launch",
+      "complete_on": {
+        "event": "orbit_achieved"
+      },
+      "required": true
+    },
+    {
+      "id": "dads_office",
+      "complete_on": {
+        "area": "dad_office"
+      },
+      "required": true
+    },
+    {
+      "id": "listen_tapes",
+      "complete_on": {
+        "event": "tapes_all_heard"
+      },
+      "done_if_flag": "tapes_all_heard",
+      "required": true
+    }
+  ],
+  "autoplay": [
+    {
+      "area": "lobby",
+      "trigger": "moms_note",
+      "unless": [
+        "mom_note_seen"
+      ],
+      "delay": 1.5
+    }
+  ],
+  "triggers": {
+    "moms_bag": [
+      {
+        "lines": [
+          "lobby.mom_note"
+        ],
+        "set": [
+          "mom_note_seen"
+        ]
+      }
+    ],
+    "moms_note": [
+      {
+        "lines": [
+          "lobby.mom_note"
+        ],
+        "set": [
+          "mom_note_seen"
+        ]
+      }
+    ],
+    "talk_guard": [
+      {
+        "lines": [
+          "lobby.guard_1",
+          "lobby.guard_2"
+        ],
+        "set": [
+          "guard_met"
+        ]
+      }
+    ],
+    "talk_dot": [
+      {
+        "unless": [
+          "dot_intro_seen"
+        ],
+        "lines": [
+          "design_bay.intro_1",
+          "design_bay.intro_2",
+          "design_bay.intro_3",
+          "design_bay.intro_4",
+          "design_bay.intro_5",
+          "design_bay.intro_6"
+        ],
+        "set": [
+          "dot_intro_seen"
+        ],
+        "fire": "talked_to_dot"
+      },
+      {
+        "lines": [
+          "design_bay.about_dad_1",
+          "design_bay.about_dad_2"
+        ]
+      }
+    ],
+    "talk_pike": [
+      {
+        "lines": [
+          "pike_office.brief_1",
+          "pike_office.brief_2",
+          "pike_office.brief_3",
+          "pike_office.brief_4",
+          "pike_office.brief_5"
+        ],
+        "set": [
+          "pike_brief_seen"
+        ],
+        "fire": "pike_brief_done"
+      }
+    ],
+    "talk_antagonist": [
+      {
+        "unless": [
+          "board_warning_seen"
+        ],
+        "lines": [
+          "pike_office.board_warning"
+        ],
+        "set": [
+          "board_warning_seen"
+        ]
+      },
+      {
+        "lines": [
+          "pike_office.board_warning"
+        ]
+      }
+    ],
+    "talk_jo": [
+      {
+        "lines": [
+          "cafeteria.jo_1",
+          "cafeteria.jo_2",
+          "cafeteria.jo_3"
+        ],
+        "set": [
+          "jo_intro_seen"
+        ]
+      }
+    ],
+    "talk_operator": [
+      {
+        "lines": [
+          "ibm_room.operator_intro"
+        ],
+        "set": [
+          "operator_intro_seen"
+        ]
+      }
+    ],
+    "dads_tape_player": [
+      {
+        "unless": [
+          "tapes_all_heard"
+        ],
+        "lines": [
+          "dad_office.tape1_1",
+          "dad_office.tape1_2",
+          "dad_office.tape2_1",
+          "dad_office.tape2_2",
+          "dad_office.tape3_1",
+          "dad_office.tape3_2",
+          "dad_office.tape3_3",
+          "dad_office.tape3_4",
+          "ending.level_complete",
+          "ending.to_be_continued"
+        ],
+        "set": [
+          "tapes_all_heard",
+          "level1_complete"
+        ],
+        "fire": "tapes_all_heard"
+      },
+      {
+        "lines": [
+          "dad_office.tape1_1",
+          "dad_office.tape1_2"
+        ]
+      }
+    ]
+  }
+}

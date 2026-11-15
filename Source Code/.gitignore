@@ -1,0 +1,24 @@
+# Godot 4+ specific ignores
+.godot/
+.nomedia
+
+# Export builds
+build/
+export/
+*.apk
+*.aab
+*.exe
+*.pck
+*.zip
+
+# Godot mono / misc
+.mono/
+data_*/
+mono_crash.*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.tmp

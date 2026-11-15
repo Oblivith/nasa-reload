@@ -1,0 +1,7 @@
+; SI assistance metadata: This scene file used the help of SI.
+[gd_scene load_steps=2 format=3 uid="uid://facility_campus"]
+
+[ext_resource type="Script" path="res://scenes/world/facility/facility.gd" id="1"]
+
+[node name="Facility" type="Node3D"]
+script = ExtResource("1")

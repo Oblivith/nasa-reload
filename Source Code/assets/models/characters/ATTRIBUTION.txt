@@ -1,0 +1,8 @@
+Metadata claim: The character import and placement code used the help of SI.
+
+Character meshes were assembled from Characters.ldr and the official LDraw Parts Library.
+The source part library is licensed under the terms listed at:
+https://www.ldraw.org/docs-main/licenses/legal-info.html
+
+Several private or unavailable custom part names in Characters.ldr were substituted with
+the closest installed official LDraw parts. The importer mapping is in tools/import_characters.py.

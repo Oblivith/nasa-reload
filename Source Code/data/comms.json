@@ -1,0 +1,141 @@
+{
+  "radios": [
+    {
+      "id": "beacon_transmitter",
+      "name": "Beacon transmitter",
+      "mass_kg": 1.0,
+      "power_W": 1,
+      "data_rate_bps": 100,
+      "max_range_km": 3000,
+      "cost": 0.2,
+      "unlock_level": 1,
+      "description": "Low-rate, low-power tone beacon. Enough for tracking and a trickle of data.",
+      "verified": false,
+      "source": "Inspired by the real 108 MHz beacons on Vanguard 1 and Explorer 1, 1958."
+    },
+    {
+      "id": "telemetry_radio",
+      "name": "Telemetry radio",
+      "mass_kg": 3.0,
+      "power_W": 4,
+      "data_rate_bps": 1000,
+      "max_range_km": 40000,
+      "cost": 0.5,
+      "unlock_level": 1,
+      "description": "Standard transmitter for orbital science data.",
+      "verified": false,
+      "source": "Inspired by real Explorer-class and TIROS-class telemetry transmitters, 1958-60."
+    },
+    {
+      "id": "wideband_radio",
+      "name": "Wideband radio",
+      "mass_kg": 10.0,
+      "power_W": 20,
+      "data_rate_bps": 100000,
+      "max_range_km": 40000,
+      "cost": 1.5,
+      "unlock_level": 3,
+      "description": "High-rate link for TV pictures. Heavy and power hungry.",
+      "verified": false,
+      "source": "Inspired by real Telstar and TIROS video transmitters, 1960-62."
+    },
+    {
+      "id": "deep_space_radio",
+      "name": "Deep-space radio",
+      "mass_kg": 15.0,
+      "power_W": 30,
+      "data_rate_bps": 2000,
+      "max_range_km": 400000,
+      "cost": 2.0,
+      "unlock_level": 5,
+      "description": "Long-range link good out to the Moon.",
+      "verified": false,
+      "source": "Inspired by the real Ranger / Surveyor probe transmitters, 1960s."
+    }
+  ],
+  "ground_stations": [
+    {
+      "id": "single_station",
+      "name": "Cape Canaveral station",
+      "stations": 1,
+      "pass_minutes_min": 5,
+      "pass_minutes_max": 12,
+      "passes_per_day": 3,
+      "cost": 1.0,
+      "unlock_level": 1,
+      "description": "A single tracking station; a few passes a day.",
+      "verified": false,
+      "source": "Inspired by the real Minitrack network station at Cape Canaveral, 1958."
+    },
+    {
+      "id": "minitrack_network",
+      "name": "Minitrack network",
+      "stations": 5,
+      "pass_minutes_min": 5,
+      "pass_minutes_max": 12,
+      "passes_per_day": 8,
+      "cost": 4.0,
+      "unlock_level": 2,
+      "description": "A handful of stations around the world. More passes, more data.",
+      "verified": false,
+      "source": "Inspired by the real NASA Minitrack tracking network, 1957-60s."
+    },
+    {
+      "id": "global_network",
+      "name": "Global tracking network",
+      "stations": 14,
+      "pass_minutes_min": 5,
+      "pass_minutes_max": 12,
+      "passes_per_day": 16,
+      "cost": 10.0,
+      "unlock_level": 3,
+      "description": "Near-continuous coverage for crewed missions.",
+      "verified": false,
+      "source": "Inspired by the real Mercury Space Flight Network (18 stations), 1961."
+    }
+  ],
+  "tape_recorders": [
+    {
+      "id": "small_tape",
+      "name": "Small tape recorder",
+      "capacity_bits": 2000000,
+      "capacity_MB": 0.25,
+      "mass_kg": 2.0,
+      "power_W": 1,
+      "cost": 0.3,
+      "unlock_level": 1,
+      "description": "Holds a few minutes of low-rate data between passes.",
+      "verified": false,
+      "source": "Inspired by the real miniature tape recorder on Explorer 3 (1958)."
+    },
+    {
+      "id": "standard_tape",
+      "name": "Standard tape recorder",
+      "capacity_bits": 16000000,
+      "capacity_MB": 2,
+      "mass_kg": 5.0,
+      "power_W": 3,
+      "cost": 0.8,
+      "unlock_level": 2,
+      "description": "A few megabytes: enough for a day of low-rate instruments.",
+      "verified": false,
+      "source": "Inspired by the real tape recorders on TIROS and Explorer satellites, 1960s."
+    },
+    {
+      "id": "large_tape",
+      "name": "Large tape recorder",
+      "capacity_bits": 80000000,
+      "capacity_MB": 10,
+      "mass_kg": 12.0,
+      "power_W": 6,
+      "cost": 2.0,
+      "unlock_level": 3,
+      "description": "Bulky, but can buffer TV imagery between passes.",
+      "verified": false,
+      "source": "Inspired by the real video tape recorders flown on Nimbus and Ranger-era missions, 1960s."
+    }
+  ],
+  "metadata": {
+    "si_assistance": "This file was developed with the help of SI."
+  }
+}

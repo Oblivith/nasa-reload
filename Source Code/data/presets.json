@@ -1,0 +1,198 @@
+{
+  "nose": [
+    {
+      "id": "pointy",
+      "label": "Pointy",
+      "shape": "cone",
+      "length_to_diameter": 3,
+      "description": "A long sharp cone.",
+      "verified": false,
+      "source": "MADE UP fineness ratio, typical of sounding-rocket nose cones (about 3:1)."
+    },
+    {
+      "id": "rounded",
+      "label": "Rounded",
+      "shape": "ogive",
+      "length_to_diameter": 2,
+      "description": "A smooth curved nose. Slips through the air most easily.",
+      "verified": false,
+      "source": "MADE UP fineness ratio, typical of 1960s payload fairings (about 2:1 ogive)."
+    },
+    {
+      "id": "fat",
+      "label": "Fat / Blunt",
+      "shape": "blunt",
+      "length_to_diameter": 0.8,
+      "description": "Short and stubby, like a capsule. Roomy, but it pushes a lot of air.",
+      "verified": false,
+      "source": "MADE UP fineness ratio, loosely a Mercury-style capsule shape."
+    }
+  ],
+  "body": [
+    {
+      "id": "short_thin",
+      "label": "Short & thin",
+      "length_m": 15,
+      "diameter_m": 2.4,
+      "propellant_mass_kg": 61700,
+      "description": "The slimmest, shortest tank. Light and cheap, with the least fuel.",
+      "verified": false,
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Propellant is 100% of what the tank holds at 1,000 kg/m3 with 10% ullage."
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "length_m": 18,
+      "diameter_m": 3,
+      "propellant_mass_kg": 115700,
+      "description": "A solid all-rounder.",
+      "verified": false,
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Propellant is 100% of what the tank holds at 1,000 kg/m3 with 10% ullage."
+    },
+    {
+      "id": "tall_fat",
+      "label": "Tall & fat",
+      "length_m": 27,
+      "diameter_m": 3.2,
+      "propellant_mass_kg": 197400,
+      "description": "A great big fuel tank. Goes far, if the engine can lift it.",
+      "verified": false,
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Propellant is 100% of what the tank holds at 1,000 kg/m3 with 10% ullage."
+    }
+  ],
+  "fins": [
+    {
+      "id": "small",
+      "label": "Small",
+      "count": 4,
+      "root_chord_m": 1,
+      "tip_chord_m": 0.5,
+      "span_m": 0.5,
+      "sweep_m": 0.5,
+      "position_from_tail_m": 0,
+      "mass_kg": 60,
+      "description": "Little fins. Light, but they do not steady the rocket much.",
+      "verified": false,
+      "source": "MADE UP: under half the Redstone-class fin in every dimension. Too small to stabilise any of the preset bodies, on purpose."
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "count": 4,
+      "root_chord_m": 2.8,
+      "tip_chord_m": 1.4,
+      "span_m": 2.1,
+      "sweep_m": 1.4,
+      "position_from_tail_m": 0,
+      "mass_kg": 560,
+      "description": "Sensible fins for a sensible rocket. Wide enough for most bodies.",
+      "verified": false,
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Same shape as the other presets (tip and sweep = root / 2); mass 32 kg per m2 of total planform, like the Large fins."
+    },
+    {
+      "id": "large",
+      "label": "Large",
+      "count": 4,
+      "root_chord_m": 3.6,
+      "tip_chord_m": 1.8,
+      "span_m": 2.4,
+      "sweep_m": 1.8,
+      "position_from_tail_m": 0,
+      "mass_kg": 800,
+      "description": "Big fins. Very steady, but heavy and draggy.",
+      "verified": false,
+      "source": "MADE UP: 1.5x the medium chords and about 1.8x its span; tuned so the Tall & fat body is stable (about 1.4-1.7 calibres)."
+    }
+  ],
+  "engine": [
+    {
+      "id": "small_cheap",
+      "label": "Small & cheap",
+      "engine_id": "kerosene_booster",
+      "count": 1,
+      "section_length_m": 4,
+      "description": "One kerosene engine. Cheapest, and the hardest to get to orbit, but it can be done.",
+      "verified": false,
+      "source": "Points at engines.json 'kerosene_booster' x 1 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "engine_id": "kerosene_booster",
+      "count": 2,
+      "section_length_m": 4,
+      "description": "Two kerosene engines side by side. A proper workhorse.",
+      "verified": false,
+      "source": "Points at engines.json 'kerosene_booster' x 2 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
+    },
+    {
+      "id": "big_powerful",
+      "label": "Big & powerful",
+      "engine_id": "kerosene_booster",
+      "count": 3,
+      "section_length_m": 4,
+      "description": "Three kerosene engines. Lots of push: make sure the rest of the rocket can take it.",
+      "verified": false,
+      "source": "Points at engines.json 'kerosene_booster' x 3 (a cluster). Count and section length tuned by tools/tune_easy_presets/tune.js for Level 1 balance."
+    }
+  ],
+  "material": [
+    {
+      "id": "light",
+      "label": "Light",
+      "material": "aluminium",
+      "description": "Aluminium: light, so more of your fuel goes into speed.",
+      "verified": false,
+      "source": "Points at materials.json 'aluminium'."
+    },
+    {
+      "id": "strong",
+      "label": "Strong",
+      "material": "steel",
+      "description": "Steel: heavy, but it holds together when the air pushes hard.",
+      "verified": false,
+      "source": "Points at materials.json 'steel'."
+    }
+  ],
+  "upper_stage": [
+    {
+      "id": "none",
+      "label": "None",
+      "engine_id": null,
+      "description": "Just the one stage. Simple and cheap, but it cannot reach orbit.",
+      "verified": false,
+      "source": "No upper stage."
+    },
+    {
+      "id": "small",
+      "label": "Small upper stage",
+      "engine_id": "hypergolic_upper",
+      "count": 1,
+      "section_length_m": 1.5,
+      "propellant_mass_kg": 9000,
+      "dry_mass_kg": 630,
+      "propellant_density_kg_m3": 1200,
+      "ullage_factor": 1.1,
+      "description": "A little second stage for an extra push once the air is thin.",
+      "verified": false,
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Structure is 7% of propellant; propellant density from tanks.json 'hypergolic'; engine from engines.json 'hypergolic_upper'."
+    },
+    {
+      "id": "big",
+      "label": "Big upper stage",
+      "engine_id": "hypergolic_upper",
+      "count": 1,
+      "section_length_m": 1.5,
+      "propellant_mass_kg": 18000,
+      "dry_mass_kg": 1260,
+      "propellant_density_kg_m3": 1200,
+      "ullage_factor": 1.1,
+      "description": "A proper second stage. Heavy on the pad, but it gets you to orbit with fuel to spare.",
+      "verified": false,
+      "source": "Tuned by tools/tune_easy_presets/tune.js for Level 1 gameplay balance (MADE UP for balance, not sourced). Structure is 7% of propellant; propellant density from tanks.json 'hypergolic'; engine from engines.json 'hypergolic_upper'."
+    }
+  ],
+  "metadata": {
+    "si_assistance": "This file was developed with the help of SI."
+  }
+}

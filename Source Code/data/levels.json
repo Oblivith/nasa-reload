@@ -1,0 +1,92 @@
+{
+  "levels": [
+    {
+      "id": "L1",
+      "number": 1,
+      "name": "BEACON-1",
+      "year": 1962,
+      "description": "Put the first satellite in orbit and keep it talking.",
+      "required_goal": {
+        "id": "stable_orbit_transmit",
+        "description": "Reach a stable orbit (elliptical allowed) and transmit for 30 days",
+        "type": "orbit_and_transmit",
+        "min_perigee_km": 200,
+        "elliptical_allowed": true,
+        "min_orbit_lifetime_days": 30,
+        "transmit_days": 30
+      },
+      "optional_goal": {
+        "id": "radiation_data",
+        "description": "Return radiation data",
+        "type": "instrument_data",
+        "instrument_id": "radiation_counter",
+        "min_data_bits_downlinked": 100000
+      },
+      "payload_mass_kg": 14,
+      "payload_length_m": 1.0,
+      "mission": {
+        "profile": "orbit_insertion",
+        "target_perigee_km": 200,
+        "target_apogee_km": 200,
+        "needs_return": false,
+        "crewed": false,
+        "note": "The mission the Rocket Builder evaluates against: the cheapest orbit that meets the goal (perigee 200 km; any higher apogee also counts). Required delta-v uses delta_v_map.json loss_model. Latitude comes from launch_site."
+      },
+      "reference_rocket": "juno_class",
+      "budget": 15,
+      "launch_site": {
+        "id": "cape_canaveral",
+        "name": "Cape Canaveral",
+        "latitude_deg": 28.5,
+        "rotation_bonus_ms": 408
+      },
+      "unlocked_parts": {
+        "engines": [
+          "redstone_class",
+          "kerosene_booster",
+          "hypergolic_upper"
+        ],
+        "tanks": [
+          "S",
+          "M",
+          "L"
+        ],
+        "orbits": [
+          "very_low",
+          "low",
+          "medium_low"
+        ],
+        "solar_panels": [
+          "silicon_panel"
+        ],
+        "batteries": [
+          "nicad",
+          "silver_zinc"
+        ],
+        "instruments": [
+          "radiation_counter",
+          "magnetometer"
+        ],
+        "radios": [
+          "beacon_transmitter",
+          "telemetry_radio"
+        ],
+        "ground_stations": [
+          "single_station"
+        ],
+        "tape_recorders": [
+          "small_tape"
+        ],
+        "structures": [
+          "fairing",
+          "interstage"
+        ]
+      },
+      "verified": false,
+      "source": "Inspired by the real 1958-62 satellite programmes (Explorer 1, Vanguard 1, Telstar 1)."
+    }
+  ],
+  "metadata": {
+    "si_assistance": "This file was developed with the help of SI."
+  }
+}

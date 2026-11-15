@@ -1,0 +1,270 @@
+{
+  "reference_rockets": [
+    {
+      "id": "redstone_class",
+      "name": "Redstone-class",
+      "level": "validation",
+      "description": "A single-stage alcohol/LOX rocket carrying a small crewed capsule on a suborbital hop.",
+      "slider_range": {
+        "min_factor": 0.5,
+        "max_factor": 2
+      },
+      "design": {
+        "name": "Redstone-class reference",
+        "nose": {
+          "shape": "cone",
+          "length_m": 2.9,
+          "mass_kg": 1300
+        },
+        "payload": {
+          "length_m": 2.5,
+          "mass_kg": 500
+        },
+        "stages": [
+          {
+            "body": {
+              "length_m": 12,
+              "diameter_m": 1.78,
+              "material": "aluminium",
+              "propellant_mass_kg": 23600,
+              "dry_mass_kg": 3000
+            },
+            "engine": {
+              "engine_id": "redstone_class",
+              "count": 1,
+              "section_length_m": 3.5,
+              "thrust_sl_N": 350000,
+              "thrust_vac_N": 382600,
+              "isp_sl": 215,
+              "isp_vac": 235,
+              "mass_kg": 700
+            }
+          }
+        ],
+        "fins": {
+          "count": 4,
+          "root_chord_m": 2.4,
+          "tip_chord_m": 1.2,
+          "span_m": 1.07,
+          "sweep_m": 1.2,
+          "position_from_tail_m": 0,
+          "mass_kg": 300
+        },
+        "options": {
+          "gimballed": true,
+          "escape_tower": {
+            "length_m": 4.5,
+            "mass_kg": 500
+          }
+        },
+        "mission": {
+          "profile": "suborbital",
+          "target_altitude_km": 187,
+          "latitude_deg": 28.5,
+          "needs_return": false,
+          "crewed": true
+        }
+      },
+      "geometry_notes": {
+        "overall": "Real Mercury-Redstone: about 25.4 m tall including capsule and escape tower, 1.78 m (70 in) diameter, about 30,000 kg (66,000 lb) at liftoff. Here: tower 4.5 + capsule 2.9 + booster 18.0 = 25.4 m; liftoff mass 29,900 kg.",
+        "nose": "The capsule itself is the nose. Modelled as a 2.9 m cone weighing 1,300 kg (real capsule about 1,300 kg at launch; it was a blunt truncated cone, not a pointed one).",
+        "payload": "The adapter plus instrument compartment between capsule and tanks. Length and mass are ESTIMATES.",
+        "body": "Tank section. 12.0 m length is an ESTIMATE (18.0 m booster minus the instrument and tail sections). Propellant 23,600 kg is DERIVED from 350 kN / (215 s x g0) = 166 kg/s times the real 142 s burn. Dry mass 3,000 kg is an ESTIMATE chosen so total liftoff mass matches about 30 t.",
+        "engine": "Same numbers as engines.json 'redstone_class' (inspired by the Rocketdyne A-7: 78,000 lbf sea-level thrust). Tail section length 3.5 m is an ESTIMATE.",
+        "fins": "Count 4 is real. Span 1.07 m per fin is DERIVED from a roughly 3.9 m overall fin span. Root chord, tip chord, sweep and mass are ESTIMATES from drawings, not sourced numbers.",
+        "options": "The real Redstone steered with carbon jet vanes in the exhaust plus air rudders, not a gimbal; 'gimballed: true' stands in for that active steering. Escape tower mass and length are ESTIMATES. The tower's aerodynamics are ignored; only its mass counts."
+      },
+      "real_flight": {
+        "mission": "Mercury-Redstone 3 (Freedom 7), 5 May 1961",
+        "type": "suborbital",
+        "apogee_km": 187.5,
+        "downrange_km": 487,
+        "max_velocity_ms": 2294,
+        "burn_time_s": 142,
+        "flight_duration_s": 922,
+        "max_q_pa": 27500,
+        "notes": "Apogee, range, speed and duration are from memory of the NASA MR-3 mission summary: VERIFY. max_q_pa (about 575 lb/ft2) is LOW CONFIDENCE and may be wrong. Mercury-Redstone 4 (21 July 1961) reached about 190 km and 486 km downrange."
+      },
+      "verified": false,
+      "source": "Inspired by the real Mercury-Redstone Launch Vehicle (NASA MSFC, 1960-61). See 'The Mercury-Redstone Project' (NASA TMX-53107, 1964) and 'This New Ocean' (NASA SP-4201) for the numbers to verify against.",
+      "optional_upper_stage": {
+        "enabled_by_default": false,
+        "body": {
+          "material": "aluminium",
+          "propellant_mass_kg": 12000,
+          "dry_mass_kg": 840,
+          "propellant_density_kg_m3": 1200,
+          "ullage_factor": 1.1
+        },
+        "engine": {
+          "engine_id": "hypergolic_upper",
+          "count": 1,
+          "section_length_m": 1.5
+        },
+        "verified": false,
+        "source": "MADE UP: same as the presets.json 'big' upper stage. The real Mercury-Redstone had no upper stage; the Redstone-derived Jupiter-C / Juno I carried small solid-rocket upper stages instead."
+      }
+    },
+    {
+      "id": "juno_class",
+      "name": "Juno-class",
+      "level": "L1",
+      "description": "A stretched Redstone-class booster carrying a spinning tub of small solid rockets in three stages (11, then 3, then 1), the way Juno I put the 14 kg Explorer 1 into orbit in 1958.",
+      "slider_range": {
+        "min_factor": 0.5,
+        "max_factor": 2
+      },
+      "design": {
+        "name": "Juno-class reference",
+        "nose": {
+          "shape": "cone",
+          "length_m": 0.5,
+          "mass_kg": 0
+        },
+        "payload": {
+          "length_m": 1.0,
+          "mass_kg": 14
+        },
+        "stages": [
+          {
+            "body": {
+              "length_m": 14.4,
+              "diameter_m": 1.78,
+              "material": "aluminium",
+              "propellant_mass_kg": 25700,
+              "dry_mass_kg": 3000
+            },
+            "engine": {
+              "engine_id": "redstone_class",
+              "count": 1,
+              "section_length_m": 3.5,
+              "thrust_sl_N": 350000,
+              "thrust_vac_N": 382600,
+              "isp_sl": 215,
+              "isp_vac": 235,
+              "mass_kg": 700
+            }
+          }
+        ],
+        "fins": {
+          "count": 4,
+          "root_chord_m": 2.4,
+          "tip_chord_m": 1.2,
+          "span_m": 1.07,
+          "sweep_m": 1.2,
+          "position_from_tail_m": 0,
+          "mass_kg": 300
+        },
+        "options": {
+          "gimballed": true
+        },
+        "mission": {
+          "profile": "leo",
+          "target_altitude_km": 400,
+          "latitude_deg": 28.5,
+          "needs_return": false,
+          "crewed": false
+        }
+      },
+      "geometry_notes": {
+        "overall": "Real Juno I (Jupiter-C, 1958): about 21 m tall, 1.78 m diameter, about 29 t at liftoff. A Redstone with stretched tanks, then a spinning tub of scaled-down Sergeant solid rockets: 11 in stage 2, 3 in stage 3, 1 in stage 4 (which stayed attached to Explorer 1).",
+        "nose": "Explorer 1's own nose. Its mass is counted in the 14 kg payload, so the nose segment weighs 0 here. Length 0.5 m is an ESTIMATE.",
+        "body": "Tank length 14.4 m is an ESTIMATE: the Redstone-class reference's 12 m plus about 2.4 m of stretch. Propellant 25,700 kg is DERIVED like the Redstone's: 350 kN / (215 s x g0) = 166 kg/s times an ESTIMATED 155 s burn. Dry mass 3,000 kg is an ESTIMATE (same as the Redstone-class, the stretch roughly offset by the lighter instrument section).",
+        "engine": "The Redstone-class engine with the same numbers as engines.json (350 kN sea level, 382.6 kN vacuum, Isp 215 s / 235 s, 700 kg). The real Jupiter-C burned hydyne for a little more thrust; that uprate is deliberately NOT modelled.",
+        "fins": "Same ESTIMATED fins as the Redstone-class reference.",
+        "options": "Gimballed stands in for the real carbon jet vanes, like the Redstone-class reference.",
+        "upper_stages": "Each motor is an ESTIMATE of a 1950s 'Baby Sergeant': 7.3 kN for about 6.5 s, Isp 220 s, about 22 kg of propellant in a 4.7 kg case, 1.22 m long, 0.152 m wide. 220 s is typical of 1950s polysulfide / ammonium perchlorate solids. Stage structure (the spinning tub and its rings) is an ESTIMATE."
+      },
+      "real_flight": {
+        "mission": "Explorer 1 on Juno I, 31 January 1958",
+        "type": "orbital",
+        "perigee_km": 358,
+        "apogee_km": 2550,
+        "payload_kg": 14,
+        "notes": "From memory: VERIFY against NASA/JPL records. Explorer 1 (with its attached fourth-stage case) weighed about 14 kg and reached roughly 358 x 2,550 km. The real ascent lofted the tub to about 360 km and fired the solids near-horizontally at apogee."
+      },
+      "verified": false,
+      "source": "Inspired by the real Juno I / Jupiter-C launch vehicle (Army Ballistic Missile Agency and JPL, 1958). Every number is an estimate: see geometry_notes. VERIFY against NASA SP-4201-era sources and JPL's Explorer 1 records.",
+      "optional_upper_stages": [
+        {
+          "enabled_by_default": true,
+          "body": {
+            "length_m": 1.22,
+            "diameter_m": 0.8,
+            "material": "aluminium",
+            "propellant_mass_kg": 242,
+            "dry_mass_kg": 30
+          },
+          "engine": {
+            "name": "11 x Baby-Sergeant-class solid",
+            "propellant": "solid",
+            "count": 11,
+            "section_length_m": 0.1,
+            "thrust_sl_N": null,
+            "thrust_vac_N": 7300,
+            "isp_sl": null,
+            "isp_vac": 220,
+            "mass_kg": 4.7,
+            "cost": 0.05,
+            "cost_thrust_N": 7300
+          },
+          "verified": false,
+          "source": "ESTIMATE: 11 motors x 22 kg propellant; 30 kg of tub structure is a guess."
+        },
+        {
+          "enabled_by_default": true,
+          "body": {
+            "length_m": 1.22,
+            "diameter_m": 0.45,
+            "material": "aluminium",
+            "propellant_mass_kg": 66,
+            "dry_mass_kg": 8
+          },
+          "engine": {
+            "name": "3 x Baby-Sergeant-class solid",
+            "propellant": "solid",
+            "count": 3,
+            "section_length_m": 0.1,
+            "thrust_sl_N": null,
+            "thrust_vac_N": 7300,
+            "isp_sl": null,
+            "isp_vac": 220,
+            "mass_kg": 4.7,
+            "cost": 0.05,
+            "cost_thrust_N": 7300
+          },
+          "verified": false,
+          "source": "ESTIMATE: 3 motors x 22 kg propellant; 8 kg of ring structure is a guess."
+        },
+        {
+          "enabled_by_default": true,
+          "body": {
+            "length_m": 1.22,
+            "diameter_m": 0.16,
+            "material": "aluminium",
+            "propellant_mass_kg": 22,
+            "dry_mass_kg": 1
+          },
+          "engine": {
+            "name": "1 x Baby-Sergeant-class solid",
+            "propellant": "solid",
+            "count": 1,
+            "section_length_m": 0.1,
+            "thrust_sl_N": null,
+            "thrust_vac_N": 7300,
+            "isp_sl": null,
+            "isp_vac": 220,
+            "mass_kg": 4.7,
+            "cost": 0.05,
+            "cost_thrust_N": 7300
+          },
+          "verified": false,
+          "source": "ESTIMATE: 1 motor x 22 kg propellant, attached to the satellite; 1 kg of fittings is a guess."
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "si_assistance": "This file was developed with the help of SI."
+  }
+}

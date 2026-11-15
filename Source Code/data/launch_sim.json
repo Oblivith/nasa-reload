@@ -1,0 +1,167 @@
+{
+  "dt_s": 0.1,
+  "coast_dt_factor": 8,
+  "coast_fast_altitude_m": 100000,
+  "telemetry_interval_s": 1.0,
+  "max_flight_time_s": 4000,
+  "tower_height_m": 40,
+  "pad_hold_s": 3.0,
+  "orbit_min_perigee_km": 150,
+  "tumble_min_q_pa": 1500,
+  "guidance": {
+    "kick_start_speed_ms": 60,
+    "kick_ramp_s": 6,
+    "kick_min_deg": 0.2,
+    "kick_max_deg": 45,
+    "upper_law": "vgo",
+    "vgo_altitude_tau_s": 200,
+    "vgo_gravity_tau_s": 10,
+    "vgo_max_climb_ms": 300,
+    "vgo_min_forward_ms": 50,
+    "max_retarget_km": 0,
+    "time_to_go_includes_burnout": true,
+    "plan_grid": 8,
+    "plan_refine": 6,
+    "insertion_margin_km": 20,
+    "cutoff_margin_km": 5,
+    "upper_ignition_delay_s": 2.0,
+    "max_loft_coast_s": 900,
+    "min_time_to_go_s": 8,
+    "max_up_fraction": 0.9,
+    "max_down_fraction": 0.6,
+    "q_margin_fraction": 0.9
+  },
+  "reliability": {
+    "default_engine": 0.97,
+    "default_solid_motor": 0.99,
+    "separation": 0.99,
+    "structural_roll_max": 0.5
+  },
+  "lifetime": {
+    "formula": "days = table(h_eff) x clamp(ballistic coefficient / reference, min_factor, max_factor); h_eff = perigee + apogee_weight x (apogee - perigee). Ballistic coefficient = payload mass / (payload_cd x payload side area); side area = payload length x top diameter (a tumbling satellite). Table from orbits.json lifetime_table, interpolated in log(days).",
+    "apogee_weight": 0.1,
+    "payload_cd": 2.2,
+    "min_factor": 0.25,
+    "max_factor": 4.0,
+    "check_days": 30,
+    "verified": false,
+    "source": "MADE UP quick check. Drag happens mostly near perigee, so an elliptical orbit lives like a slightly higher circular one. Real Explorer 1 (358 x 2,550 km) stayed up about 12 years."
+  },
+  "time_scales": [
+    1,
+    5,
+    20
+  ],
+  "countdown_s": 10,
+  "text": {
+    "title": "MISSION CONTROL  //  FLIGHT",
+    "poll_title": "GO / NO-GO POLL",
+    "poll_prompt": "FLIGHT, all stations report. Press GO to start the count, HOLD to scrub and go back.",
+    "go": "GO",
+    "hold": "HOLD",
+    "planning": "GUIDO is working out the pitch program...",
+    "launch_again": "BACK TO THE FLOOR",
+    "result_title": "FLIGHT RESULT",
+    "outcome": {
+      "success": "MISSION SUCCESS",
+      "partial": "PARTIAL SUCCESS",
+      "failure": "MISSION FAILED"
+    },
+    "failure_types": {
+      "no_liftoff": "No liftoff: the engine could not lift the rocket's weight.",
+      "unstable": "Lost control: the rocket was not stable and tumbled in the thick air.",
+      "structural": "Structural break-up at Max-Q: the air pressure crushed the rocket.",
+      "engine_out": "Engine failure: an engine quit before its stage had finished.",
+      "staging": "Staging failure: the stages did not separate.",
+      "no_orbit": "Fell short of orbit: not enough speed by the time the fuel ran out.",
+      "low_orbit": "Orbit too low: the perigee dips into the air and the satellite comes down too soon.",
+      "short_apogee": "Fell short: the rocket did not climb as high as the mission needed."
+    },
+    "poll_stations": {
+      "BOOSTER": "liftoff",
+      "GUIDO": "stability",
+      "FIDO": "range",
+      "STRUCTURES": "structure",
+      "RETRO": "upper",
+      "PROCEDURES": "budget"
+    },
+    "poll_go": "GO",
+    "poll_nogo": "NO-GO",
+    "poll_hold": "Not physically possible: %s",
+    "lifetime_ok": "Orbit lifetime about %s: more than the %d days the mission needs.",
+    "lifetime_short": "Orbit lifetime only about %s: the mission needs %d days.",
+    "reason_orbit": "Orbit %.0f x %.0f km (perigee x apogee).",
+    "reason_apogee": "Peak altitude %.0f km, %.0f km downrange.",
+    "reason_max_q": "Max-Q %.1f kPa of a %.1f kPa limit.",
+    "reason_margin_warn": "Max-Q came close to the structural limit (%.0f%%).",
+    "reason_goal_perigee": "Perigee %.0f km is below the %.0f km the mission needs.",
+    "reason_goal_apogee": "Peak altitude %.0f km is below the %.0f km target.",
+    "reason_guidance": "Pitch kick %.1f degrees (%s guidance).",
+    "reason_spare": "Spare propellant at cutoff: %.0f kg (%.0f m/s)."
+  },
+  "callouts_fallback": {
+    "liftoff": [
+      "Liftoff! We have liftoff."
+    ],
+    "tower_cleared": [
+      "Tower cleared."
+    ],
+    "roll_program": [
+      "Roll program."
+    ],
+    "pitch_over": [
+      "Pitch program, she's leaning over."
+    ],
+    "max_q": [
+      "Max-Q. Through the worst of it."
+    ],
+    "stage_burnout": [
+      "Burnout, stage {stage}."
+    ],
+    "staging": [
+      "Staging. Stage {stage} away."
+    ],
+    "ignition": [
+      "Stage {stage} ignition."
+    ],
+    "coast": [
+      "Coasting up to the top of the arc."
+    ],
+    "engine_out": [
+      "BOOSTER: Engine out on stage {stage}!"
+    ],
+    "seco": [
+      "Engine cutoff."
+    ],
+    "orbit_achieved": [
+      "FIDO: Apogee {apogee}, perigee {perigee}. We have an orbit!"
+    ],
+    "apogee": [
+      "Apogee, {altitude} kilometres."
+    ],
+    "failure_no_liftoff": [
+      "BOOSTER: No liftoff! Shut it down!"
+    ],
+    "failure_unstable": [
+      "GUIDO: She's tumbling! We've lost her."
+    ],
+    "failure_structural": [
+      "...telemetry is static. We've lost the signal."
+    ],
+    "failure_staging": [
+      "No separation! Stage is still attached!"
+    ],
+    "failure_no_orbit": [
+      "FIDO: We're not going to make orbit. Perigee is below the atmosphere, she's coming back down."
+    ],
+    "failure_engine_out": [
+      "FIDO: Not enough left to make orbit after that engine."
+    ],
+    "splashdown": [
+      "Impact, {downrange} kilometres downrange."
+    ]
+  },
+  "metadata": {
+    "si_assistance": "This file was developed with the help of SI."
+  }
+}

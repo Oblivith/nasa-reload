@@ -1,0 +1,4692 @@
+{
+  "metadata": {
+    "si_assistance": "This file was developed with the help of SI."
+  },
+  "atmosphere": {
+    "quality": 2,
+    "exposure": 1.0,
+    "white": 5.0,
+    "ambient": 0.45,
+    "ambient_color": "fff0da",
+    "glow_intensity": 0.4,
+    "glow_bloom": 0.04,
+    "glow_threshold": 1.0,
+    "fog": 0.003,
+    "fog_color": "d9c9a8",
+    "contrast": 1.06,
+    "saturation": 1.08,
+    "sky_top": "5f9fd0",
+    "sky_horizon": "dfe9e4",
+    "sun_direction": [
+      0.3,
+      -0.62,
+      -0.72
+    ],
+    "sun_color": "fff0cf",
+    "sun_energy": 1.5,
+    "shaft_strength": 0.11,
+    "grade_tint": [
+      1.0,
+      0.965,
+      0.885
+    ],
+    "vignette": 0.34,
+    "grain": 0.055
+  },
+  "spawn": {
+    "at": [
+      32,
+      0,
+      41.5
+    ],
+    "yaw_deg": 0
+  },
+  "texts": {
+    "locked_prompt": "E  Try the door",
+    "locked": "Locked.",
+    "lift_call": "E  Call the lift",
+    "lift_floor": "E  %s",
+    "interact_default": "E  Use"
+  },
+  "story_unlocks": [
+    {
+      "event": "orbit_achieved",
+      "flag": "dad_office_unlocked",
+      "say": "Dot slides a small brass key across the desk. \"Upstairs. Second door past Pike's. Don't tell him I had it.\""
+    }
+  ],
+  "stations": {
+    "design_bay": {
+      "origin": [
+        0,
+        0,
+        11
+      ],
+      "x_min": 5,
+      "x_max": 23,
+      "depth": 14
+    },
+    "wind_tunnel": {
+      "origin": [
+        0,
+        0,
+        21
+      ],
+      "x_min": 28,
+      "x_max": 42,
+      "depth": 14
+    },
+    "keypunch": {
+      "at": [
+        35,
+        4,
+        11.5
+      ]
+    },
+    "flight_console": {
+      "at": [
+        51,
+        1.2,
+        19.35
+      ],
+      "look": [
+        51,
+        3.2,
+        4
+      ]
+    },
+    "vehicle_model": {
+      "at": [
+        44.3,
+        0,
+        6.6
+      ]
+    }
+  },
+  "lift": {
+    "name": "LIFT",
+    "subtitle": "",
+    "ambience": "lift",
+    "rect": [
+      40,
+      32,
+      43,
+      35.5
+    ],
+    "door": {
+      "at": [
+        41.5,
+        32
+      ],
+      "w": 1.4,
+      "h": 2.3
+    },
+    "speed": 1.25,
+    "start_floor": 0,
+    "floors": [
+      {
+        "y": 0,
+        "room": "corridor_g",
+        "label": "G",
+        "name": "Ground floor"
+      },
+      {
+        "y": 4,
+        "room": "corridor_u",
+        "label": "1",
+        "name": "Upper floor"
+      }
+    ]
+  },
+  "rooms": [
+    {
+      "id": "lobby",
+      "name": "LOBBY",
+      "subtitle": "Center Campus. Sign in at the desk.",
+      "rect": [
+        24,
+        32,
+        40,
+        44
+      ],
+      "y": 0,
+      "h": 3.3,
+      "sun": true,
+      "floor": "d9c9a3",
+      "floor_surface": "tile",
+      "wall": "f2e8cf",
+      "dado": "2a7b7b",
+      "ceiling": "f4efe2",
+      "ambience": "lobby",
+      "surface": "lino",
+      "mood": {
+        "ambient": 0.55
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 2,
+        "nz": 2,
+        "energy": 0.7,
+        "color": "fff3dc"
+      },
+      "entry": [
+        8,
+        8.5
+      ],
+      "props": [
+        [
+          "security_desk",
+          8,
+          4.2,
+          0,
+          {
+            "npc": {
+              "role": "guard",
+              "bark": "guard",
+              "name": "SECURITY",
+              "talk": {
+                "id": "talk_guard",
+                "prompt": "E  Talk to security"
+              }
+            },
+            "interact": {
+              "id": "sign_in_book",
+              "prompt": "E  Sign the visitors' book",
+              "at": [
+                -1.0,
+                1.2,
+                0.4
+              ],
+              "from": [
+                -1.0,
+                1.75,
+                1.7
+              ],
+              "say": "You sign in. Somebody has written the same surname forty lines up, in a hand you know."
+            }
+          }
+        ],
+        [
+          "display_case",
+          2.2,
+          6.5,
+          90,
+          {
+            "npc": {
+              "role": "visitor",
+              "pose": "stand",
+              "bark": "visitor"
+            },
+            "interact": {
+              "id": "display_case",
+              "prompt": "E  Look at the model rockets",
+              "at": [
+                0,
+                1.4,
+                0.6
+              ],
+              "from": [
+                0,
+                1.7,
+                2.3
+              ],
+              "say": "Four rockets, smallest to tallest. The brass plate under the last one is blank."
+            }
+          }
+        ],
+        [
+          "bench_seat",
+          14.2,
+          6.5,
+          -90,
+          {}
+        ],
+        [
+          "bench_seat",
+          14.2,
+          9.2,
+          -90,
+          {}
+        ],
+        [
+          "plant",
+          1.0,
+          10.9,
+          0,
+          {}
+        ],
+        [
+          "plant",
+          15.0,
+          10.9,
+          0,
+          {}
+        ],
+        [
+          "plant",
+          12.0,
+          0.8,
+          0,
+          {}
+        ],
+        [
+          "rug",
+          8,
+          8.4,
+          0,
+          {
+            "w": 5.0,
+            "d": 3.2,
+            "color": "c8551f"
+          }
+        ],
+        [
+          "wall_clock",
+          2.5,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "exit_sign",
+          8,
+          11.85,
+          180,
+          {
+            "text": "EXIT"
+          }
+        ],
+        [
+          "pa_speaker",
+          13.5,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "noticeboard",
+          15.85,
+          3.0,
+          -90,
+          {
+            "title": "VISITOR INFORMATION",
+            "w": 1.6
+          }
+        ],
+        [
+          "trash_can",
+          4.6,
+          0.6,
+          0,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "CENTER CAMPUS",
+          "at": [
+            8,
+            2.95,
+            0.16
+          ],
+          "face": "s",
+          "size": 96,
+          "color": "2a7b7b"
+        },
+        {
+          "text": "SPACE FLIGHT CENTER   EST. 1958",
+          "at": [
+            13.4,
+            2.2,
+            0.16
+          ],
+          "face": "s",
+          "size": 30,
+          "color": "2b2622"
+        }
+      ]
+    },
+    {
+      "id": "corridor_g",
+      "name": "MAIN CORRIDOR",
+      "subtitle": "Ground floor.",
+      "rect": [
+        4,
+        28,
+        60,
+        32
+      ],
+      "y": 0,
+      "h": 3.3,
+      "floor": "d8c08a",
+      "floor_surface": "tile",
+      "wall": "efe6cc",
+      "dado": "8fc1b5",
+      "ceiling": "f4efe2",
+      "ambience": "corridor",
+      "surface": "lino",
+      "mood": {
+        "ambient": 0.42
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 7,
+        "nz": 1,
+        "energy": 0.9,
+        "flicker": [
+          5
+        ]
+      },
+      "entry": [
+        28,
+        2
+      ],
+      "props": [
+        [
+          "dir_sign",
+          22.6,
+          2.0,
+          90,
+          {
+            "hanging": true,
+            "w": 3.2,
+            "mount": 2.72,
+            "lines": [
+              "<  WIND TUNNEL",
+              "LIFT  STAIRS  >"
+            ],
+            "lines_back": [
+              "DESIGN BAY  >",
+              "<  CAFETERIA"
+            ]
+          }
+        ],
+        [
+          "dir_sign",
+          33.4,
+          2.0,
+          90,
+          {
+            "hanging": true,
+            "w": 3.2,
+            "mount": 2.72,
+            "lines": [
+              "<  WIND TUNNEL",
+              "LIFT  STAIRS  >"
+            ],
+            "lines_back": [
+              "DESIGN BAY  >",
+              "<  LOBBY"
+            ]
+          }
+        ],
+        [
+          "dir_sign",
+          28,
+          0.15,
+          0,
+          {
+            "w": 3.6,
+            "mount": 1.95,
+            "lines": [
+              "<<  DESIGN BAY",
+              "WIND TUNNEL  >>",
+              "IBM 7090   ^ LIFT",
+              "MISSION CONTROL   ^ LIFT"
+            ]
+          }
+        ],
+        [
+          "dir_sign",
+          39.6,
+          3.85,
+          180,
+          {
+            "w": 2.0,
+            "mount": 2.55,
+            "color": "c8551f",
+            "lines": [
+              "UPPER FLOOR",
+              "IBM  OFFICES  MC"
+            ]
+          }
+        ],
+        [
+          "noticeboard",
+          7.5,
+          0.15,
+          0,
+          {
+            "title": "STAFF NOTICES",
+            "npc": {
+              "role": "engineer",
+              "pose": "talk",
+              "pair": "notice_g",
+              "bark": "gossip"
+            }
+          }
+        ],
+        [
+          "water_fountain",
+          20.2,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "wall_clock",
+          24.4,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "fire_extinguisher",
+          26.0,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "noticeboard",
+          42.4,
+          0.15,
+          0,
+          {
+            "title": "SAFETY BULLETIN",
+            "w": 1.5
+          }
+        ],
+        [
+          "bench_seat",
+          49.5,
+          0.45,
+          0,
+          {}
+        ],
+        [
+          "pa_speaker",
+          18.5,
+          3.85,
+          180,
+          {}
+        ],
+        [
+          "pa_speaker",
+          44.5,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "plant",
+          0.7,
+          0.7,
+          0,
+          {}
+        ],
+        [
+          "plant",
+          55.3,
+          3.3,
+          0,
+          {}
+        ],
+        [
+          "trash_can",
+          21.2,
+          0.5,
+          0,
+          {}
+        ],
+        [
+          "exit_sign",
+          0.15,
+          2.0,
+          90,
+          {
+            "text": "EXIT"
+          }
+        ],
+        [
+          "fire_extinguisher",
+          52.5,
+          3.85,
+          180,
+          {}
+        ],
+        [
+          "wall_clock",
+          53.0,
+          0.15,
+          0,
+          {}
+        ]
+      ],
+      "signs": []
+    },
+    {
+      "id": "cafeteria",
+      "name": "CAFETERIA",
+      "subtitle": "Coffee, cola and gossip.",
+      "rect": [
+        8,
+        32,
+        24,
+        44
+      ],
+      "y": 0,
+      "h": 3.3,
+      "sun": true,
+      "floor": "e3d3ad",
+      "floor_surface": "tile",
+      "wall": "f6e7c1",
+      "dado": "c8551f",
+      "ceiling": "f4efe2",
+      "ambience": "cafeteria",
+      "surface": "lino",
+      "mood": {
+        "ambient": 0.5
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 2,
+        "nz": 2,
+        "energy": 0.85,
+        "color": "fff0d6"
+      },
+      "entry": [
+        8,
+        2
+      ],
+      "props": [
+        [
+          "vending_machine",
+          15.4,
+          2.4,
+          -90,
+          {
+            "npc": {
+              "role": "technician",
+              "pose": "press",
+              "bark": "vending"
+            }
+          }
+        ],
+        [
+          "fridge",
+          15.45,
+          4.0,
+          -90,
+          {}
+        ],
+        [
+          "coffee_station",
+          15.5,
+          6.6,
+          -90,
+          {
+            "sign": "DOT'S POT.\nHANDS OFF.",
+            "mugs": 8,
+            "interact": {
+              "id": "dots_coffee",
+              "prompt": "E  Look at the coffee pot",
+              "at": [
+                -0.5,
+                1.2,
+                0.4
+              ],
+              "from": [
+                -0.4,
+                1.6,
+                1.9
+              ],
+              "say": "Eight mugs, all Dot's. The pot is older than the space program and nobody is brave enough to wash it."
+            }
+          }
+        ],
+        [
+          "counter",
+          8,
+          11.5,
+          180,
+          {
+            "w": 5.0,
+            "color": "8fc1b5",
+            "npc": {
+              "role": "cook",
+              "pose": "stand",
+              "at": [
+                0.5,
+                0,
+                0.95
+              ]
+            }
+          }
+        ],
+        [
+          "cafe_table",
+          4,
+          3.6,
+          0,
+          {
+            "color": "e9c46a",
+            "npcs": [
+              {
+                "role": "engineer",
+                "seat": 0,
+                "pose": "talk_sit",
+                "bark": "cafeteria"
+              },
+              {
+                "role": "typist",
+                "seat": 2,
+                "pose": "talk_sit"
+              }
+            ]
+          }
+        ],
+        [
+          "cafe_table",
+          4.2,
+          8.2,
+          20,
+          {
+            "color": "8fc1b5",
+            "npcs": [
+              {
+                "role": "technician",
+                "seat": 1,
+                "pose": "sit_read",
+                "bark": "cafeteria"
+              }
+            ]
+          }
+        ],
+        [
+          "cafe_table",
+          9.6,
+          5.4,
+          45,
+          {
+            "color": "e9c46a"
+          }
+        ],
+        [
+          "cafe_table",
+          11.2,
+          8.9,
+          10,
+          {
+            "color": "c8551f",
+            "mugs": false
+          }
+        ],
+        [
+          "ceiling_fan",
+          5,
+          6,
+          0,
+          {}
+        ],
+        [
+          "ceiling_fan",
+          11,
+          6,
+          0,
+          {}
+        ],
+        [
+          "wall_clock",
+          3.0,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "noticeboard",
+          0.15,
+          6,
+          90,
+          {
+            "title": "TODAY'S MENU",
+            "w": 1.6
+          }
+        ],
+        [
+          "plant",
+          0.8,
+          11.2,
+          0,
+          {}
+        ],
+        [
+          "trash_can",
+          14.6,
+          0.9,
+          0,
+          {}
+        ],
+        [
+          "pa_speaker",
+          12.5,
+          0.15,
+          0,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "PLEASE RETURN YOUR TRAYS",
+          "at": [
+            8,
+            2.6,
+            11.84
+          ],
+          "face": "n",
+          "size": 40,
+          "color": "c8551f"
+        }
+      ]
+    },
+    {
+      "id": "records",
+      "name": "RECORDS & STORES",
+      "subtitle": "Open stores. Sign for what you take.",
+      "rect": [
+        48,
+        32,
+        60,
+        44
+      ],
+      "y": 0,
+      "h": 3.3,
+      "floor": "b9b1a0",
+      "floor_surface": "concrete",
+      "wall": "ddd6c2",
+      "ceiling": "e6e0d0",
+      "ceiling_surface": "matte",
+      "ambience": "store",
+      "surface": "concrete",
+      "mood": {
+        "ambient": 0.3
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 2,
+        "nz": 2,
+        "energy": 0.6,
+        "flicker": [
+          1
+        ]
+      },
+      "entry": [
+        6,
+        2
+      ],
+      "props": [
+        [
+          "desk",
+          2.6,
+          2.2,
+          90,
+          {
+            "papers": true,
+            "lamp": true,
+            "npc": {
+              "role": "clerk",
+              "pose": "write",
+              "bark": "clerk"
+            }
+          }
+        ],
+        [
+          "shelf_unit",
+          0.45,
+          6.0,
+          90,
+          {
+            "w": 3.0,
+            "h": 2.6
+          }
+        ],
+        [
+          "shelf_unit",
+          0.45,
+          9.6,
+          90,
+          {
+            "w": 3.0,
+            "h": 2.6
+          }
+        ],
+        [
+          "shelf_unit",
+          4.4,
+          7.6,
+          90,
+          {
+            "w": 5.0,
+            "h": 2.4
+          }
+        ],
+        [
+          "shelf_unit",
+          5.0,
+          7.6,
+          -90,
+          {
+            "w": 5.0,
+            "h": 2.4
+          }
+        ],
+        [
+          "shelf_unit",
+          8.2,
+          7.6,
+          90,
+          {
+            "w": 5.0,
+            "h": 2.4
+          }
+        ],
+        [
+          "shelf_unit",
+          8.8,
+          7.6,
+          -90,
+          {
+            "w": 5.0,
+            "h": 2.4
+          }
+        ],
+        [
+          "filing_cabinet",
+          4.0,
+          11.5,
+          180,
+          {
+            "n": 5
+          }
+        ],
+        [
+          "filing_cabinet",
+          8.4,
+          11.5,
+          180,
+          {
+            "n": 3,
+            "color": "54728c"
+          }
+        ],
+        [
+          "crate_stack",
+          10.6,
+          2.0,
+          0,
+          {}
+        ],
+        [
+          "crate_stack",
+          10.7,
+          10.6,
+          90,
+          {}
+        ],
+        [
+          "barrel",
+          11.3,
+          5.2,
+          0,
+          {}
+        ],
+        [
+          "barrel",
+          11.3,
+          5.9,
+          0,
+          {
+            "color": "2a7b7b"
+          }
+        ],
+        [
+          "locker_row",
+          11.75,
+          8.0,
+          -90,
+          {
+            "n": 4
+          }
+        ],
+        [
+          "trash_can",
+          1.0,
+          0.7,
+          0,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "EVERYTHING HAS A FORM.\nFILL IN THE FORM.",
+          "at": [
+            6,
+            2.5,
+            11.84
+          ],
+          "face": "n",
+          "size": 34,
+          "color": "2b2622"
+        }
+      ]
+    },
+    {
+      "id": "parts_store",
+      "name": "PARTS STORE",
+      "subtitle": "Spares for the bay.",
+      "rect": [
+        28,
+        4,
+        42,
+        14
+      ],
+      "y": 0,
+      "h": 3.3,
+      "floor": "b9b1a0",
+      "floor_surface": "concrete",
+      "wall": "d9d2bd",
+      "ceiling": "e6e0d0",
+      "ceiling_surface": "matte",
+      "ambience": "store",
+      "surface": "concrete",
+      "mood": {
+        "ambient": 0.3
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 2,
+        "nz": 1,
+        "energy": 0.7
+      },
+      "entry": [
+        2,
+        5
+      ],
+      "props": [
+        [
+          "counter",
+          3.2,
+          2.2,
+          90,
+          {
+            "w": 3.0,
+            "color": "e9c46a",
+            "npc": {
+              "role": "clerk",
+              "pose": "stand",
+              "at": [
+                0,
+                0,
+                -0.9
+              ],
+              "yaw": 0,
+              "bark": "parts"
+            }
+          }
+        ],
+        [
+          "shelf_unit",
+          7.0,
+          0.45,
+          0,
+          {
+            "w": 4.0,
+            "h": 2.6
+          }
+        ],
+        [
+          "shelf_unit",
+          11.4,
+          0.45,
+          0,
+          {
+            "w": 4.0,
+            "h": 2.6
+          }
+        ],
+        [
+          "shelf_unit",
+          6.5,
+          4.4,
+          0,
+          {
+            "w": 4.5,
+            "h": 2.4
+          }
+        ],
+        [
+          "shelf_unit",
+          6.5,
+          5.0,
+          180,
+          {
+            "w": 4.5,
+            "h": 2.4
+          }
+        ],
+        [
+          "shelf_unit",
+          11.6,
+          4.4,
+          0,
+          {
+            "w": 3.6,
+            "h": 2.4
+          }
+        ],
+        [
+          "shelf_unit",
+          11.6,
+          5.0,
+          180,
+          {
+            "w": 3.6,
+            "h": 2.4
+          }
+        ],
+        [
+          "shelf_unit",
+          8.0,
+          9.55,
+          180,
+          {
+            "w": 5.0,
+            "h": 2.6
+          }
+        ],
+        [
+          "crate_stack",
+          12.5,
+          8.6,
+          0,
+          {}
+        ],
+        [
+          "crate_stack",
+          3.4,
+          8.8,
+          90,
+          {}
+        ],
+        [
+          "barrel",
+          13.3,
+          6.6,
+          0,
+          {}
+        ],
+        [
+          "barrel",
+          13.3,
+          7.3,
+          0,
+          {
+            "color": "e9c46a"
+          }
+        ],
+        [
+          "tool_cart",
+          1.4,
+          8.6,
+          90,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "NO PART LEAVES WITHOUT A CHIT",
+          "at": [
+            7,
+            2.8,
+            9.84
+          ],
+          "face": "n",
+          "size": 34,
+          "color": "c0392b"
+        }
+      ]
+    },
+    {
+      "id": "wind_tunnel",
+      "name": "WIND TUNNEL",
+      "subtitle": "Press E at the control desk to blow air over a model of your rocket.",
+      "rect": [
+        28,
+        14,
+        42,
+        28
+      ],
+      "y": 0,
+      "h": 3.3,
+      "floor": "b9b1a0",
+      "floor_surface": "concrete",
+      "wall": "e9c46a",
+      "dado": "4d5b63",
+      "ceiling": "e6e0d0",
+      "ceiling_surface": "matte",
+      "ambience": "wind_tunnel",
+      "surface": "concrete",
+      "mood": {
+        "ambient": 0.36
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 2,
+        "nz": 2,
+        "energy": 0.8
+      },
+      "entry": [
+        7,
+        11.5
+      ],
+      "props": [
+        [
+          "instrument_rack",
+          0.5,
+          8.6,
+          90,
+          {
+            "npc": {
+              "role": "technician",
+              "pose": "stand",
+              "bark": "tunnel"
+            }
+          }
+        ],
+        [
+          "instrument_rack",
+          0.5,
+          10.2,
+          90,
+          {}
+        ],
+        [
+          "instrument_rack",
+          13.5,
+          9.4,
+          -90,
+          {}
+        ],
+        [
+          "locker_row",
+          3.2,
+          13.6,
+          180,
+          {
+            "n": 3
+          }
+        ],
+        [
+          "barrel",
+          12.8,
+          12.9,
+          0,
+          {
+            "color": "4d5b63"
+          }
+        ],
+        [
+          "wall_clock",
+          11.5,
+          13.85,
+          180,
+          {}
+        ],
+        [
+          "fire_extinguisher",
+          9.3,
+          13.85,
+          180,
+          {}
+        ],
+        [
+          "trash_can",
+          4.8,
+          13.3,
+          0,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "CAUTION   HIGH VELOCITY AIR",
+          "at": [
+            7,
+            2.85,
+            0.16
+          ],
+          "face": "s",
+          "size": 56,
+          "color": "2b2622"
+        },
+        {
+          "text": "HATS, TIES AND PAPERWORK\nWILL BE REMOVED BY THE TUNNEL",
+          "at": [
+            7,
+            2.5,
+            13.84
+          ],
+          "face": "n",
+          "size": 30,
+          "color": "2b2622"
+        }
+      ]
+    },
+    {
+      "id": "design_bay",
+      "name": "DESIGN BAY",
+      "subtitle": "Click a part on a shelf, then click the rocket to fit it.",
+      "rect": [
+        4,
+        4,
+        28,
+        28
+      ],
+      "y": 0,
+      "h": 8.4,
+      "floor": "bdb6a6",
+      "floor_surface": "concrete",
+      "wall": "8fc1b5",
+      "dado": "2a7b7b",
+      "ceiling": "c4bdad",
+      "ceiling_surface": "matte",
+      "ambience": "design_bay",
+      "surface": "concrete",
+      "raised_surface": {
+        "above": 2.0,
+        "surface": "metal"
+      },
+      "mood": {
+        "ambient": 0.3,
+        "fog": 0.005
+      },
+      "max_prop_lights": 8,
+      "lights": {
+        "kind": "fluoro",
+        "nx": 2,
+        "nz": 2,
+        "energy": 0.55,
+        "color": "f2efe4",
+        "range": 17
+      },
+      "entry": [
+        12,
+        21.5
+      ],
+      "structures": [
+        {
+          "type": "platform",
+          "a": [
+            4,
+            3.82,
+            26
+          ],
+          "b": [
+            28,
+            4,
+            28
+          ],
+          "color": "6f7c82",
+          "surface": "grid"
+        },
+        {
+          "type": "platform",
+          "a": [
+            4,
+            3.6,
+            25.9
+          ],
+          "b": [
+            28,
+            3.82,
+            26.05
+          ],
+          "color": "e9c46a",
+          "surface": "metal",
+          "solid": false
+        },
+        {
+          "type": "rail",
+          "from": [
+            6.1,
+            4,
+            26.08
+          ],
+          "to": [
+            28,
+            4,
+            26.08
+          ]
+        },
+        {
+          "type": "stairs",
+          "from": [
+            5.1,
+            0,
+            18
+          ],
+          "to": [
+            5.1,
+            4,
+            26
+          ],
+          "width": 1.6,
+          "fill": false,
+          "color": "6f7c82",
+          "surface": "metal",
+          "rail": "left"
+        },
+        {
+          "type": "platform",
+          "a": [
+            4.3,
+            0,
+            17.9
+          ],
+          "b": [
+            4.4,
+            0.02,
+            18
+          ],
+          "color": "e9c46a",
+          "solid": false
+        }
+      ],
+      "props": [
+        [
+          "gantry_crane",
+          12,
+          11,
+          0,
+          {
+            "y": 6.7,
+            "span": 23.2,
+            "length": 20
+          }
+        ],
+        [
+          "work_light",
+          6,
+          5,
+          0,
+          {
+            "h": 6.4,
+            "drop": 2.0
+          }
+        ],
+        [
+          "work_light",
+          16.5,
+          5.5,
+          0,
+          {
+            "h": 6.4,
+            "drop": 2.0
+          }
+        ],
+        [
+          "work_light",
+          7,
+          16,
+          0,
+          {
+            "h": 6.4,
+            "drop": 2.0
+          }
+        ],
+        [
+          "work_light",
+          17,
+          17,
+          0,
+          {
+            "h": 6.4,
+            "drop": 2.0
+          }
+        ],
+        [
+          "workbench",
+          7.0,
+          14.5,
+          0,
+          {
+            "w": 2.8,
+            "npc": {
+              "role": "dot",
+              "pose": "tinker",
+              "bark": "bay",
+              "name": "DOT OKAFOR",
+              "talk": {
+                "id": "talk_dot",
+                "prompt": "E  Talk to Dot"
+              }
+            }
+          }
+        ],
+        [
+          "workbench",
+          14.5,
+          14.5,
+          0,
+          {
+            "w": 2.8,
+            "npc": {
+              "role": "technician",
+              "pose": "tinker"
+            }
+          }
+        ],
+        [
+          "rocket_stage",
+          15.5,
+          19.6,
+          0,
+          {
+            "l": 6.5,
+            "r": 0.75,
+            "npc": {
+              "role": "engineer",
+              "pose": "write",
+              "at": [
+                -1.5,
+                0,
+                1.6
+              ],
+              "yaw": 180,
+              "bark": "bay"
+            }
+          }
+        ],
+        [
+          "tool_cart",
+          10.0,
+          15.4,
+          20,
+          {}
+        ],
+        [
+          "tool_cart",
+          19.6,
+          18.0,
+          -70,
+          {}
+        ],
+        [
+          "crate_stack",
+          21.8,
+          14.6,
+          0,
+          {}
+        ],
+        [
+          "crate_stack",
+          10.2,
+          21.6,
+          90,
+          {}
+        ],
+        [
+          "barrel",
+          22.6,
+          21.6,
+          0,
+          {}
+        ],
+        [
+          "barrel",
+          23.2,
+          22.3,
+          0,
+          {
+            "color": "2a7b7b"
+          }
+        ],
+        [
+          "barrel",
+          22.5,
+          22.5,
+          0,
+          {
+            "color": "e9c46a"
+          }
+        ],
+        [
+          "shelf_unit",
+          0.45,
+          4.0,
+          90,
+          {
+            "w": 3.2,
+            "h": 3.0
+          }
+        ],
+        [
+          "shelf_unit",
+          0.45,
+          8.0,
+          90,
+          {
+            "w": 3.2,
+            "h": 3.0
+          }
+        ],
+        [
+          "locker_row",
+          23.7,
+          12.0,
+          -90,
+          {
+            "n": 5
+          }
+        ],
+        [
+          "wall_clock",
+          8.5,
+          23.85,
+          180,
+          {
+            "y": 0.4
+          }
+        ],
+        [
+          "fire_extinguisher",
+          14.2,
+          23.85,
+          180,
+          {}
+        ],
+        [
+          "pa_speaker",
+          20,
+          23.85,
+          180,
+          {
+            "y": 0.6
+          }
+        ],
+        [
+          "exit_sign",
+          12,
+          23.85,
+          180,
+          {
+            "y": 0.1
+          }
+        ]
+      ],
+      "signs": [
+        {
+          "text": "DESIGN BAY",
+          "at": [
+            12,
+            6.6,
+            0.16
+          ],
+          "face": "s",
+          "size": 220,
+          "color": "2a7b7b",
+          "range": 80
+        },
+        {
+          "text": "SAFETY FIRST. COFFEE SECOND.  D.O.",
+          "at": [
+            17.5,
+            3.0,
+            23.84
+          ],
+          "face": "n",
+          "size": 44,
+          "color": "2b2622"
+        },
+        {
+          "text": "0 DAYS SINCE SOMEBODY\nSAID \"IT'LL PROBABLY HOLD\"",
+          "at": [
+            23.84,
+            2.6,
+            17.5
+          ],
+          "face": "w",
+          "size": 34,
+          "color": "c0392b"
+        }
+      ]
+    },
+    {
+      "id": "mc_gallery",
+      "name": "VIEWING GALLERY",
+      "subtitle": "Quiet, please. Stairs down to the Mission Control floor.",
+      "rect": [
+        42,
+        24,
+        60,
+        28
+      ],
+      "y": 4,
+      "h": 3.3,
+      "sides": "",
+      "has_ceiling": false,
+      "floor": "7a4a30",
+      "floor_surface": "carpet",
+      "ambience": "mission_control",
+      "surface": "carpet",
+      "mood": {
+        "ambient": 0.2,
+        "fog": 0.002,
+        "fog_color": "1c2c30"
+      },
+      "lights": {
+        "kind": "none",
+        "extra": [
+          {
+            "at": [
+              5,
+              2.6,
+              2.4
+            ],
+            "energy": 0.35,
+            "range": 6,
+            "color": "ffd9a0"
+          },
+          {
+            "at": [
+              13,
+              2.6,
+              2.4
+            ],
+            "energy": 0.35,
+            "range": 6,
+            "color": "ffd9a0"
+          }
+        ]
+      },
+      "entry": [
+        9,
+        2.8
+      ],
+      "structures": [
+        {
+          "type": "rail",
+          "from": [
+            42.15,
+            4,
+            24.05
+          ],
+          "to": [
+            42.3,
+            4,
+            24.05
+          ]
+        },
+        {
+          "type": "platform",
+          "a": [
+            42,
+            3.55,
+            23.9
+          ],
+          "b": [
+            60,
+            3.8,
+            24.1
+          ],
+          "color": "2b2622",
+          "solid": false
+        }
+      ],
+      "props": [
+        [
+          "bench_seat",
+          6,
+          2.7,
+          180,
+          {}
+        ],
+        [
+          "bench_seat",
+          10,
+          2.7,
+          180,
+          {
+            "npc": {
+              "role": "visitor",
+              "pose": "sit",
+              "at": [
+                0.3,
+                0,
+                0.1
+              ],
+              "yaw": 0,
+              "bark": "gallery"
+            }
+          }
+        ],
+        [
+          "bench_seat",
+          14,
+          2.7,
+          180,
+          {}
+        ],
+        [
+          "plant",
+          17.3,
+          3.3,
+          0,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "VIEWING GALLERY   QUIET PLEASE",
+          "at": [
+            9,
+            2.75,
+            3.84
+          ],
+          "face": "n",
+          "size": 44,
+          "color": "e9c46a"
+        },
+        {
+          "text": "<  STAIRS TO THE FLOOR",
+          "at": [
+            2.4,
+            2.2,
+            3.84
+          ],
+          "face": "n",
+          "size": 36,
+          "color": "fbf5e6"
+        }
+      ]
+    },
+    {
+      "id": "mission_control",
+      "name": "MISSION CONTROL",
+      "subtitle": "Press E at the FLIGHT console to request a launch.",
+      "rect": [
+        42,
+        4,
+        60,
+        28
+      ],
+      "y": 0,
+      "h": 7.3,
+      "floor": "3e4a4c",
+      "floor_surface": "carpet",
+      "wall": "33474a",
+      "ceiling": "20292b",
+      "ceiling_surface": "matte",
+      "ambience": "mission_control",
+      "surface": "carpet",
+      "mood": {
+        "ambient": 0.2,
+        "fog": 0.002,
+        "fog_color": "1c2c30"
+      },
+      "max_prop_lights": 5,
+      "lights": {
+        "kind": "none",
+        "extra": [
+          {
+            "at": [
+              9,
+              6.0,
+              7
+            ],
+            "energy": 0.55,
+            "range": 13,
+            "color": "9fc8d8"
+          },
+          {
+            "at": [
+              9,
+              5.2,
+              15
+            ],
+            "energy": 0.5,
+            "range": 12,
+            "color": "ffd9a0"
+          },
+          {
+            "at": [
+              9,
+              3.6,
+              21.5
+            ],
+            "energy": 0.45,
+            "range": 8,
+            "color": "ffd0a0"
+          }
+        ]
+      },
+      "entry": [
+        9,
+        1.2,
+        21
+      ],
+      "structures": [
+        {
+          "type": "platform",
+          "a": [
+            42,
+            0,
+            10
+          ],
+          "b": [
+            60,
+            0.4,
+            13.5
+          ],
+          "color": "46585a",
+          "surface": "carpet"
+        },
+        {
+          "type": "platform",
+          "a": [
+            42,
+            0,
+            13.5
+          ],
+          "b": [
+            60,
+            0.8,
+            17
+          ],
+          "color": "4a5e60",
+          "surface": "carpet"
+        },
+        {
+          "type": "platform",
+          "a": [
+            42,
+            0,
+            17
+          ],
+          "b": [
+            60,
+            1.2,
+            28
+          ],
+          "color": "4e6466",
+          "surface": "carpet"
+        },
+        {
+          "type": "stairs",
+          "from": [
+            43.0,
+            0,
+            9
+          ],
+          "to": [
+            43.0,
+            0.4,
+            10
+          ],
+          "width": 1.6,
+          "color": "e9c46a",
+          "surface": "carpet"
+        },
+        {
+          "type": "stairs",
+          "from": [
+            43.0,
+            0.4,
+            12.5
+          ],
+          "to": [
+            43.0,
+            0.8,
+            13.5
+          ],
+          "width": 1.6,
+          "color": "e9c46a",
+          "surface": "carpet",
+          "base": 0.4
+        },
+        {
+          "type": "stairs",
+          "from": [
+            43.0,
+            0.8,
+            16
+          ],
+          "to": [
+            43.0,
+            1.2,
+            17
+          ],
+          "width": 1.6,
+          "color": "e9c46a",
+          "surface": "carpet",
+          "base": 0.8
+        },
+        {
+          "type": "stairs",
+          "from": [
+            59.0,
+            0,
+            9
+          ],
+          "to": [
+            59.0,
+            0.4,
+            10
+          ],
+          "width": 1.6,
+          "color": "e9c46a",
+          "surface": "carpet"
+        },
+        {
+          "type": "stairs",
+          "from": [
+            59.0,
+            0.4,
+            12.5
+          ],
+          "to": [
+            59.0,
+            0.8,
+            13.5
+          ],
+          "width": 1.6,
+          "color": "e9c46a",
+          "surface": "carpet",
+          "base": 0.4
+        },
+        {
+          "type": "stairs",
+          "from": [
+            59.0,
+            0.8,
+            16
+          ],
+          "to": [
+            59.0,
+            1.2,
+            17
+          ],
+          "width": 1.6,
+          "color": "e9c46a",
+          "surface": "carpet",
+          "base": 0.8
+        },
+        {
+          "type": "stairs",
+          "from": [
+            43.1,
+            1.2,
+            18.4
+          ],
+          "to": [
+            43.1,
+            4,
+            24
+          ],
+          "width": 1.6,
+          "color": "5a6e70",
+          "surface": "carpet",
+          "base": 1.2,
+          "rail": "right"
+        }
+      ],
+      "props": [
+        [
+          "wall_screen",
+          9,
+          0.15,
+          0,
+          {
+            "w": 7.4,
+            "h": 3.9,
+            "mount": 2.3,
+            "mode": "map",
+            "title": "GROUND TRACK",
+            "glow": "7fd0c0",
+            "energy": 1.3
+          }
+        ],
+        [
+          "wall_screen",
+          2.9,
+          0.15,
+          0,
+          {
+            "w": 4.2,
+            "h": 3.2,
+            "mount": 2.6,
+            "mode": "data",
+            "title": "TELEMETRY",
+            "glow": "ffd08a",
+            "energy": 0.7
+          }
+        ],
+        [
+          "wall_screen",
+          15.1,
+          0.15,
+          0,
+          {
+            "w": 4.2,
+            "h": 3.2,
+            "mount": 2.6,
+            "mode": "data",
+            "title": "TRAJECTORY",
+            "glow": "9fd8ff",
+            "energy": 0.7
+          }
+        ],
+        [
+          "status_board",
+          17.85,
+          8.0,
+          -90,
+          {
+            "mount": 2.2,
+            "title": "GO / NO GO"
+          }
+        ],
+        [
+          "pad_plinth",
+          2.3,
+          2.6,
+          0,
+          {
+            "label": "VEHICLE ON PAD 5  (SCALE MODEL)"
+          }
+        ],
+        [
+          "mc_console",
+          4,
+          3.6,
+          0,
+          {
+            "label": "BOOSTER",
+            "npc": {
+              "role": "controller",
+              "pose": "type"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          6,
+          3.6,
+          0,
+          {
+            "label": "RETRO",
+            "npc": {
+              "role": "controller",
+              "pose": "sit_turn",
+              "bark": "controller"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          8,
+          3.6,
+          0,
+          {
+            "label": "FIDO",
+            "npc": {
+              "role": "controller",
+              "pose": "write"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          10,
+          3.6,
+          0,
+          {
+            "label": "GUIDO"
+          }
+        ],
+        [
+          "mc_console",
+          12,
+          3.6,
+          0,
+          {
+            "label": "SURGEON",
+            "npc": {
+              "role": "controller",
+              "pose": "type"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          14,
+          3.6,
+          0,
+          {
+            "label": "CAPCOM",
+            "npc": {
+              "role": "controller",
+              "pose": "sit_turn"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          4,
+          7.2,
+          0,
+          {
+            "y": 0.4,
+            "label": "EECOM",
+            "npc": {
+              "role": "controller",
+              "pose": "type",
+              "bark": "controller"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          6,
+          7.2,
+          0,
+          {
+            "y": 0.4,
+            "label": "GNC",
+            "npc": {
+              "role": "controller",
+              "pose": "write"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          8,
+          7.2,
+          0,
+          {
+            "y": 0.4,
+            "label": "TELMU"
+          }
+        ],
+        [
+          "mc_console",
+          10,
+          7.2,
+          0,
+          {
+            "y": 0.4,
+            "label": "CONTROL",
+            "npc": {
+              "role": "controller",
+              "pose": "sit_turn"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          12,
+          7.2,
+          0,
+          {
+            "y": 0.4,
+            "label": "INCO",
+            "npc": {
+              "role": "controller",
+              "pose": "type"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          14,
+          7.2,
+          0,
+          {
+            "y": 0.4,
+            "label": "NETWORK",
+            "npc": {
+              "role": "controller",
+              "pose": "write"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          4,
+          10.7,
+          0,
+          {
+            "y": 0.8,
+            "label": "PROCEDURES",
+            "npc": {
+              "role": "controller",
+              "pose": "write"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          6,
+          10.7,
+          0,
+          {
+            "y": 0.8,
+            "label": "RECOVERY",
+            "npc": {
+              "role": "controller",
+              "pose": "type"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          8,
+          10.7,
+          0,
+          {
+            "y": 0.8,
+            "label": "COMMS",
+            "npc": {
+              "role": "sparks",
+              "pose": "sit_turn",
+              "bark": "sparks"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          10,
+          10.7,
+          0,
+          {
+            "y": 0.8,
+            "label": "RANGE",
+            "npc": {
+              "role": "controller",
+              "pose": "type"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          12,
+          10.7,
+          0,
+          {
+            "y": 0.8,
+            "label": "WEATHER"
+          }
+        ],
+        [
+          "mc_console",
+          14,
+          10.7,
+          0,
+          {
+            "y": 0.8,
+            "label": "PAO",
+            "npc": {
+              "role": "controller",
+              "pose": "sit_turn",
+              "bark": "controller"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          5,
+          14.4,
+          0,
+          {
+            "y": 1.2,
+            "label": "OPS",
+            "npc": {
+              "role": "controller",
+              "pose": "write"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          7,
+          14.4,
+          0,
+          {
+            "y": 1.2,
+            "label": "ASST FLIGHT",
+            "npc": {
+              "role": "controller",
+              "pose": "type",
+              "bark": "controller"
+            }
+          }
+        ],
+        [
+          "mc_console",
+          9,
+          14.4,
+          0,
+          {
+            "y": 1.2,
+            "label": "FLIGHT",
+            "lamp": true,
+            "color": "8a9a8f"
+          }
+        ],
+        [
+          "mc_console",
+          11,
+          14.4,
+          0,
+          {
+            "y": 1.2,
+            "label": "DIRECTOR"
+          }
+        ],
+        [
+          "mc_console",
+          13,
+          14.4,
+          0,
+          {
+            "y": 1.2,
+            "label": "DOD",
+            "npc": {
+              "role": "controller",
+              "pose": "sit_turn"
+            }
+          }
+        ],
+        [
+          "teletype",
+          17.3,
+          17.0,
+          -90,
+          {
+            "y": 1.2
+          }
+        ],
+        [
+          "coat_rack",
+          16.8,
+          22.6,
+          0,
+          {
+            "y": 1.2
+          }
+        ],
+        [
+          "table",
+          11.5,
+          22.0,
+          0,
+          {
+            "y": 1.2,
+            "w": 1.8,
+            "d": 0.8
+          }
+        ],
+        [
+          "bench_seat",
+          7.0,
+          23.4,
+          180,
+          {
+            "y": 1.2
+          }
+        ],
+        [
+          "trash_can",
+          15.4,
+          23.2,
+          0,
+          {
+            "y": 1.2
+          }
+        ],
+        [
+          "wall_clock",
+          12.2,
+          0.15,
+          0,
+          {
+            "y": 3.9
+          }
+        ],
+        [
+          "pa_speaker",
+          17.85,
+          14,
+          -90,
+          {
+            "y": 2.0
+          }
+        ]
+      ],
+      "signs": [
+        {
+          "text": "MISSION CONTROL",
+          "at": [
+            9,
+            6.75,
+            0.16
+          ],
+          "face": "s",
+          "size": 120,
+          "color": "e9c46a",
+          "range": 80
+        }
+      ]
+    },
+    {
+      "id": "stairwell",
+      "name": "STAIRS",
+      "subtitle": "",
+      "rect": [
+        43,
+        32,
+        48,
+        42
+      ],
+      "y": 0,
+      "h": 7.3,
+      "floor": "b9b1a0",
+      "floor_surface": "concrete",
+      "wall": "e3dcc8",
+      "dado": "c8551f",
+      "ceiling": "e6e0d0",
+      "ceiling_surface": "matte",
+      "ambience": "stairwell",
+      "surface": "concrete",
+      "mood": {
+        "ambient": 0.34
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 1,
+        "nz": 2,
+        "energy": 0.9,
+        "range": 10,
+        "extra": [
+          {
+            "at": [
+              1.2,
+              2.8,
+              2.0
+            ],
+            "energy": 0.6,
+            "range": 6,
+            "color": "e4eeff"
+          }
+        ]
+      },
+      "entry": [
+        1.25,
+        0.8
+      ],
+      "structures": [
+        {
+          "type": "stairs",
+          "from": [
+            44.25,
+            0,
+            33.5
+          ],
+          "to": [
+            44.25,
+            2,
+            39.5
+          ],
+          "width": 2.3,
+          "color": "a8a294",
+          "surface": "concrete",
+          "rail": "left"
+        },
+        {
+          "type": "platform",
+          "a": [
+            43,
+            0,
+            39.5
+          ],
+          "b": [
+            48,
+            2,
+            42
+          ],
+          "color": "a8a294",
+          "surface": "concrete"
+        },
+        {
+          "type": "stairs",
+          "from": [
+            46.75,
+            2,
+            39.5
+          ],
+          "to": [
+            46.75,
+            4,
+            33.5
+          ],
+          "width": 2.3,
+          "color": "a8a294",
+          "surface": "concrete",
+          "base": 0,
+          "rail": "left"
+        },
+        {
+          "type": "platform",
+          "a": [
+            45.5,
+            0,
+            32
+          ],
+          "b": [
+            48,
+            4,
+            33.5
+          ],
+          "color": "a8a294",
+          "surface": "concrete"
+        },
+        {
+          "type": "platform",
+          "a": [
+            45.42,
+            0,
+            33.5
+          ],
+          "b": [
+            45.58,
+            5.1,
+            39.5
+          ],
+          "color": "e3dcc8"
+        },
+        {
+          "type": "rail",
+          "from": [
+            45.56,
+            4,
+            32.1
+          ],
+          "to": [
+            45.56,
+            4,
+            33.5
+          ]
+        }
+      ],
+      "props": [
+        [
+          "exit_sign",
+          1.25,
+          0.15,
+          0,
+          {
+            "text": "GROUND"
+          }
+        ],
+        [
+          "fire_extinguisher",
+          0.15,
+          1.0,
+          90,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "1",
+          "at": [
+            3.75,
+            6.2,
+            0.16
+          ],
+          "face": "s",
+          "size": 160,
+          "color": "c8551f"
+        },
+        {
+          "text": "G",
+          "at": [
+            1.25,
+            2.6,
+            9.84
+          ],
+          "face": "n",
+          "size": 160,
+          "color": "c8551f"
+        }
+      ]
+    },
+    {
+      "id": "corridor_u",
+      "name": "UPPER CORRIDOR",
+      "subtitle": "Upper floor.",
+      "rect": [
+        4,
+        28,
+        60,
+        32
+      ],
+      "y": 4,
+      "h": 3.3,
+      "floor": "cdbf9c",
+      "floor_surface": "tile",
+      "wall": "efe6cc",
+      "dado": "e9c46a",
+      "ceiling": "f4efe2",
+      "ambience": "corridor",
+      "surface": "lino",
+      "mood": {
+        "ambient": 0.42
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 7,
+        "nz": 1,
+        "energy": 0.9,
+        "flicker": [
+          1
+        ]
+      },
+      "entry": [
+        37.5,
+        2
+      ],
+      "props": [
+        [
+          "dir_sign",
+          37.4,
+          2.0,
+          90,
+          {
+            "hanging": true,
+            "w": 3.2,
+            "mount": 2.72,
+            "lines": [
+              "<  IBM 7090",
+              "DIRECTOR  ENGINEERING  >"
+            ],
+            "lines_back": [
+              "MISSION CONTROL  >",
+              "<  TYPING POOL"
+            ]
+          }
+        ],
+        [
+          "dir_sign",
+          39.6,
+          3.85,
+          180,
+          {
+            "w": 2.0,
+            "mount": 2.55,
+            "color": "c8551f",
+            "lines": [
+              "GROUND FLOOR",
+              "LOBBY  BAY  TUNNEL"
+            ]
+          }
+        ],
+        [
+          "noticeboard",
+          24.5,
+          3.85,
+          180,
+          {
+            "title": "DIRECTOR'S MEMOS",
+            "w": 1.6
+          }
+        ],
+        [
+          "water_fountain",
+          44.6,
+          0.15,
+          0,
+          {
+            "npc": {
+              "role": "typist",
+              "pose": "stand",
+              "bark": "gossip"
+            }
+          }
+        ],
+        [
+          "wall_clock",
+          33.0,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "bench_seat",
+          21.0,
+          3.55,
+          180,
+          {}
+        ],
+        [
+          "plant",
+          0.7,
+          0.7,
+          0,
+          {}
+        ],
+        [
+          "plant",
+          55.3,
+          3.3,
+          0,
+          {}
+        ],
+        [
+          "pa_speaker",
+          12.0,
+          3.85,
+          180,
+          {}
+        ],
+        [
+          "fire_extinguisher",
+          49.2,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "trash_can",
+          31.3,
+          3.5,
+          0,
+          {}
+        ],
+        [
+          "exit_sign",
+          41.0,
+          0.15,
+          0,
+          {
+            "text": "STAIRS  >"
+          }
+        ]
+      ],
+      "signs": [
+        {
+          "text": "LOOK DOWN.  THAT'S THE BAY.",
+          "at": [
+            16,
+            0.75,
+            0.16
+          ],
+          "face": "s",
+          "size": 28,
+          "color": "2b2622",
+          "range": 12
+        }
+      ]
+    },
+    {
+      "id": "computer_room",
+      "name": "IBM 7090 COMPUTER ROOM",
+      "subtitle": "Press E at the keypunch to type your rocket in real numbers.",
+      "rect": [
+        28,
+        4,
+        42,
+        28
+      ],
+      "y": 4,
+      "h": 3.3,
+      "floor": "cfd8d6",
+      "floor_surface": "grid",
+      "wall": "f4f1e6",
+      "dado": "54728c",
+      "ceiling": "f4efe2",
+      "ambience": "computer_room",
+      "surface": "raised",
+      "mood": {
+        "ambient": 0.5
+      },
+      "max_prop_lights": 2,
+      "lights": {
+        "kind": "fluoro",
+        "nx": 2,
+        "nz": 3,
+        "energy": 0.7,
+        "color": "e6f2ff"
+      },
+      "entry": [
+        7,
+        21.5
+      ],
+      "props": [
+        [
+          "cpu_cabinet",
+          2.4,
+          0.6,
+          0,
+          {
+            "w": 2.6,
+            "label": "CENTRAL PROCESSING"
+          }
+        ],
+        [
+          "cpu_cabinet",
+          5.4,
+          0.6,
+          0,
+          {
+            "w": 2.6,
+            "label": "CORE STORAGE"
+          }
+        ],
+        [
+          "cpu_cabinet",
+          8.6,
+          0.6,
+          0,
+          {
+            "w": 2.6,
+            "label": "MULTIPLEXOR"
+          }
+        ],
+        [
+          "cpu_cabinet",
+          11.6,
+          0.6,
+          0,
+          {
+            "w": 2.6,
+            "label": "POWER"
+          }
+        ],
+        [
+          "tape_drive",
+          0.56,
+          4.2,
+          90,
+          {}
+        ],
+        [
+          "tape_drive",
+          0.56,
+          5.2,
+          90,
+          {}
+        ],
+        [
+          "tape_drive",
+          0.56,
+          6.2,
+          90,
+          {}
+        ],
+        [
+          "tape_drive",
+          0.56,
+          7.2,
+          90,
+          {}
+        ],
+        [
+          "tape_drive",
+          0.56,
+          8.2,
+          90,
+          {}
+        ],
+        [
+          "tape_drive",
+          0.56,
+          9.2,
+          90,
+          {
+            "npc": {
+              "role": "operator",
+              "pose": "stand",
+              "bark": "ibm"
+            }
+          }
+        ],
+        [
+          "tape_drive",
+          13.44,
+          4.2,
+          -90,
+          {}
+        ],
+        [
+          "tape_drive",
+          13.44,
+          5.2,
+          -90,
+          {}
+        ],
+        [
+          "tape_drive",
+          13.44,
+          6.2,
+          -90,
+          {}
+        ],
+        [
+          "tape_drive",
+          13.44,
+          7.2,
+          -90,
+          {}
+        ],
+        [
+          "tape_drive",
+          13.44,
+          8.2,
+          -90,
+          {}
+        ],
+        [
+          "tape_drive",
+          13.44,
+          9.2,
+          -90,
+          {}
+        ],
+        [
+          "operator_console",
+          7,
+          13.6,
+          0,
+          {
+            "npc": {
+              "role": "operator",
+              "pose": "type",
+              "bark": "ibm",
+              "name": "IBM OPERATOR",
+              "talk": {
+                "id": "talk_operator",
+                "prompt": "E  Ask the operator"
+              }
+            }
+          }
+        ],
+        [
+          "card_reader",
+          3.2,
+          13.4,
+          0,
+          {}
+        ],
+        [
+          "line_printer",
+          10.9,
+          13.4,
+          0,
+          {
+            "npc": {
+              "role": "operator",
+              "pose": "stand"
+            }
+          }
+        ],
+        [
+          "floor_open",
+          4.4,
+          17.6,
+          0,
+          {}
+        ],
+        [
+          "shelf_unit",
+          3.4,
+          23.55,
+          180,
+          {
+            "w": 4.5,
+            "h": 2.2
+          }
+        ],
+        [
+          "shelf_unit",
+          11.0,
+          23.55,
+          180,
+          {
+            "w": 4.5,
+            "h": 2.2
+          }
+        ],
+        [
+          "desk",
+          11.6,
+          19.2,
+          -90,
+          {
+            "typewriter": false,
+            "phone": true,
+            "papers": true
+          }
+        ],
+        [
+          "wall_clock",
+          0.15,
+          12.0,
+          90,
+          {}
+        ],
+        [
+          "fire_extinguisher",
+          13.85,
+          11.5,
+          -90,
+          {}
+        ],
+        [
+          "exit_sign",
+          7,
+          23.85,
+          180,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "DATA PROCESSING DIVISION",
+          "at": [
+            7,
+            2.9,
+            0.16
+          ],
+          "face": "s",
+          "size": 60,
+          "color": "54728c"
+        },
+        {
+          "text": "NO SMOKING.  NO MAGNETS.\nNO COFFEE (THIS MEANS YOU, DOT).",
+          "at": [
+            13.84,
+            2.4,
+            16.5
+          ],
+          "face": "w",
+          "size": 30,
+          "color": "c0392b"
+        }
+      ]
+    },
+    {
+      "id": "eng_office",
+      "name": "ENGINEERING OFFICE",
+      "subtitle": "Drafting tables and slide rules.",
+      "rect": [
+        4,
+        32,
+        24,
+        44
+      ],
+      "y": 4,
+      "h": 3.3,
+      "sun": true,
+      "floor": "a7b59f",
+      "floor_surface": "carpet",
+      "wall": "efe6cc",
+      "dado": "8c6a4a",
+      "ceiling": "f4efe2",
+      "ambience": "office",
+      "surface": "carpet",
+      "mood": {
+        "ambient": 0.48
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 3,
+        "nz": 2,
+        "energy": 0.8
+      },
+      "entry": [
+        10,
+        2
+      ],
+      "props": [
+        [
+          "drafting_table",
+          3.0,
+          3.4,
+          0,
+          {
+            "npc": {
+              "role": "draftsman",
+              "pose": "write",
+              "bark": "office"
+            }
+          }
+        ],
+        [
+          "drafting_table",
+          6.4,
+          3.4,
+          0,
+          {}
+        ],
+        [
+          "drafting_table",
+          3.0,
+          7.6,
+          0,
+          {
+            "npc": {
+              "role": "draftsman",
+              "pose": "write"
+            }
+          }
+        ],
+        [
+          "drafting_table",
+          6.4,
+          7.6,
+          0,
+          {
+            "npc": {
+              "role": "engineer",
+              "pose": "write"
+            }
+          }
+        ],
+        [
+          "desk",
+          13.0,
+          4.0,
+          0,
+          {
+            "typewriter": true,
+            "phone": true,
+            "npc": {
+              "role": "engineer",
+              "pose": "type",
+              "bark": "office"
+            }
+          }
+        ],
+        [
+          "desk",
+          16.2,
+          4.0,
+          0,
+          {
+            "papers": true,
+            "lamp": true,
+            "mug": true
+          }
+        ],
+        [
+          "desk",
+          13.0,
+          8.0,
+          0,
+          {
+            "papers": true,
+            "phone": true,
+            "npc": {
+              "role": "engineer",
+              "pose": "write"
+            }
+          }
+        ],
+        [
+          "desk",
+          16.2,
+          8.0,
+          0,
+          {
+            "typewriter": true,
+            "mug": true
+          }
+        ],
+        [
+          "filing_cabinet",
+          19.65,
+          3.5,
+          -90,
+          {
+            "n": 4
+          }
+        ],
+        [
+          "filing_cabinet",
+          19.65,
+          7.0,
+          -90,
+          {
+            "n": 3,
+            "color": "2a7b7b"
+          }
+        ],
+        [
+          "bookshelf",
+          0.4,
+          5.5,
+          90,
+          {
+            "w": 3.5,
+            "h": 2.2
+          }
+        ],
+        [
+          "chart_board",
+          4.5,
+          0.15,
+          0,
+          {
+            "title": "LAUNCH SCHEDULE",
+            "w": 2.6
+          }
+        ],
+        [
+          "noticeboard",
+          17.0,
+          0.15,
+          0,
+          {
+            "title": "DRAWING OFFICE",
+            "w": 1.6
+          }
+        ],
+        [
+          "teletype",
+          19.5,
+          10.4,
+          -90,
+          {}
+        ],
+        [
+          "coat_rack",
+          0.8,
+          1.0,
+          0,
+          {}
+        ],
+        [
+          "plant",
+          0.8,
+          11.2,
+          0,
+          {}
+        ],
+        [
+          "wall_clock",
+          10.0,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "trash_can",
+          9.8,
+          6.0,
+          0,
+          {}
+        ]
+      ],
+      "signs": []
+    },
+    {
+      "id": "pike_office",
+      "name": "DIRECTOR'S OFFICE",
+      "subtitle": "Director Bertram Pike. Mission briefs and budgets.",
+      "rect": [
+        24,
+        32,
+        32,
+        44
+      ],
+      "y": 4,
+      "h": 3.3,
+      "sun": true,
+      "floor": "7a3f2a",
+      "floor_surface": "carpet",
+      "wall": "ead9b8",
+      "dado": "6b4f36",
+      "ceiling": "f4efe2",
+      "ambience": "office_quiet",
+      "surface": "carpet",
+      "mood": {
+        "ambient": 0.42
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 1,
+        "nz": 2,
+        "energy": 0.55,
+        "color": "fff0d6"
+      },
+      "entry": [
+        4,
+        2.2
+      ],
+      "props": [
+        [
+          "pike_desk",
+          4,
+          7.6,
+          0,
+          {
+            "nameplate": "B. PIKE  DIRECTOR",
+            "npc": {
+              "role": "pike",
+              "pose": "write",
+              "bark": "pike",
+              "name": "DIRECTOR PIKE",
+              "talk": {
+                "id": "talk_pike",
+                "prompt": "E  Hear the mission brief"
+              }
+            }
+          }
+        ],
+        [
+          "photo_frame",
+          3.0,
+          7.3,
+          200,
+          {
+            "y": 0.78,
+            "interact": {
+              "id": "pike_photo",
+              "prompt": "E  Look at the photograph",
+              "at": [
+                0,
+                0.15,
+                0
+              ],
+              "from": [
+                0.3,
+                0.6,
+                -1.3
+              ],
+              "say": "Two young men in shirtsleeves beside a rocket the size of a fence post. One of them is Pike. You know the other."
+            }
+          }
+        ],
+        [
+          "chart_board",
+          0.15,
+          4.6,
+          90,
+          {
+            "title": "BUDGET  FY 1962",
+            "w": 2.4
+          }
+        ],
+        [
+          "chart_board",
+          0.15,
+          8.4,
+          90,
+          {
+            "title": "COST PER POUND TO ORBIT",
+            "w": 2.4
+          }
+        ],
+        [
+          "sofa",
+          7.5,
+          3.6,
+          -90,
+          {
+            "w": 1.9,
+            "color": "2a7b7b"
+          }
+        ],
+        [
+          "bookshelf",
+          7.72,
+          7.6,
+          -90,
+          {
+            "w": 3.0,
+            "h": 2.3
+          }
+        ],
+        [
+          "filing_cabinet",
+          0.5,
+          11.3,
+          90,
+          {
+            "n": 2,
+            "color": "6b4f36"
+          }
+        ],
+        [
+          "rug",
+          4,
+          5.2,
+          0,
+          {
+            "w": 4.2,
+            "d": 3.0,
+            "color": "2a7b7b"
+          }
+        ],
+        [
+          "coat_rack",
+          0.9,
+          0.9,
+          0,
+          {}
+        ],
+        [
+          "plant",
+          7.2,
+          11.2,
+          0,
+          {}
+        ],
+        [
+          "wall_clock",
+          6.0,
+          0.15,
+          0,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "EVERY POUND COSTS A DOLLAR.\nEVERY DOLLAR COSTS A MEETING.",
+          "at": [
+            7.84,
+            2.75,
+            3.6
+          ],
+          "face": "w",
+          "size": 26,
+          "color": "2b2622",
+          "range": 14
+        }
+      ]
+    },
+    {
+      "id": "dad_office",
+      "name": "DAD'S OFFICE",
+      "subtitle": "Nobody has been in here for a year.",
+      "rect": [
+        32,
+        32,
+        40,
+        44
+      ],
+      "y": 4,
+      "h": 3.3,
+      "sun": true,
+      "floor": "6f6a5c",
+      "floor_surface": "carpet",
+      "wall": "cfc6ae",
+      "dado": "6b4f36",
+      "ceiling": "e2dccb",
+      "ambience": "dad_office",
+      "surface": "carpet",
+      "mood": {
+        "ambient": 0.2
+      },
+      "lights": {
+        "kind": "none",
+        "extra": [
+          {
+            "at": [
+              4,
+              2.4,
+              9.5
+            ],
+            "energy": 0.5,
+            "range": 7,
+            "color": "ffd9a0"
+          }
+        ]
+      },
+      "entry": [
+        4,
+        2.2
+      ],
+      "props": [
+        [
+          "desk",
+          4,
+          7.4,
+          0,
+          {
+            "color": "6b4f36",
+            "papers": true,
+            "lamp": true,
+            "chair": "6b4f36"
+          }
+        ],
+        [
+          "model_rocket",
+          4.45,
+          7.3,
+          30,
+          {
+            "y": 0.765,
+            "broken": true,
+            "interact": {
+              "id": "dads_model_rocket",
+              "prompt": "E  Look at the model rocket",
+              "at": [
+                0,
+                0.2,
+                0
+              ],
+              "from": [
+                -0.5,
+                0.75,
+                1.3
+              ],
+              "say": "Balsa and cream paint. The nose has snapped off and been set down beside it, carefully, to be fixed later."
+            }
+          }
+        ],
+        [
+          "moon_poster",
+          0.15,
+          5.6,
+          90,
+          {
+            "text": "SELENE"
+          }
+        ],
+        [
+          "safe",
+          0.15,
+          9.6,
+          90,
+          {}
+        ],
+        [
+          "tape_player",
+          7.5,
+          8.8,
+          -90,
+          {
+            "tape": "#1",
+            "interact": {
+              "id": "dads_tape_player",
+              "prompt": "E  Play the tape",
+              "at": [
+                0,
+                1.0,
+                0.3
+              ],
+              "from": [
+                0.2,
+                1.5,
+                1.7
+              ],
+              "say": "Click. Hiss. \"Log one. It's 2 a.m. Coffee number four. Don't tell Ruth.\""
+            }
+          }
+        ],
+        [
+          "bookshelf",
+          7.72,
+          4.6,
+          -90,
+          {
+            "w": 3.0,
+            "h": 2.3
+          }
+        ],
+        [
+          "dust_boxes",
+          1.4,
+          10.9,
+          0,
+          {}
+        ],
+        [
+          "dust_boxes",
+          6.2,
+          1.6,
+          180,
+          {}
+        ],
+        [
+          "coat_rack",
+          0.9,
+          0.9,
+          0,
+          {}
+        ],
+        [
+          "rug",
+          4,
+          6.0,
+          0,
+          {
+            "w": 3.6,
+            "d": 2.6,
+            "color": "5b6b5b"
+          }
+        ],
+        [
+          "window_blind",
+          4,
+          11.72,
+          180,
+          {
+            "y": 0.95,
+            "w": 4.0,
+            "h": 1.75
+          }
+        ],
+        [
+          "chart_board",
+          3.6,
+          0.15,
+          0,
+          {
+            "title": "SELENE  HEAT SHIELD TESTS",
+            "w": 2.0
+          }
+        ]
+      ],
+      "signs": []
+    },
+    {
+      "id": "typing_pool",
+      "name": "TYPING POOL",
+      "subtitle": "Sixty words a minute, all day.",
+      "rect": [
+        48,
+        32,
+        60,
+        44
+      ],
+      "y": 4,
+      "h": 3.3,
+      "sun": true,
+      "floor": "d6caa6",
+      "floor_surface": "tile",
+      "wall": "f2e8cf",
+      "dado": "8fc1b5",
+      "ceiling": "f4efe2",
+      "ambience": "typing_pool",
+      "surface": "lino",
+      "mood": {
+        "ambient": 0.5
+      },
+      "lights": {
+        "kind": "fluoro",
+        "nx": 2,
+        "nz": 2,
+        "energy": 0.85
+      },
+      "entry": [
+        6,
+        2
+      ],
+      "props": [
+        [
+          "desk",
+          2.6,
+          4.2,
+          0,
+          {
+            "typewriter": true,
+            "color": "c9c2b0",
+            "npc": {
+              "role": "typist",
+              "pose": "type",
+              "bark": "typing"
+            }
+          }
+        ],
+        [
+          "desk",
+          6.0,
+          4.2,
+          0,
+          {
+            "typewriter": true,
+            "color": "c9c2b0",
+            "npc": {
+              "role": "typist",
+              "pose": "type"
+            }
+          }
+        ],
+        [
+          "desk",
+          9.4,
+          4.2,
+          0,
+          {
+            "typewriter": true,
+            "color": "c9c2b0",
+            "phone": true
+          }
+        ],
+        [
+          "desk",
+          2.6,
+          7.6,
+          0,
+          {
+            "typewriter": true,
+            "color": "c9c2b0",
+            "npc": {
+              "role": "typist",
+              "pose": "type"
+            }
+          }
+        ],
+        [
+          "desk",
+          6.0,
+          7.6,
+          0,
+          {
+            "typewriter": true,
+            "color": "c9c2b0",
+            "phone": true,
+            "npc": {
+              "role": "typist",
+              "pose": "sit_turn",
+              "bark": "typing"
+            }
+          }
+        ],
+        [
+          "desk",
+          9.4,
+          7.6,
+          0,
+          {
+            "typewriter": true,
+            "color": "c9c2b0",
+            "npc": {
+              "role": "typist",
+              "pose": "type"
+            }
+          }
+        ],
+        [
+          "filing_cabinet",
+          0.5,
+          2.0,
+          90,
+          {
+            "n": 3
+          }
+        ],
+        [
+          "filing_cabinet",
+          11.5,
+          6.0,
+          -90,
+          {
+            "n": 5,
+            "color": "54728c"
+          }
+        ],
+        [
+          "teletype",
+          0.55,
+          10.6,
+          90,
+          {}
+        ],
+        [
+          "plant",
+          11.2,
+          11.2,
+          0,
+          {}
+        ],
+        [
+          "wall_clock",
+          9.0,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "pa_speaker",
+          3.0,
+          0.15,
+          0,
+          {}
+        ],
+        [
+          "coat_rack",
+          11.0,
+          1.0,
+          0,
+          {}
+        ],
+        [
+          "trash_can",
+          4.3,
+          6.0,
+          0,
+          {}
+        ]
+      ],
+      "signs": [
+        {
+          "text": "ACCURACY BEFORE SPEED.  THEN SPEED.",
+          "at": [
+            6,
+            2.75,
+            0.16
+          ],
+          "face": "s",
+          "size": 34,
+          "color": "2a7b7b"
+        }
+      ]
+    }
+  ],
+  "doors": [
+    {
+      "id": "bay",
+      "at": [
+        16,
+        28
+      ],
+      "axis": "x",
+      "y": 0,
+      "w": 2.4,
+      "h": 2.6,
+      "type": "double",
+      "rooms": [
+        "corridor_g",
+        "design_bay"
+      ],
+      "label": "DESIGN BAY",
+      "color": "2a7b7b"
+    },
+    {
+      "id": "tunnel",
+      "at": [
+        35,
+        28
+      ],
+      "axis": "x",
+      "y": 0,
+      "w": 1.2,
+      "h": 2.3,
+      "type": "swing",
+      "rooms": [
+        "corridor_g",
+        "wind_tunnel"
+      ],
+      "label": "WIND TUNNEL",
+      "color": "e9c46a",
+      "porthole": true
+    },
+    {
+      "id": "plant",
+      "at": [
+        51,
+        28
+      ],
+      "axis": "x",
+      "y": 0,
+      "w": 1.1,
+      "h": 2.3,
+      "type": "swing",
+      "rooms": [
+        "corridor_g"
+      ],
+      "locked": true,
+      "label": "PLANT ROOM",
+      "label_side": 1,
+      "sign": "AUTHORISED PERSONNEL ONLY",
+      "color": "4d5b63",
+      "locked_text": "Locked. AUTHORISED PERSONNEL ONLY. Something large is humming behind it."
+    },
+    {
+      "id": "stores_b",
+      "at": [
+        6,
+        32
+      ],
+      "axis": "x",
+      "y": 0,
+      "w": 1.1,
+      "h": 2.3,
+      "type": "swing",
+      "rooms": [
+        "corridor_g"
+      ],
+      "locked": true,
+      "label": "STORES B",
+      "label_side": -1,
+      "sign": "AUTHORISED PERSONNEL ONLY",
+      "color": "4d5b63",
+      "locked_text": "Locked. AUTHORISED PERSONNEL ONLY. You are a filing clerk. You are not personnel yet."
+    },
+    {
+      "id": "cafeteria",
+      "at": [
+        16,
+        32
+      ],
+      "axis": "x",
+      "y": 0,
+      "w": 2.2,
+      "h": 2.4,
+      "type": "double",
+      "rooms": [
+        "corridor_g",
+        "cafeteria"
+      ],
+      "label": "CAFETERIA",
+      "color": "c8551f"
+    },
+    {
+      "id": "lobby",
+      "at": [
+        32,
+        32
+      ],
+      "axis": "x",
+      "y": 0,
+      "w": 6.0,
+      "h": 2.8,
+      "type": "arch",
+      "rooms": [
+        "corridor_g",
+        "lobby"
+      ]
+    },
+    {
+      "id": "stairs_g",
+      "at": [
+        44.25,
+        32
+      ],
+      "axis": "x",
+      "y": 0,
+      "w": 2.0,
+      "h": 2.6,
+      "type": "arch",
+      "rooms": [
+        "corridor_g",
+        "stairwell"
+      ],
+      "label": "STAIRS",
+      "label_side": -1
+    },
+    {
+      "id": "records",
+      "at": [
+        54,
+        32
+      ],
+      "axis": "x",
+      "y": 0,
+      "w": 1.2,
+      "h": 2.3,
+      "type": "swing",
+      "rooms": [
+        "corridor_g",
+        "records"
+      ],
+      "label": "RECORDS & STORES",
+      "color": "8c8577"
+    },
+    {
+      "id": "parts",
+      "at": [
+        28,
+        9
+      ],
+      "axis": "z",
+      "y": 0,
+      "w": 1.8,
+      "h": 2.4,
+      "type": "double",
+      "rooms": [
+        "design_bay",
+        "parts_store"
+      ],
+      "label": "PARTS STORE",
+      "color": "e9c46a"
+    },
+    {
+      "id": "entrance",
+      "at": [
+        32,
+        44
+      ],
+      "axis": "x",
+      "y": 0,
+      "w": 3.2,
+      "h": 2.6,
+      "type": "glass",
+      "rooms": [
+        "lobby"
+      ],
+      "locked": true,
+      "locked_prompt": "E  Leave the building",
+      "locked_text": "Your shift is not over. Pike counts the hours."
+    },
+    {
+      "id": "catwalk",
+      "at": [
+        10,
+        28
+      ],
+      "axis": "x",
+      "y": 4,
+      "w": 1.1,
+      "h": 2.3,
+      "type": "swing",
+      "rooms": [
+        "corridor_u",
+        "design_bay"
+      ],
+      "label": "BAY CATWALK",
+      "color": "2a7b7b",
+      "porthole": true
+    },
+    {
+      "id": "ibm",
+      "at": [
+        35,
+        28
+      ],
+      "axis": "x",
+      "y": 4,
+      "w": 2.2,
+      "h": 2.4,
+      "type": "double",
+      "rooms": [
+        "corridor_u",
+        "computer_room"
+      ],
+      "label": "IBM 7090  DATA PROCESSING",
+      "color": "54728c"
+    },
+    {
+      "id": "gallery",
+      "at": [
+        51,
+        28
+      ],
+      "axis": "x",
+      "y": 4,
+      "w": 1.2,
+      "h": 2.3,
+      "type": "swing",
+      "rooms": [
+        "corridor_u",
+        "mc_gallery",
+        "mission_control"
+      ],
+      "label": "MISSION CONTROL",
+      "color": "33474a",
+      "porthole": true
+    },
+    {
+      "id": "eng",
+      "at": [
+        14,
+        32
+      ],
+      "axis": "x",
+      "y": 4,
+      "w": 2.0,
+      "h": 2.4,
+      "type": "double",
+      "rooms": [
+        "corridor_u",
+        "eng_office"
+      ],
+      "label": "ENGINEERING",
+      "color": "8c6a4a"
+    },
+    {
+      "id": "pike",
+      "at": [
+        28,
+        32
+      ],
+      "axis": "x",
+      "y": 4,
+      "w": 1.1,
+      "h": 2.3,
+      "type": "swing",
+      "rooms": [
+        "corridor_u",
+        "pike_office"
+      ],
+      "label": "DIRECTOR   B. PIKE",
+      "color": "6b4f36"
+    },
+    {
+      "id": "dad",
+      "at": [
+        36,
+        32
+      ],
+      "axis": "x",
+      "y": 4,
+      "w": 1.1,
+      "h": 2.3,
+      "type": "swing",
+      "rooms": [
+        "corridor_u",
+        "dad_office"
+      ],
+      "locked": true,
+      "lock_flag": "dad_office_unlocked",
+      "label": "LEAD DESIGNER",
+      "color": "6b4f36",
+      "locked_text": "Locked. The nameplate has been unscrewed: two holes and a clean rectangle where it was."
+    },
+    {
+      "id": "stairs_u",
+      "at": [
+        46.75,
+        32
+      ],
+      "axis": "x",
+      "y": 4,
+      "w": 2.0,
+      "h": 2.6,
+      "type": "arch",
+      "rooms": [
+        "corridor_u",
+        "stairwell"
+      ],
+      "label": "STAIRS",
+      "label_side": -1
+    },
+    {
+      "id": "typing",
+      "at": [
+        54,
+        32
+      ],
+      "axis": "x",
+      "y": 4,
+      "w": 1.2,
+      "h": 2.3,
+      "type": "swing",
+      "rooms": [
+        "corridor_u",
+        "typing_pool"
+      ],
+      "label": "TYPING POOL",
+      "color": "8fc1b5",
+      "porthole": true
+    }
+  ],
+  "windows": [
+    {
+      "at": [
+        27.6,
+        44
+      ],
+      "axis": "x",
+      "y": 0,
+      "sill": 0.25,
+      "h": 2.6,
+      "w": 5.4,
+      "rooms": [
+        "lobby"
+      ]
+    },
+    {
+      "at": [
+        36.4,
+        44
+      ],
+      "axis": "x",
+      "y": 0,
+      "sill": 0.25,
+      "h": 2.6,
+      "w": 5.4,
+      "rooms": [
+        "lobby"
+      ]
+    },
+    {
+      "at": [
+        4,
+        30
+      ],
+      "axis": "z",
+      "y": 0,
+      "sill": 1.0,
+      "h": 1.5,
+      "w": 2.2,
+      "rooms": [
+        "corridor_g"
+      ]
+    },
+    {
+      "at": [
+        60,
+        30
+      ],
+      "axis": "z",
+      "y": 0,
+      "sill": 1.0,
+      "h": 1.5,
+      "w": 2.2,
+      "rooms": [
+        "corridor_g"
+      ]
+    },
+    {
+      "at": [
+        12,
+        44
+      ],
+      "axis": "x",
+      "y": 0,
+      "sill": 0.9,
+      "h": 1.7,
+      "w": 4.2,
+      "rooms": [
+        "cafeteria"
+      ]
+    },
+    {
+      "at": [
+        20,
+        44
+      ],
+      "axis": "x",
+      "y": 0,
+      "sill": 0.9,
+      "h": 1.7,
+      "w": 4.2,
+      "rooms": [
+        "cafeteria"
+      ]
+    },
+    {
+      "at": [
+        4,
+        30
+      ],
+      "axis": "z",
+      "y": 4,
+      "sill": 1.0,
+      "h": 1.5,
+      "w": 2.2,
+      "rooms": [
+        "corridor_u"
+      ]
+    },
+    {
+      "at": [
+        60,
+        30
+      ],
+      "axis": "z",
+      "y": 4,
+      "sill": 1.0,
+      "h": 1.5,
+      "w": 2.2,
+      "rooms": [
+        "corridor_u"
+      ]
+    },
+    {
+      "at": [
+        20,
+        28
+      ],
+      "axis": "x",
+      "y": 4,
+      "sill": 1.0,
+      "h": 1.6,
+      "w": 8.0,
+      "rooms": [
+        "corridor_u",
+        "design_bay"
+      ],
+      "bay": 2.0
+    },
+    {
+      "at": [
+        30.6,
+        28
+      ],
+      "axis": "x",
+      "y": 4,
+      "sill": 1.0,
+      "h": 1.5,
+      "w": 3.0,
+      "rooms": [
+        "corridor_u",
+        "computer_room"
+      ]
+    },
+    {
+      "at": [
+        52,
+        24
+      ],
+      "axis": "x",
+      "y": 4,
+      "sill": 0.0,
+      "h": 3.3,
+      "w": 16.0,
+      "rooms": [
+        "mc_gallery",
+        "mission_control"
+      ],
+      "alpha": 0.1,
+      "bay": 2.0,
+      "frame": "2b2622"
+    },
+    {
+      "at": [
+        9,
+        44
+      ],
+      "axis": "x",
+      "y": 4,
+      "sill": 0.9,
+      "h": 1.8,
+      "w": 4.6,
+      "rooms": [
+        "eng_office"
+      ]
+    },
+    {
+      "at": [
+        19,
+        44
+      ],
+      "axis": "x",
+      "y": 4,
+      "sill": 0.9,
+      "h": 1.8,
+      "w": 4.6,
+      "rooms": [
+        "eng_office"
+      ]
+    },
+    {
+      "at": [
+        28,
+        44
+      ],
+      "axis": "x",
+      "y": 4,
+      "sill": 0.9,
+      "h": 1.8,
+      "w": 5.0,
+      "rooms": [
+        "pike_office"
+      ]
+    },
+    {
+      "at": [
+        36,
+        44
+      ],
+      "axis": "x",
+      "y": 4,
+      "sill": 0.9,
+      "h": 1.8,
+      "w": 4.2,
+      "rooms": [
+        "dad_office"
+      ]
+    },
+    {
+      "at": [
+        51,
+        44
+      ],
+      "axis": "x",
+      "y": 4,
+      "sill": 0.9,
+      "h": 1.8,
+      "w": 4.2,
+      "rooms": [
+        "typing_pool"
+      ]
+    },
+    {
+      "at": [
+        57,
+        44
+      ],
+      "axis": "x",
+      "y": 4,
+      "sill": 0.9,
+      "h": 1.8,
+      "w": 4.2,
+      "rooms": [
+        "typing_pool"
+      ]
+    }
+  ],
+  "sight_links": [],
+  "exterior": {
+    "ground": [
+      {
+        "a": [
+          -60,
+          -0.4,
+          -40
+        ],
+        "b": [
+          124,
+          -0.08,
+          120
+        ],
+        "color": "8aa06e"
+      },
+      {
+        "a": [
+          22,
+          -0.08,
+          44
+        ],
+        "b": [
+          42,
+          -0.04,
+          62
+        ],
+        "color": "cfc8b8",
+        "surface": "concrete"
+      },
+      {
+        "a": [
+          -60,
+          -0.08,
+          62
+        ],
+        "b": [
+          124,
+          -0.05,
+          70
+        ],
+        "color": "5a5a58"
+      },
+      {
+        "a": [
+          45,
+          -0.08,
+          46
+        ],
+        "b": [
+          63,
+          -0.05,
+          60
+        ],
+        "color": "6a6a66",
+        "surface": "concrete"
+      }
+    ],
+    "props": [
+      [
+        "flagpole",
+        26.5,
+        50,
+        0
+      ],
+      [
+        "tree",
+        14,
+        51,
+        0
+      ],
+      [
+        "tree",
+        8,
+        57,
+        0
+      ],
+      [
+        "tree",
+        18.5,
+        58,
+        0
+      ],
+      [
+        "tree",
+        2,
+        49,
+        0
+      ],
+      [
+        "tree",
+        66,
+        51,
+        0
+      ],
+      [
+        "tree",
+        70,
+        58,
+        0
+      ],
+      [
+        "tree",
+        40,
+        76,
+        0
+      ],
+      [
+        "tree",
+        22,
+        77,
+        0
+      ],
+      [
+        "tree",
+        56,
+        78,
+        0
+      ],
+      [
+        "tree",
+        -3,
+        31,
+        0
+      ],
+      [
+        "tree",
+        67,
+        29,
+        0
+      ],
+      [
+        "tree",
+        -6,
+        22,
+        0
+      ],
+      [
+        "tree",
+        70,
+        36,
+        0
+      ],
+      [
+        "car",
+        49,
+        51,
+        0,
+        {
+          "color": "2a7b7b"
+        }
+      ],
+      [
+        "car",
+        53,
+        51,
+        0,
+        {
+          "color": "c8551f"
+        }
+      ],
+      [
+        "car",
+        59,
+        53,
+        180,
+        {
+          "color": "e9c46a"
+        }
+      ],
+      [
+        "car",
+        30,
+        66,
+        90,
+        {
+          "color": "f2e8cf"
+        }
+      ],
+      [
+        "bench_seat",
+        36,
+        50,
+        180,
+        {}
+      ]
+    ]
+  },
+  "world_map": [
+    "                                                            ",
+    "       ####  ########         ####   ##############         ",
+    "    ##########  #####      ########################## ##    ",
+    "    ##########   ##        #############################    ",
+    "     ########              ###########################      ",
+    "      #######              ######### ################       ",
+    "       #####               ##########   ######### #         ",
+    "        ###                 ##########    ###   #           ",
+    "         ####                #######       #    ##          ",
+    "         ######               ######            # ##        ",
+    "         #######              #####               ####      ",
+    "          ######              ####               ######     ",
+    "          #####                ##                ######     ",
+    "          ###                                      ##       ",
+    "          ##                                                ",
+    "          #                                                 "
+  ]
+}
