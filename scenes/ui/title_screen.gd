@@ -1,8 +1,8 @@
 # Code generated with AI assistance (Claude). Reviewed by team.
 extends Control
-## Title card. Any key or click walks into the facility.
+## Title card. Any key or click starts the opening cutscene, which leads into the facility.
 
-const NEXT_SCENE := "res://scenes/world/facility/facility.tscn"
+const NEXT_SCENE := "res://scenes/cutscenes/opening.tscn"
 
 
 func _unhandled_input(event: InputEvent) -> void:

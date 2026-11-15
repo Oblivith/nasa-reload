@@ -1,0 +1,29 @@
+{
+  "comment": "Level 1 story flow: which lines play, on which trigger, in what order.",
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. The words are in story_dialogue.json; this file only refers to them as 'scene.line_id'. 'line_refs_in' lists other data files in which a string '@scene.line_id' is swapped for that line's text at load (Pike's budget refusals, NPC barks, PA calls). OPENING: 'beats' run in order: 'narrate' types one line over the stars, 'stars' fades the star field (alpha 0 = black), 'dialogue' plays lines in the dialogue box ('auto' = seconds each line stays if the player does not press E), 'sfx' plays /assets/audio/<file>.wav, 'title' shows the title card. 'ui' holds dialogue box timings.",
+  "line_refs_in": ["pike_lines", "npc_barks", "facility_audio"],
+  "ui": {
+    "chars_per_second": 60,
+    "caption_seconds": 2.6
+  },
+  "opening": {
+    "next_scene": "res://scenes/world/facility/facility.tscn",
+    "chars_per_second": 30,
+    "hold_seconds": 1.9,
+    "beats": [
+      { "type": "narrate", "line": "opening.line_1" },
+      { "type": "narrate", "line": "opening.line_2" },
+      { "type": "narrate", "line": "opening.line_3" },
+      { "type": "narrate", "line": "opening.line_4" },
+      { "type": "stars", "alpha": 0.0, "seconds": 1.2 },
+      { "type": "dialogue", "auto": 2.2, "lines": ["opening.fight_1", "opening.fight_2", "opening.fight_3", "opening.fight_4"] },
+      { "type": "sfx", "file": "door_close", "wait": 1.8 },
+      { "type": "stars", "alpha": 1.0, "seconds": 1.2 },
+      { "type": "narrate", "line": "opening.line_5" },
+      { "type": "narrate", "line": "opening.line_6" },
+      { "type": "narrate", "line": "opening.line_7" },
+      { "type": "title", "line": "opening.title", "hold": 3.5 }
+    ]
+  },
+  "triggers": {}
+}
