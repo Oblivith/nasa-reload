@@ -86,7 +86,9 @@ func _ready() -> void:
 	camera_rig.exclude(self)
 	camera_rig.face(facing)
 	camera_rig.snap()
-	_update_mouse()
+	# Browsers only lock the pointer after a click, so on the web the first click does it.
+	if not OS.has_feature("web"):
+		_update_mouse()
 
 
 func _exit_tree() -> void:
@@ -206,7 +208,10 @@ func end_interaction() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	var motion := event as InputEventMouseMotion
 	if motion != null:
-		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and control_enabled and camera_rig.look_enabled:
+		# Captured mouse looks freely. Where the browser refuses pointer lock (some
+		# embeds do), holding a mouse button and dragging looks instead.
+		var dragging := (motion.button_mask & (MOUSE_BUTTON_MASK_LEFT | MOUSE_BUTTON_MASK_RIGHT)) != 0 and _wants_mouse()
+		if (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or dragging) and control_enabled and camera_rig.look_enabled:
 			var s := camera_rig.mouse_sensitivity
 			camera_rig.rotate_look(-motion.relative.x * s, -motion.relative.y * s * (-1.0 if camera_rig.invert_y else 1.0))
 		return
