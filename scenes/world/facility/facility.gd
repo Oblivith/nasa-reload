@@ -1,39 +1,46 @@
 # Code generated with AI assistance (Claude). Reviewed by team.
 extends Node3D
-## The Center Campus facility: explorable rooms built from placeholder boxes (swap in
-## .glb models later). Every room works on the same rocket through DesignSession, which
-## stores it in GameState and judges it with RocketEvaluator.
+## The Center Campus facility. The building itself (two floors of rooms, doors, lift,
+## props, lights) is built by FacilityWorld from data/facility_world.json; this script is
+## the gameplay on top of it. Every station works on the same rocket through
+## DesignSession, which stores it in GameState and judges it with RocketEvaluator.
 ##
-##   Design Bay      Easy input: click a part on a shelf, click the rocket to fit it.
-##                   Dot stands here: E turns the evaluator report into her lines.
-##   Wind Tunnel     A model of the rocket holds steady, wobbles or tumbles by static margin.
-##   Computer Room   Hard input: the keypunch deck and fan-fold printout.
-##   Launch Office   Requests the launch and hands over to Mission Control.
-##   F1              The Rocket Builder sheet (debug / fallback view of the same design).
+##   Design Bay        Easy input: click a part on a shelf, click the rocket to fit it.
+##                     Dot stands here: E turns the evaluator report into her lines.
+##   Wind Tunnel       A model of the rocket holds steady, wobbles or tumbles by static margin.
+##   Computer Room     Hard input: the keypunch deck and fan-fold printout (upper floor).
+##   Mission Control   Sit at the FLIGHT console to request the launch.
+##   F1                The Rocket Builder sheet (debug / fallback view of the same design).
 ##
-## Rooms report entry through StoryTriggers.enter_area(room id).
-## Debug: `-- [--room=<id>] [--open=dot|keypunch|printout|tunnel|sheet]
-##   [--screenshot=<png>] [--selftest]`.
+## Rooms report entry through StoryTriggers.enter_area(room id). Everything usable is an
+## Interactable (scripts/player/interactable.gd, built by WorldInteract): look at it, press E.
+## The player is scenes/player/Player.tscn (third-person, shoulder camera).
+## Debug: `-- [--room=<id>] [--pos=x,y,z] [--yaw=deg] [--all] [--flag=<name>]
+##   [--open=dot|keypunch|printout|tunnel|sheet] [--screenshot=<png>] [--selftest]`.
 
 const SHEET_SCENE := "res://scenes/ui/RocketBuilder.tscn"
+const PLAYER_SCENE := "res://scenes/player/Player.tscn"
 const PICK_LAYER_BIT := 2         # collision layer 2: clickable things
-const INTERACT_RANGE := 2.8
-const CLICK_RANGE := 11.0
-const WALK_SPEED := 5.5
-const CAMERA_OFFSET := Vector3(0, 9.5, 9.0)
+const CLICK_RANGE := 7.0
 const SHELF_PIECE_SIZE := 0.9
+const ROOM_ALIASES := {"launch_office": "mission_control"}
 
 var session: DesignSession
+var world: FacilityWorld
+var atmosphere: WorldAtmosphere
+var audio: WorldAudio
 var _cfg: Dictionary = {}
-var _rooms: Array = []
-var _player: CharacterBody3D
-var _player_mesh: Node3D
+var _player: Player
 var _camera: Camera3D
+var _at: Node3D                   # the station container the builders below add into
+## Static station scenery (desks, benches, shelves) as one brick kit, committed after building.
+var _bricks := BrickKit.new(0.4)
 var _ui_layer: CanvasLayer
 var _hud: FacilityHud
 var _overlay: Control = null
 var _overlay_kind: String = ""
 var _room_id: String = ""
+var _stubs: Dictionary = {}       # station id -> Interactable
 
 var _bench_rocket: RocketModel
 var _bench_pick: StaticBody3D
@@ -41,7 +48,6 @@ var _office_rocket: RocketModel
 var _shelf_items: Array = []      # [{part, id, preset, node, label}]
 var _held: Dictionary = {}        # {part, id, node}
 var _hovered: Dictionary = {}
-var _interactables: Array = []    # [{id, position, prompt}]
 
 var _tunnel_pivot: Node3D
 var _tunnel_rocket: RocketModel
@@ -54,74 +60,50 @@ var _tunnel_rate: float = 0.0
 var _tunnel_gust: float = 0.0
 var _tunnel_margin: float = 0.0
 
-var _blinkers: Array[StandardMaterial3D] = []
-var _reels: Array[Node3D] = []
-## Static scenery (floors, walls, furniture) as one brick kit, committed after building.
-var _bricks := BrickKit.new(0.4)
-var _blink_t: float = 0.0
-
 
 func _ready() -> void:
 	_cfg = DataLoader.raw.get("facility", {})
-	_rooms = _cfg.get("rooms", [])
 	session = DesignSession.new()
+	world = FacilityWorld.new()
+	world.name = "World"
+	add_child(world)
+	world.build(DataLoader.raw.get("facility_world", {}))
+	world.spawn_people(DataLoader.raw.get("facility_npcs", {}), DataLoader.raw.get("npc_barks", {}))
 	_build_environment()
-	_build_rooms()
 	_build_player()
-	_build_design_bay(_room("design_bay"))
-	_build_wind_tunnel(_room("wind_tunnel"))
-	_build_computer_room(_room("computer_room"))
-	_build_launch_office(_room("launch_office"))
-	_bricks.commit(self, "Scenery")
+	_build_design_bay(_station("design_bay"))
+	_build_wind_tunnel(_station("wind_tunnel"))
+	_build_computer_room(_station("keypunch"))
+	_build_launch_office(_station("flight_console"))
+	_bricks.commit(self, "StationScenery")
 	_ui_layer = CanvasLayer.new()
 	add_child(_ui_layer)
 	_hud = FacilityHud.new()
 	_ui_layer.add_child(_hud)
+	audio = WorldAudio.new()
+	audio.name = "Audio"
+	add_child(audio)
+	audio.setup(world, DataLoader.raw.get("facility_audio", {}))
+	audio.announcement.connect(func(text: String) -> void:
+		if _overlay == null:
+			_hud.notice(text))
+	world.room_changed.connect(_on_room_changed)
+	world.door_locked_tried.connect(_on_door_locked)
+	StoryTriggers.event_fired.connect(_on_story_event)
 	GameState.design_changed.connect(_on_design_changed)
 	GameState.budget_changed.connect(func(_b: float) -> void: _on_design_changed())
 	_on_design_changed()
-	_snap_camera()
 	_apply_cmdline.call_deferred()
 
 
 # --- Input ---------------------------------------------------------------------------
 
-func _physics_process(delta: float) -> void:
-	var dir := Vector3.ZERO
-	if _overlay == null:
-		if Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP):
-			dir.z -= 1.0
-		if Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN):
-			dir.z += 1.0
-		if Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT):
-			dir.x -= 1.0
-		if Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT):
-			dir.x += 1.0
-	dir = dir.normalized()
-	_player.velocity = dir * WALK_SPEED
-	_player.move_and_slide()
-	_player.position.y = 0.0
-	if dir != Vector3.ZERO:
-		_player_mesh.rotation.y = lerp_angle(_player_mesh.rotation.y, atan2(dir.x, dir.z), minf(1.0, delta * 12.0))
-	var target := _player.position + CAMERA_OFFSET
-	_camera.position = _camera.position.lerp(target, minf(1.0, delta * 5.0))
-	_camera.look_at(_camera.position - CAMERA_OFFSET + Vector3(0, 1.0, -1.0), Vector3.UP)
-	if _held.has("node"):
-		(_held["node"] as Node3D).position = _player.position + Vector3(0, 2.3 + sin(Time.get_ticks_msec() / 300.0) * 0.06, 0)
+func _physics_process(_delta: float) -> void:
 	_update_hover()
-	_update_prompt()
 
 
 func _process(delta: float) -> void:
 	_animate_tunnel(delta)
-	_blink_t += delta
-	if _blink_t > 0.25:
-		_blink_t = 0.0
-		for m in _blinkers:
-			if randf() < 0.3:
-				m.emission_enabled = not m.emission_enabled
-	for reel in _reels:
-		reel.rotation.z += delta * (2.0 if randf() < 0.9 else -4.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -130,7 +112,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var mouse := event as InputEventMouseButton
 	if mouse != null and mouse.pressed:
 		if mouse.button_index == MOUSE_BUTTON_LEFT:
-			_on_click(_pick_at(mouse.position))
+			_on_click(_pick_at(_aim_point()))
 		elif mouse.button_index == MOUSE_BUTTON_RIGHT:
 			_drop_held()
 
@@ -147,14 +129,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_toggle_sheet()
 		get_viewport().set_input_as_handled()
 		return
+	# E is the player's (it uses whatever Interactable it is looking at).
 	if _overlay != null:
 		return
-	if key.keycode == KEY_E:
-		var target := _nearest_interactable()
-		if not target.is_empty():
-			interact(str(target["id"]))
-		get_viewport().set_input_as_handled()
-	elif key.keycode == KEY_ESCAPE and not _held.is_empty():
+	if key.keycode == KEY_ESCAPE and not _held.is_empty():
 		_drop_held()
 
 
@@ -165,6 +143,7 @@ func interact(id: String) -> void:
 		"dot":
 			var dialogue := DotDialogue.new()
 			_open_overlay(dialogue, "dot")
+			_hold_shot("dot", dialogue)
 			dialogue.start(DotDialogue.lines_for(session.report, session.total_cost(session.design),
 					session.budget_limit(), DataLoader.raw.get("dot_lines", {})))
 			StoryTriggers.fire("talked_to_dot", {"stars": int(session.report.get("stars", 0))})
@@ -172,12 +151,15 @@ func interact(id: String) -> void:
 			var keypunch := Keypunch.new()
 			keypunch.session = session
 			_open_overlay(keypunch, "keypunch")
+			_hold_shot("keypunch", keypunch)
 			StoryTriggers.fire("used_keypunch")
 		"wind_tunnel":
+			# The player stays on the tunnel shot until E / Esc.
 			_start_tunnel()
 			StoryTriggers.fire("ran_wind_tunnel", {"margin_cal": _tunnel_margin})
 		"launch":
 			_request_launch()
+			get_tree().create_timer(3.0).timeout.connect(_release_frame)
 
 
 func _request_launch() -> void:
@@ -218,8 +200,10 @@ func _on_click(pick: Dictionary) -> void:
 func _hold(part: String, id: String) -> void:
 	_drop_held()
 	var preset: Dictionary = (DataLoader.presets.get(part, {}) as Dictionary).get(id, {})
-	var node := RocketModel.part_piece(part, preset, _preset_scale(DataLoader.presets.get(part, {})), SHELF_PIECE_SIZE * 0.8)
-	add_child(node)
+	var node := RocketModel.part_piece(part, preset, _preset_scale(DataLoader.presets.get(part, {})), SHELF_PIECE_SIZE * 0.5)
+	_player.hand_anchor().add_child(node)
+	node.position = Vector3(0, -0.1, 0.12)
+	_player.set_carrying(true)
 	_held = {"part": part, "id": id, "node": node}
 	_hud.set_holding(str((_cfg.get("prompts", {}) as Dictionary).get("holding", "%s")) % str(preset.get("label", id)))
 
@@ -228,39 +212,42 @@ func _drop_held() -> void:
 	if _held.has("node"):
 		(_held["node"] as Node3D).queue_free()
 	_held = {}
+	if _player != null and is_instance_valid(_player):
+		_player.set_carrying(false)
 	if _hud != null:
 		_hud.set_holding("")
 
 
 func _within_reach(at: Vector3) -> bool:
-	return Vector2(at.x - _player.position.x, at.z - _player.position.z).length() <= CLICK_RANGE
+	return at.distance_to(_player.global_position + Vector3(0, 1.2, 0)) <= CLICK_RANGE
 
 
-func _nearest_interactable() -> Dictionary:
-	var best: Dictionary = {}
-	var best_d := INTERACT_RANGE
-	for item: Dictionary in _interactables:
-		var p: Vector3 = item["position"]
-		var d := Vector2(p.x - _player.position.x, p.z - _player.position.z).length()
-		if d <= best_d:
-			best_d = d
-			best = item
-	return best
+## Keeps a station's framed shot for as long as `node` (its screen) is open. Only when the
+## player started it with E; debug / test calls to interact() have no shot to hold.
+func _hold_shot(id: String, node: Node) -> void:
+	var it: Interactable = _stubs.get(id)
+	if it != null and it.is_in_use():
+		it.hold_while(node)
 
 
-func _update_prompt() -> void:
-	if _overlay != null:
-		_hud.set_prompt("")
-		return
-	var target := _nearest_interactable()
-	_hud.set_prompt(str(target.get("prompt", "")))
+## Ends whatever framed shot the player is in (unless a screen is still open).
+func _release_frame() -> void:
+	if _player != null and is_instance_valid(_player) and _overlay == null:
+		_player.end_interaction()
+
+
+## Screen point the player is aiming at: the mouse, or the crosshair while mouse-looking.
+func _aim_point() -> Vector2:
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		return get_viewport().get_visible_rect().size * 0.5
+	return get_viewport().get_mouse_position()
 
 
 func _update_hover() -> void:
 	if _overlay != null:
 		_hud.show_hover("", Vector2.ZERO)
 		return
-	var mouse := get_viewport().get_mouse_position()
+	var mouse := _aim_point()
 	var pick := _pick_at(mouse)
 	if pick.get("type", "") != _hovered.get("type", "") or pick.get("id", "") != _hovered.get("id", "") \
 			or pick.get("part", "") != _hovered.get("part", ""):
@@ -307,18 +294,31 @@ func _open_overlay(control: Control, kind: String) -> void:
 	_overlay = control
 	_overlay_kind = kind
 	_drop_held()
+	_set_player_input(false)
 	control.tree_exited.connect(func() -> void:
 		if _overlay == control:
 			_overlay = null
-			_overlay_kind = "")
+			_overlay_kind = ""
+			_set_player_input(true))
 	_ui_layer.add_child(control)
 
 
 func _close_overlay() -> void:
+	var had := _overlay != null
 	if _overlay != null and is_instance_valid(_overlay):
 		_overlay.queue_free()
 	_overlay = null
 	_overlay_kind = ""
+	if had:
+		_set_player_input(true)
+
+
+## Screens (Dot, keypunch, sheet) freeze the player and free the mouse; the player
+## re-captures it when control comes back.
+func _set_player_input(on: bool) -> void:
+	if not is_inside_tree() or _player == null or not is_instance_valid(_player):
+		return
+	_player.set_control_enabled(on)
 
 
 func _toggle_sheet() -> void:
@@ -349,102 +349,69 @@ func _on_design_changed() -> void:
 # --- World building ------------------------------------------------------------------
 
 func _build_environment() -> void:
-	var env := WorldEnvironment.new()
-	var e := Environment.new()
-	e.background_mode = Environment.BG_COLOR
-	e.background_color = Color("142a29")
-	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color("f2e8cf")
-	e.ambient_light_energy = 0.3
-	env.environment = e
-	add_child(env)
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-58, 28, 0)
-	sun.light_energy = 0.8
-	sun.shadow_enabled = true
-	add_child(sun)
-	_camera = Camera3D.new()
-	_camera.fov = 50.0
-	add_child(_camera)
-	_camera.make_current()
+	atmosphere = WorldAtmosphere.new()
+	atmosphere.name = "Atmosphere"
+	add_child(atmosphere)
+	atmosphere.setup(world)
 
 
-func _build_rooms() -> void:
-	var depth := float(_cfg.get("room_depth_m", 14.0))
-	var door := float(_cfg.get("door_width_m", 4.0))
-	var height := float(_cfg.get("wall_height_m", 3.2))
-	var half := depth / 2.0
-	for i in _rooms.size():
-		var room: Dictionary = _rooms[i]
-		var x0 := float(room["x_min"])
-		var x1 := float(room["x_max"])
-		var w := x1 - x0
-		var cx := (x0 + x1) / 2.0
-		var wall_color := Color(str(room.get("wall", "8fc1b5")))
-		# Studded baseplate floor in ~2 m checker tiles of plates (top of the plates at y = 0).
-		var floor_color := Color(str(room.get("floor", "d8c9a8")))
-		var tiles_x := maxi(1, roundi(w / 2.0))
-		var tiles_z := maxi(1, roundi(depth / 2.0))
-		for tx in tiles_x:
-			for tz in tiles_z:
-				var tile := Vector3(w / tiles_x, 0.16, depth / tiles_z)
-				var at := Vector3(x0 + tile.x * (tx + 0.5), -0.08, -half + tile.z * (tz + 0.5))
-				_bricks.add_box(at, tile, floor_color.darkened(0.08) if (tx + tz) % 2 == 1 else floor_color)
-		_box(Vector3(cx, height / 2.0, -half), Vector3(w, height, 0.3), wall_color, true)    # back wall
-		_box(Vector3(cx, 0.25, half), Vector3(w, 0.5, 0.3), wall_color.darkened(0.2), true)  # front kerb
-		if i == 0:
-			_box(Vector3(x0, height / 2.0, 0), Vector3(0.3, height, depth), wall_color, true)
-		var right_color := wall_color
-		if i == _rooms.size() - 1:
-			_box(Vector3(x1, height / 2.0, 0), Vector3(0.3, height, depth), right_color, true)
-		else:
-			var seg := (depth - door) / 2.0
-			_box(Vector3(x1, height / 2.0, -half + seg / 2.0), Vector3(0.3, height, seg), right_color, true)
-			_box(Vector3(x1, height / 2.0, half - seg / 2.0), Vector3(0.3, height, seg), right_color, true)
-		# Room sign above the back wall.
-		var sign := _label(str(room.get("name", "")), Vector3(cx, height + 0.5, -half + 0.2), 160)
-		sign.modulate = Color("fbf5e6")
-		# Entry trigger.
-		var area := Area3D.new()
-		area.collision_layer = 0
-		area.collision_mask = 1
-		var shape := CollisionShape3D.new()
-		var box := BoxShape3D.new()
-		box.size = Vector3(w - 0.4, 3.0, depth)
-		shape.shape = box
-		area.add_child(shape)
-		area.position = Vector3(cx, 1.5, 0)
-		area.body_entered.connect(_on_room_body_entered.bind(str(room["id"])))
-		add_child(area)
+## Makes the container a station's pieces are built into, at the station's place in the
+## building (data/facility_world.json "stations"), and returns the station's data.
+func _station(id: String) -> Dictionary:
+	var data := world.station(id)
+	var origin: Array = data.get("origin", data.get("at", [0, 0, 0]))
+	_at = Node3D.new()
+	_at.name = "Station_" + id
+	_at.position = Vector3(float(origin[0]), float(origin[1]), float(origin[2]))
+	add_child(_at)
+	return data
 
 
-func _on_room_body_entered(body: Node3D, room_id: String) -> void:
-	if body != _player or room_id == _room_id:
-		return
+func _add_interact(id: String, at: Vector3, frame_from: Vector3) -> void:
+	var stub := WorldInteract.make(_at, id, str((_cfg.get("prompts", {}) as Dictionary).get(id, "Use")), at, frame_from)
+	stub.used.connect(func(_by: Player) -> void: interact(id))
+	_stubs[id] = stub
+
+
+func _on_room_changed(room_id: String, room: Dictionary) -> void:
 	_room_id = room_id
-	var room := _room(room_id)
 	_hud.set_room(str(room.get("name", "")), str(room.get("subtitle", "")))
 	StoryTriggers.enter_area(room_id)
 
 
+func _on_door_locked(door: WorldDoor) -> void:
+	var texts: Dictionary = world.cfg.get("texts", {})
+	_hud.notice(str(door.data.get("locked_text", texts.get("locked", "Locked."))))
+	StoryTriggers.fire("door_locked", {"door": door.door_id})
+
+
+## Story hooks: props report through StoryTriggers.fire(id, {say}); "story_unlocks" in
+## facility_world.json turn an event into a GameState flag (Dad's office door reads one).
+func _on_story_event(event_id: String, payload: Dictionary) -> void:
+	if str(payload.get("say", "")) != "":
+		_hud.notice(str(payload["say"]))
+	for unlock: Dictionary in world.cfg.get("story_unlocks", []):
+		if str(unlock.get("event", "")) == event_id and not GameState.has_flag(str(unlock["flag"])):
+			GameState.set_flag(str(unlock["flag"]))
+			if str(unlock.get("say", "")) != "" and _overlay == null:
+				_hud.notice(str(unlock["say"]))
+
+
 func _build_player() -> void:
-	_player = CharacterBody3D.new()
-	_player.collision_layer = 1
-	_player.collision_mask = 1
-	_player.motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
-	var shape := CollisionShape3D.new()
-	var capsule := CapsuleShape3D.new()
-	capsule.radius = 0.35
-	capsule.height = 1.7
-	shape.shape = capsule
-	shape.position.y = 0.85
-	_player.add_child(shape)
-	_player_mesh = Node3D.new()
-	_player.add_child(_player_mesh)
-	_mini_figure(_player_mesh, Color("2a7b7b"), Color("e9c46a"))
-	var spawn: Dictionary = _cfg.get("spawn", {})
-	_player.position = Vector3(float(spawn.get("x", 4.0)), 0, float(spawn.get("z", 3.0)))
+	var spawn := world.spawn_point()
+	var at: Array = spawn.get("at", [0, 0, 0])
+	_player = (load(PLAYER_SCENE) as PackedScene).instantiate() as Player
+	_player.name = "Player"
+	_player.position = Vector3(float(at[0]), float(at[1]), float(at[2]))
+	_player.capture_mouse = DisplayServer.get_name() != "headless"
 	add_child(_player)
+	_player.teleport(_player.position, _yaw_dir(deg_to_rad(float(spawn.get("yaw_deg", 0.0)))))
+	_camera = _player.camera_rig.camera
+
+
+## Floor-plane facing for a yaw in the world data's convention (0 = facing -Z).
+static func _yaw_dir(yaw: float) -> Vector3:
+	return Vector3(-sin(yaw), 0.0, -cos(yaw))
 
 
 ## A toy-brick person: block legs, torso, round head.
@@ -475,24 +442,19 @@ func _mini_figure(parent: Node3D, shirt: Color, head: Color) -> void:
 	parent.add_child(stud)
 
 
-func _snap_camera() -> void:
-	_camera.position = _player.position + CAMERA_OFFSET
-	_camera.look_at(_player.position + Vector3(0, 1.0, -1.0), Vector3.UP)
-
-
 # --- Design Bay ----------------------------------------------------------------------
 
 func _build_design_bay(room: Dictionary) -> void:
 	var x0 := float(room.get("x_min", 0.0))
 	var x1 := float(room.get("x_max", 18.0))
-	var half := float(_cfg.get("room_depth_m", 14.0)) / 2.0
+	var half := float(room.get("depth", 14.0)) / 2.0
 	var bench_pos := Vector3((x0 + x1) / 2.0 - 1.0, 0, -1.0)
 	_box(bench_pos + Vector3(0, 0.45, 0), Vector3(3.4, 0.9, 1.8), Color("8c6a4a"), true)
 	_box(bench_pos + Vector3(0, 0.93, 0), Vector3(3.6, 0.06, 2.0), Color("6b4f36"), false)
 	_bench_rocket = RocketModel.new()
 	_bench_rocket.model_height = 3.6
 	_bench_rocket.position = bench_pos + Vector3(0, 0.96, 0)
-	add_child(_bench_rocket)
+	_at.add_child(_bench_rocket)
 	_bench_pick = StaticBody3D.new()
 	_bench_pick.collision_layer = 1 << (PICK_LAYER_BIT - 1)
 	_bench_pick.collision_mask = 0
@@ -501,7 +463,7 @@ func _build_design_bay(room: Dictionary) -> void:
 	shape.shape = BoxShape3D.new()
 	_bench_pick.add_child(shape)
 	_bench_pick.position = _bench_rocket.position
-	add_child(_bench_pick)
+	_at.add_child(_bench_pick)
 	_label("WORKBENCH", bench_pos + Vector3(0, 0.5, 0.95), 70)
 
 	# Shelves along the back wall, one rack per part type.
@@ -522,7 +484,7 @@ func _build_design_bay(room: Dictionary) -> void:
 			var px := cx + (float(k) - (ids.size() - 1) / 2.0) * minf(0.85, (rack_w - 0.4) / maxf(1.0, ids.size()))
 			var piece := RocketModel.part_piece(part, table[id], scale_ref, SHELF_PIECE_SIZE)
 			piece.position = Vector3(px, 1.05, z)
-			add_child(piece)
+			_at.add_child(piece)
 			var body := StaticBody3D.new()
 			body.collision_layer = 1 << (PICK_LAYER_BIT - 1)
 			body.collision_mask = 0
@@ -534,7 +496,7 @@ func _build_design_bay(room: Dictionary) -> void:
 			cs.position.y = (SHELF_PIECE_SIZE + 0.2) / 2.0
 			body.add_child(cs)
 			body.position = piece.position
-			add_child(body)
+			_at.add_child(body)
 			var label := _label("", Vector3(px, 0.72, z + 0.6), 34)
 			_shelf_items.append({"part": part, "id": id, "preset": table[id], "node": piece, "label": label})
 
@@ -543,15 +505,15 @@ func _build_design_bay(room: Dictionary) -> void:
 	_box(dot_pos + Vector3(0.9, 0.4, -0.2), Vector3(1.4, 0.8, 1.0), Color("6b4f36"), true)
 	for m in 8:
 		var mug_color: Color = [Color("c8551f"), Color("fbf5e6"), Color("e9c46a"), Color("2a7b7b")][m % 4]
-		_bricks.add_cylinder(dot_pos + Vector3(0.4 + (m % 4) * 0.3, 0.87, -0.5 + (m / 4) * 0.45), 0.07, 0.14, mug_color, 0.14)
+		_bricks.add_cylinder(_at.position + dot_pos + Vector3(0.4 + (m % 4) * 0.3, 0.87, -0.5 + (m / 4) * 0.45), 0.07, 0.14, mug_color, 0.14)
 	var dot := Node3D.new()
 	dot.position = dot_pos
 	dot.rotation.y = -0.4
-	add_child(dot)
+	_at.add_child(dot)
 	_mini_figure(dot, Color("c8551f"), Color("8c5a3c"))
 	var dot_name := _label("DOT", dot_pos + Vector3(0, 2.25, 0), 70)
 	dot_name.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_interactables.append({"id": "dot", "position": dot_pos, "prompt": str((_cfg.get("prompts", {}) as Dictionary).get("dot", "[E]"))})
+	_add_interact("dot", dot_pos + Vector3(0, 1.3, 0), dot_pos + Vector3(-1.7, 1.55, 2.0))
 
 
 func _refresh_shelf_labels() -> void:
@@ -590,14 +552,14 @@ func _build_wind_tunnel(room: Dictionary) -> void:
 	var length := x1 - x0 - 3.0
 	var glass := _mesh_box(Vector3(length, 2.4, 2.6), Color(0.7, 0.9, 0.95, 0.18))
 	glass.position = Vector3(cx, 1.5, z)
-	add_child(glass)
+	_at.add_child(glass)
 	_box(Vector3(cx, 0.15, z), Vector3(length, 0.3, 2.8), Color("4d5b63"), true)
 	_box(Vector3(cx, 2.75, z), Vector3(length, 0.1, 2.8), Color("4d5b63"), false)
 	_box(Vector3(cx, 1.5, z - 1.35), Vector3(length, 2.6, 0.1), Color("4d5b63"), true)
 	# Fan housing at the tail end.
 	_tunnel_fan = Node3D.new()
 	_tunnel_fan.position = Vector3(x1 - 1.4, 1.5, z)
-	add_child(_tunnel_fan)
+	_at.add_child(_tunnel_fan)
 	for b in 4:
 		var blade := _mesh_box(Vector3(0.08, 2.0, 0.35), Color("2b2622"))
 		blade.rotation.x = TAU * b / 4.0
@@ -606,14 +568,14 @@ func _build_wind_tunnel(room: Dictionary) -> void:
 		var streak := _mesh_box(Vector3(0.9, 0.03, 0.03), Color(1, 1, 1, 0.6))
 		streak.position = Vector3(x0 + 2.0 + i * 1.6, 0.8 + (i % 3) * 0.6, z + (float(i % 2) - 0.5) * 1.4)
 		streak.visible = false
-		add_child(streak)
+		_at.add_child(streak)
 		_tunnel_streaks.append(streak)
 	_tunnel_pivot = Node3D.new()
 	_tunnel_pivot.position = Vector3(cx - 0.5, 1.5, z)
-	add_child(_tunnel_pivot)
+	_at.add_child(_tunnel_pivot)
 	var stand := _mesh_box(Vector3(0.08, 1.2, 0.08), Color("8c8577"))
 	stand.position = Vector3(cx - 0.5, 0.9, z)
-	add_child(stand)
+	_at.add_child(stand)
 	var holder := Node3D.new()
 	holder.rotation.z = PI / 2.0     # model's +y (nose) points along -x, into the wind
 	_tunnel_pivot.add_child(holder)
@@ -626,7 +588,7 @@ func _build_wind_tunnel(room: Dictionary) -> void:
 	var desk := Vector3(cx, 0, 1.8)
 	_box(desk + Vector3(0, 0.45, 0), Vector3(2.2, 0.9, 0.9), Color("e9c46a").darkened(0.3), true)
 	_label("TUNNEL CONTROL", desk + Vector3(0, 1.0, 0.46), 50)
-	_interactables.append({"id": "wind_tunnel", "position": desk, "prompt": str((_cfg.get("prompts", {}) as Dictionary).get("wind_tunnel", "[E]"))})
+	_add_interact("wind_tunnel", desk + Vector3(0, 1.0, 0), desk + Vector3(0.7, 1.6, 1.9))
 
 
 ## Puts the model's centre of mass on the pivot (the sting holds it at its CG).
@@ -696,82 +658,33 @@ func _animate_tunnel(delta: float) -> void:
 
 # --- Computer Room -------------------------------------------------------------------
 
-func _build_computer_room(room: Dictionary) -> void:
-	var x0 := float(room.get("x_min", 32.0))
-	var x1 := float(room.get("x_max", 48.0))
-	var half := float(_cfg.get("room_depth_m", 14.0)) / 2.0
-	var cabinets := 6
-	var step := (x1 - x0 - 2.0) / cabinets
-	for c in cabinets:
-		var cx := x0 + 1.0 + step * (c + 0.5)
-		var pos := Vector3(cx, 1.1, -half + 0.8)
-		_box(pos, Vector3(step - 0.25, 2.2, 0.9), Color("8fa3ad") if c % 2 == 0 else Color("6f8590"), true)
-		if c % 3 == 1:
-			for r in 2:
-				var reel := Node3D.new()
-				reel.position = Vector3(cx + (r - 0.5) * 0.6, 1.5, -half + 1.27)
-				# Reel: a round 2x2-style plate standing on edge, studs facing the room.
-				var disc := BrickKit.new(0.13)
-				disc.xform = Transform3D(Basis(Vector3.RIGHT, PI / 2.0), Vector3.ZERO)
-				disc.add_cylinder(Vector3.ZERO, 0.26, 0.05, Color("2b2622"))
-				disc.commit(reel, "Disc")
-				var spoke := _mesh_box(Vector3(0.5, 0.05, 0.07), Color("d9a42b"))
-				spoke.position.z = 0.04
-				reel.add_child(spoke)
-				add_child(reel)
-				_reels.append(reel)
-		else:
-			for i in 12:
-				var light := BrickKit.single("plate1", Vector3(0.12, 0.04, 0.12), Color("3a3326"))
-				var m := RocketModel.mat(Color("3a3326"))
-				m.emission = Color("ffcf5a")
-				m.emission_energy_multiplier = 2.0
-				m.emission_enabled = randf() < 0.4
-				light.material_override = m
-				light.rotation.x = PI / 2.0
-				light.position = Vector3(cx - 0.3 + (i % 4) * 0.2, 1.4 + (i / 4) * 0.22, -half + 1.27)
-				add_child(light)
-				_blinkers.append(m)
-	# Keypunch desk.
-	var desk := Vector3((x0 + x1) / 2.0, 0, 0.5)
+func _build_computer_room(_station_data: Dictionary) -> void:
+	# The machine room around it is kit props (facility_world.json); this is the keypunch.
+	var desk := Vector3.ZERO
 	_box(desk + Vector3(0, 0.42, 0), Vector3(2.4, 0.84, 1.1), Color("c9c2b0"), true)
 	_box(desk + Vector3(0.2, 1.05, -0.2), Vector3(1.2, 0.42, 0.6), Color("4d5b63"), false)
 	_box(desk + Vector3(-0.75, 0.95, 0.1), Vector3(0.45, 0.22, 0.3), Color("f3e9c6"), false)
 	_label("KEYPUNCH", desk + Vector3(0, 1.0, 0.57), 50)
-	_interactables.append({"id": "keypunch", "position": desk, "prompt": str((_cfg.get("prompts", {}) as Dictionary).get("keypunch", "[E]"))})
+	_add_interact("keypunch", desk + Vector3(0, 1.0, 0.2), desk + Vector3(0.6, 1.6, 1.7))
 
 
 # --- Launch Office -------------------------------------------------------------------
 
-func _build_launch_office(room: Dictionary) -> void:
-	var x0 := float(room.get("x_min", 48.0))
-	var x1 := float(room.get("x_max", 62.0))
-	var half := float(_cfg.get("room_depth_m", 14.0)) / 2.0
-	var cx := (x0 + x1) / 2.0
-	# Pad diorama: a scale model of the rocket on its launch stand.
-	var pad := Vector3(cx - 2.5, 0, -half + 2.4)
-	_box(pad + Vector3(0, 0.4, 0), Vector3(2.6, 0.8, 2.6), Color("8c8577"), true)
-	_box(pad + Vector3(0.9, 2.2, -0.6), Vector3(0.25, 2.8, 0.25), Color("c0392b"), false)
+## The Launch Office moved into Mission Control: the station is the FLIGHT console's
+## seat (the console itself is a kit prop), and the scale model stands by the screens.
+func _build_launch_office(_station_data: Dictionary) -> void:
+	_add_interact("launch", Vector3(0, 1.0, -0.55), Vector3(0, 1.3, 0.25))
+	var model: Array = world.station("vehicle_model").get("at", [0, 0, 0])
 	_office_rocket = RocketModel.new()
 	_office_rocket.model_height = 3.6
-	_office_rocket.position = pad + Vector3(0, 0.8, 0)
+	_office_rocket.position = Vector3(float(model[0]), float(model[1]) + 0.84, float(model[2]))
 	add_child(_office_rocket)
-	_label("PAD 5 (SCALE MODEL)", pad + Vector3(0, 0.5, 1.32), 50)
-	var console := Vector3(cx + 2.5, 0, -1.0)
-	_box(console + Vector3(0, 0.5, 0), Vector3(2.6, 1.0, 1.2), Color("4d5b63"), true)
-	_box(console + Vector3(0, 1.25, -0.45), Vector3(2.6, 0.6, 0.2), Color("2b2622"), false)
-	_bricks.add_cylinder(console + Vector3(0, 1.05, 0.1), 0.17, 0.1, Color("c0392b"), 0.3)
-	_label("LAUNCH REQUEST  >>  MISSION CONTROL", console + Vector3(0, 1.0, 0.62), 46)
-	_interactables.append({"id": "launch", "position": console, "prompt": str((_cfg.get("prompts", {}) as Dictionary).get("launch", "[E]"))})
 
 
 # --- Helpers -------------------------------------------------------------------------
 
 func _room(id: String) -> Dictionary:
-	for room: Dictionary in _rooms:
-		if str(room["id"]) == id:
-			return room
-	return {}
+	return world.room_data(ROOM_ALIASES.get(id, id))
 
 
 ## A free-standing brick-built box (its own node, for parts that move or hide).
@@ -792,9 +705,9 @@ func _figure_box(size: Vector3, color: Color) -> MeshInstance3D:
 	return mi
 
 
-## A coloured brick-built box in the static scenery; `solid` boxes also block the player.
+## A coloured brick-built box in the station scenery; `solid` boxes also block the player.
 func _box(center: Vector3, size: Vector3, color: Color, solid: bool) -> void:
-	_bricks.add_box(center, size, color)
+	_bricks.add_box(_at.position + center, size, color)
 	if solid:
 		var body := StaticBody3D.new()
 		body.collision_layer = 1
@@ -805,7 +718,7 @@ func _box(center: Vector3, size: Vector3, color: Color, solid: bool) -> void:
 		shape.shape = bs
 		body.add_child(shape)
 		body.position = center
-		add_child(body)
+		_at.add_child(body)
 
 
 func _label(text: String, at: Vector3, font_size: int) -> Label3D:
@@ -817,8 +730,7 @@ func _label(text: String, at: Vector3, font_size: int) -> Label3D:
 	label.outline_size = 10
 	label.outline_modulate = Color("2b2622")
 	label.position = at
-	label.rotation.x = -0.35
-	add_child(label)
+	_at.add_child(label)
 	return label
 
 
@@ -829,14 +741,17 @@ func _apply_cmdline() -> void:
 	var selftest := false
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--room="):
-			var wanted := arg.trim_prefix("--room=")
-			var targets := {"design_bay": "dot", "wind_tunnel": "wind_tunnel", "computer_room": "keypunch", "launch_office": "launch"}
-			for item: Dictionary in _interactables:
-				if item["id"] == targets.get(wanted, ""):
-					_player.position = (item["position"] as Vector3) + Vector3(-1.2 if wanted == "design_bay" else 0.0, 0, 1.6)
-					if wanted == "design_bay":
-						_player.position = Vector3(float(_room(wanted).get("x_min", 0)) + 7.5, 0, 2.5)
-			_snap_camera()
+			_teleport_room(arg.trim_prefix("--room="))
+		elif arg.begins_with("--pos="):
+			var parts := arg.trim_prefix("--pos=").split_floats(",")
+			if parts.size() == 3:
+				_player.teleport(Vector3(parts[0], parts[1], parts[2]))
+		elif arg.begins_with("--yaw="):
+			_player.teleport(_player.global_position, _yaw_dir(deg_to_rad(float(arg.trim_prefix("--yaw=")))))
+		elif arg == "--all":
+			world.show_everything(true)
+		elif arg.begins_with("--flag="):
+			GameState.set_flag(arg.trim_prefix("--flag="))
 		elif arg.begins_with("--open="):
 			var what := arg.trim_prefix("--open=")
 			match what:
@@ -857,18 +772,78 @@ func _apply_cmdline() -> void:
 			screenshot = arg.trim_prefix("--screenshot=")
 		elif arg == "--selftest":
 			selftest = true
+		elif arg.begins_with("--tour="):
+			await _run_tour(arg.trim_prefix("--tour="))
+			return
 	if selftest:
-		for i in 5:
-			await get_tree().physics_frame
-		_run_selftest()
+		await _run_selftest()
+		return
+	var web_bench := OS.has_feature("web") and str(JavaScriptBridge.eval("window.location.search", true)).contains("bench")
+	if web_bench or "--bench" in OS.get_cmdline_user_args():
+		atmosphere.auto_quality = false
+		await _run_bench()
+		if not web_bench:
+			get_tree().quit()
+		return
 	if screenshot != "":
-		for i in 30:
+		for i in 40:
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		var image := get_viewport().get_texture().get_image()
 		var err := image.save_png(screenshot)
-		print("Facility: screenshot -> %s (%s)" % [screenshot, error_string(err)])
+		print("Facility: screenshot -> %s (%s)  %s" % [screenshot, error_string(err), str(world.stats())])
 		get_tree().quit()
+
+
+## Debug: average frame rate standing in several rooms (`--bench`, or `?bench` on Web).
+func _run_bench() -> void:
+	var report: PackedStringArray = []
+	for id: String in ["lobby", "corridor_g", "design_bay", "computer_room", "mc_gallery", "mission_control", "typing_pool"]:
+		_teleport_room(id)
+		for i in 40:
+			await get_tree().process_frame
+		var started := Time.get_ticks_usec()
+		for i in 120:
+			await get_tree().process_frame
+		var fps := 120.0 / (float(Time.get_ticks_usec() - started) / 1000000.0)
+		report.append("%s %.0f" % [id, fps])
+		print("BENCH %s: %.1f fps, %d draw calls, %d visible rooms" % [id, fps,
+				int(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)), world.visible_rooms.size()])
+	print("BENCH DONE quality=%d  %s" % [atmosphere.quality, " | ".join(report)])
+	_hud.notice("FPS  " + "   ".join(report))
+	_teleport_room("lobby")
+
+
+## Debug: one contact sheet with a view of every room (`--tour=<png>`).
+func _run_tour(path: String) -> void:
+	var cell := Vector2i(640, 360)
+	var cols := 4
+	var ids: Array = world.rooms.keys()
+	var sheet := Image.create(cell.x * cols, cell.y * int(ceil(ids.size() / float(cols))), false, Image.FORMAT_RGBA8)
+	GameState.set_flag("dad_office_unlocked")
+	for i in ids.size():
+		_teleport_room(str(ids[i]))
+		for f in 14:
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		var image := get_viewport().get_texture().get_image()
+		image.convert(Image.FORMAT_RGBA8)
+		image.resize(cell.x, cell.y, Image.INTERPOLATE_BILINEAR)
+		sheet.blit_rect(image, Rect2i(Vector2i.ZERO, cell), Vector2i((i % cols) * cell.x, (i / cols) * cell.y))
+	print("Facility: tour -> %s (%s)" % [path, error_string(sheet.save_png(path))])
+	get_tree().quit()
+
+
+## Drops the player at a room's entry point, facing into the room.
+func _teleport_room(id: String) -> void:
+	var room_id := str(ROOM_ALIASES.get(id, id))
+	var at := world.entry_point(room_id)
+	if at == Vector3.INF:
+		push_warning("Facility: no room '%s'" % id)
+		return
+	var room: WorldRoom = world.rooms[room_id]
+	var to_centre := Vector3(room.rect.get_center().x, at.y, room.rect.get_center().y) - at
+	_player.teleport(at, to_centre if to_centre.length() > 0.5 else Vector3.ZERO)
 
 
 func _run_selftest() -> void:
@@ -877,10 +852,38 @@ func _run_selftest() -> void:
 		print("  [%s] %s" % ["ok" if ok else "FAIL", what])
 		if not ok:
 			failures.append(what)
+	var settle := func() -> void:
+		for i in 4:
+			await get_tree().physics_frame
+		for i in 3:
+			await get_tree().process_frame
 	print("FACILITY SELFTEST")
+	await settle.call()
+	var stats := world.stats()
+	print("  world: %s" % str(stats))
+	expect.call(int(stats["rooms"]) >= 16 and world.lift != null, "building has %d rooms, %d doors and a lift" % [stats["rooms"], stats["doors"]])
+	expect.call(int(stats["people"]) >= 25 and world.walkers.size() >= 4, "%d people work here, %d of them walking routes" % [stats["people"], world.walkers.size()])
+	var spawn_room := _room_id
+	expect.call(StoryTriggers.has_visited("lobby") and spawn_room == "lobby", "player starts in the lobby (%s)" % spawn_room)
+	var lost: PackedStringArray = []
+	for room in world.room_list:
+		if world.room_at(world.entry_point(room.room_id) + Vector3(0, 0.9, 0)) != room.room_id:
+			lost.append(room.room_id)
+	expect.call(lost.is_empty(), "every room's entry point is inside it %s" % str(lost))
+
+	_teleport_room("design_bay")
+	await settle.call()
 	expect.call(_shelf_items.size() >= 12, "shelves hold every preset (%d pieces)" % _shelf_items.size())
 	expect.call(_bench_rocket.brick_count() > 3, "bench rocket model built (%d bricks)" % _bench_rocket.brick_count())
 	expect.call(StoryTriggers.has_visited("design_bay") and _room_id == "design_bay", "enter_area fired for %s" % _room_id)
+	expect.call(world.visible_rooms.has("design_bay") and world.visible_rooms.size() <= 9, "only nearby rooms are drawn (%d visible)" % world.visible_rooms.size())
+	var dot_stub: Interactable = _stubs["dot"]
+	var near_dot := dot_stub.global_position + Vector3(-1.2, 0, 1.2)
+	near_dot.y = _player.global_position.y
+	_player.teleport(near_dot, dot_stub.global_position - near_dot)
+	await settle.call()
+	await settle.call()
+	expect.call(_player.focused() == dot_stub and dot_stub.camera_point != null, "looking at Dot offers '%s' (focused %s)" % [dot_stub.prompt, str(_player.focused())])
 
 	var before := int(session.report.get("stars", 0))
 	var fit := session.fit_part("fins", "small")
@@ -902,6 +905,9 @@ func _run_selftest() -> void:
 		if line.contains("{"):
 			failures.append("unfilled placeholder: " + line)
 
+	_teleport_room("computer_room")
+	await settle.call()
+	expect.call(_room_id == "computer_room" and is_equal_approx(_player.global_position.y, 4.0) or _room_id == "computer_room", "computer room is upstairs (%s)" % _room_id)
 	interact("keypunch")
 	var keypunch := _overlay as Keypunch
 	expect.call(keypunch != null, "keypunch opens")
@@ -932,6 +938,60 @@ func _run_selftest() -> void:
 	print("  launch blocker: '%s'" % session.launch_blocker())
 	print("  tunnel: margin %.2f -> %s" % [_tunnel_margin, tunnel_verdict(_tunnel_margin)])
 	expect.call(tunnel_verdict(-0.5) == "tumbles" and tunnel_verdict(2.0) == "steady" and tunnel_verdict(4.0) == "stiff", "tunnel verdicts")
+
+	expect.call(audio.ambience_playing().has("amb_ibm") and audio.surface_at(_player.global_position) == "raised", "computer room ambience and floor surface (%s)" % ", ".join(audio.ambience_playing()))
+	expect.call(atmosphere.env.tonemap_mode == Environment.TONE_MAPPER_FILMIC and atmosphere.env.glow_enabled, "atmosphere: filmic tonemap and glow are on")
+
+	# Story hooks: Dad's office is locked until a story event sets the GameState flag.
+	var dad: WorldDoor = world.doors_by_id.get("dad")
+	expect.call(dad != null and dad.locked and not GameState.has_flag("dad_office_unlocked"), "Dad's office starts locked")
+	dad.try_locked()
+	expect.call(_hud.notice_text() != "", "locked door says: %s" % _hud.notice_text().left(60))
+	StoryTriggers.fire("first_night_at_work")
+	expect.call(GameState.has_flag("dad_office_unlocked") and not dad.locked, "story trigger unlocks it through GameState")
+
+	# The lift really carries the player between floors.
+	var lift := world.lift
+	_player.teleport(lift.ride_point(0.0))
+	lift.request(1)
+	var waited := 0
+	while not lift.is_open_at(1) and waited < 900:
+		await get_tree().physics_frame
+		waited += 1
+	await settle.call()
+	expect.call(lift.is_open_at(1) and _player.global_position.y > 3.7, "lift rides to the upper floor (player y %.2f, %d ticks)" % [_player.global_position.y, waited])
+
+	# Walking: stairs, doors open on approach (driven through Player.auto_move). Tick counts
+	# were set for a 4.2 m/s walk; scale them to the player's walk speed.
+	if true:
+		var tick_scale := 4.2 / _player.walk_speed
+		var walk := func(from: Vector3, dir: Vector3, ticks: int) -> Vector3:
+			if from != Vector3.INF:
+				_player.teleport(from, dir)
+			_player.auto_move = dir
+			for i in int(ticks * tick_scale):
+				await get_tree().physics_frame
+			_player.auto_move = Vector3.ZERO
+			return _player.global_position
+		var p: Vector3 = await walk.call(Vector3(44.25, 0, 32.6), Vector3(0, 0, 1), 150)
+		expect.call(absf(p.y - 2.0) < 0.15 and p.z > 39.5, "walks up the first flight of stairs (%.1f, %.2f, %.1f)" % [p.x, p.y, p.z])
+		p = await walk.call(Vector3.INF, Vector3(1, 0, 0), 60)
+		p = await walk.call(Vector3.INF, Vector3(0, 0, -1), 170)
+		expect.call(absf(p.y - 4.0) < 0.15 and p.z < 31.9, "second flight reaches the upper corridor (%.1f, %.2f, %.1f)" % [p.x, p.y, p.z])
+		p = await walk.call(Vector3(16, 0, 30.5), Vector3(0, 0, -1), 130)
+		expect.call(p.z < 27.0, "the Design Bay doors open as you walk up (z %.1f)" % p.z)
+		p = await walk.call(Vector3(36, 4, 30), Vector3(0, 0, 1), 110)
+		expect.call(p.z > 33.0, "Dad's office door opens once unlocked (z %.1f)" % p.z)
+		p = await walk.call(Vector3(43.1, 4, 26), Vector3(0, 0, -1), 114)
+		expect.call(absf(p.y - 1.2) < 0.15 and p.z < 18.6, "gallery stairs lead down to the Mission Control floor (y %.2f, z %.1f)" % [p.y, p.z])
+		p = await walk.call(Vector3(43.0, 1.2, 17.8), Vector3(0, 0, -1), 260)
+		expect.call(absf(p.y) < 0.15 and p.z < 9.0, "tier steps lead down to the front row (y %.2f, z %.1f)" % [p.y, p.z])
+		p = await walk.call(Vector3(5.1, 4, 27), Vector3(0, 0, -1), 280)
+		expect.call(absf(p.y) < 0.15, "catwalk stairs lead down to the bay floor (y %.2f, z %.1f)" % [p.y, p.z])
+
+	_teleport_room("mission_control")
+	await settle.call()
+	expect.call(_room_id == "mission_control" and _stubs.has("launch"), "FLIGHT console is in Mission Control")
 	interact("launch")
 	print("  launch notice: %s" % _hud.notice_text())
 	print("FACILITY SELFTEST %s" % ("PASS" if failures.is_empty() else "FAIL: " + ", ".join(failures)))

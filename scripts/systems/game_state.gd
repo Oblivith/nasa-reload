@@ -9,6 +9,7 @@ signal mode_changed(new_mode: Mode)
 signal part_unlocked(part_id: String)
 signal design_saved(design_name: String)
 signal design_changed
+signal flag_changed(flag: String, value: bool)
 
 enum Mode { CADET, ENGINEER, FLIGHT_DIRECTOR }
 
@@ -27,6 +28,10 @@ var mode: Mode = Mode.CADET
 var current_design: Dictionary = {}
 var current_report: Dictionary = {}
 var builder_state: Dictionary = {}
+
+## Story progress switches (flag name -> bool), e.g. "dad_office_unlocked". World scenes
+## read them (locked doors); story systems set them.
+var story_flags: Dictionary = {}
 
 
 func set_level(level_id: String) -> void:
@@ -47,6 +52,17 @@ func unlock_part(part_id: String) -> void:
 
 func is_part_unlocked(part_id: String) -> bool:
 	return part_id in unlocked_parts
+
+
+func set_flag(flag: String, value: bool = true) -> void:
+	if bool(story_flags.get(flag, false)) == value:
+		return
+	story_flags[flag] = value
+	flag_changed.emit(flag, value)
+
+
+func has_flag(flag: String) -> bool:
+	return bool(story_flags.get(flag, false))
 
 
 func set_design(design: Dictionary, report: Dictionary, state: Dictionary) -> void:
@@ -70,6 +86,7 @@ func to_dict() -> Dictionary:
 		"mode": mode,
 		"current_design": current_design,
 		"builder_state": builder_state,
+		"story_flags": story_flags,
 	}
 
 
@@ -81,3 +98,4 @@ func from_dict(d: Dictionary) -> void:
 	mode = d.get("mode", Mode.CADET)
 	current_design = d.get("current_design", {})
 	builder_state = d.get("builder_state", {})
+	story_flags = d.get("story_flags", {})

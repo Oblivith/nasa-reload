@@ -1,35 +1,30 @@
 {
   "comment": "Facility layout and on-screen text.",
-  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Rooms of the Center Campus facility, side by side along x (metres). Each room's id is sent to StoryTriggers.enter_area() when the player walks in. 'floor' and 'wall' are hex colours (60s palette). mission_control_scene is where the Launch Office sends a cleared rocket; if it does not exist yet the office says so. Text the rooms show lives here so it can be rewritten without code.",
-  "room_depth_m": 14,
-  "door_width_m": 4,
-  "wall_height_m": 3.2,
-  "rooms": [
-    {"id": "design_bay", "name": "DESIGN BAY", "x_min": 0, "x_max": 18, "floor": "d8c9a8", "wall": "8fc1b5",
-     "subtitle": "Click a part on a shelf, then click the rocket to fit it."},
-    {"id": "wind_tunnel", "name": "WIND TUNNEL", "x_min": 18, "x_max": 32, "floor": "b9b1a0", "wall": "e9c46a",
-     "subtitle": "Press E at the control desk to blow air over a model of your rocket."},
-    {"id": "computer_room", "name": "IBM COMPUTER ROOM", "x_min": 32, "x_max": 48, "floor": "c9d6d2", "wall": "f2e8cf",
-     "subtitle": "Press E at the keypunch to type your rocket in real numbers."},
-    {"id": "launch_office", "name": "LAUNCH OFFICE", "x_min": 48, "x_max": 62, "floor": "d9b38c", "wall": "e7a17a",
-     "subtitle": "Press E at the console to request a launch."}
-  ],
-  "spawn": {"x": 4, "z": 3},
+  "notes": "Code generated with AI assistance (Claude). Reviewed by team. On-screen text for the facility's gameplay stations (Dot, keypunch, wind tunnel, FLIGHT console). The building itself (rooms, doors, props, where each station stands) is in facility_world.json. mission_control_scene is where the FLIGHT console sends a cleared rocket; if it does not exist yet the console says so. Text lives here so it can be rewritten without code.",
   "mission_control_scene": "res://scenes/world/mission_control.tscn",
   "prompts": {
-    "dot": "[E] Talk to Dot",
-    "keypunch": "[E] Use the keypunch",
-    "wind_tunnel": "[E] Run the wind tunnel",
-    "launch": "[E] Request launch",
+    "dot": "E  Talk to Dot",
+    "keypunch": "E  Use the keypunch",
+    "wind_tunnel": "E  Run the wind tunnel",
+    "launch": "E  Sit at the FLIGHT console",
     "holding": "Holding: %s  (click the rocket to fit it, right-click to put it back)",
-    "help": "WASD move  |  E interact  |  F1 sheet view  |  Esc close"
+    "help": "WASD move  |  Mouse look  |  Shift run  |  E interact  |  Click parts  |  F1 sheet  |  Esc free mouse",
+    "too_far": "Too far away. Walk closer.",
+    "rocket_hover_holding": "Click to fit the part you are holding.",
+    "rocket_hover_empty": "Pick a part off a shelf first."
   },
   "keypunch": {
     "title": "KEYPUNCH  //  ONE CARD PER PART  //  REAL UNITS",
     "submit": "SUBMIT DECK",
     "add_stage": "PUNCH UPPER STAGE CARD",
     "remove_stage": "DISCARD CARD",
-    "busy": ["READING CARDS", "ASSEMBLING", "RUNNING BARROWMAN", "INTEGRATING ASCENT", "PRINTING"],
+    "busy": [
+      "READING CARDS",
+      "ASSEMBLING",
+      "RUNNING BARROWMAN",
+      "INTEGRATING ASCENT",
+      "PRINTING"
+    ],
     "bad_card": "CARD %02d REJECTED: '%s' is not a number for %s.",
     "printout_header": "DATA PROCESSING DIVISION  //  ROCKET EVALUATION RUN %04d",
     "close": "TEAR OFF"

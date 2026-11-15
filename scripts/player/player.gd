@@ -53,6 +53,8 @@ const EYE_HEIGHT := 1.45
 
 var control_enabled: bool = true
 var sprinting: bool = false
+## Tests and cutscenes: a world-space floor direction to walk in instead of the keys.
+var auto_move: Vector3 = Vector3.ZERO
 
 var _yaw: float = 0.0
 var _turn_rate: float = 0.0
@@ -266,6 +268,8 @@ func _physics_process(delta: float) -> void:
 	var wish := Vector3.ZERO
 	if input.length() > 0.01:
 		wish = Basis(Vector3.UP, camera_rig.yaw) * Vector3(input.x, 0.0, input.y)
+	if can_move and auto_move != Vector3.ZERO:
+		wish = Vector3(auto_move.x, 0.0, auto_move.z).normalized()
 	sprinting = can_move and input.length() > 0.5 and Input.is_action_pressed(PlayerInput.SPRINT)
 	var goal_velocity := wish * (sprint_speed if sprinting else walk_speed)
 
