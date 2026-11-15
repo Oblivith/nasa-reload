@@ -19,8 +19,9 @@ The player freely designs rockets and spacecraft from parts. A real-physics sim 
 /docs                 Design docs (Sim Spec, Story Bible)
 /scripts/sim          Pure GDScript physics/sim classes (no UI)
 /scripts/systems      Autoloads and game systems (GameState, SceneManager)
+/scripts/world        Facility building: rooms, kit props, doors, lift, NPCs, lighting, audio
 /scenes/ui            UI scenes
-/scenes/world         3D/2D world scenes
+/scenes/world         3D/2D world scenes (kit/ = reusable prop scenes)
 /scenes/cutscenes     Cutscene scenes
 /assets/models        3D models
 /assets/audio         Audio
@@ -35,7 +36,12 @@ Entry point: `res://scenes/main.tscn` (script `scripts/main.gd`).
 - `StoryTriggers` (`scripts/systems/story_triggers.gd`): `enter_area(id)` / `fire(event_id)`; world scenes report, story systems listen.
 
 ## Facility
-Title -> `scenes/world/facility/facility.tscn` (rooms from `data/facility.json`). Rooms share one rocket through `DesignSession` (`scripts/systems/design_session.gd`), which writes to `GameState`. F1 opens the RocketBuilder sheet as a debug/fallback view. Headless check: `-- --selftest` on the facility scene.
+Title -> `scenes/world/facility/facility.tscn`. `scenes/world/facility/facility.gd` is the gameplay (stations, overlays, self-test); the building is built by `FacilityWorld` (`scripts/world/`) from `data/facility_world.json`: two floors of rooms, doors, lift, stairs, props, lights. People come from `data/facility_npcs.json` + `data/npc_barks.json`, sound from `data/facility_audio.json`. Rooms share one rocket through `DesignSession` (`scripts/systems/design_session.gd`), which writes to `GameState`. F1 opens the RocketBuilder sheet as a debug/fallback view; F3 cycles render quality.
+
+- Kit: every prop / door / lift / NPC is a scene in `scenes/world/kit/` (placeholder geometry from `scripts/world/kit_library.gd`); replace a scene's contents with a .glb to swap art. A room entry may name a `scene` to replace its generated shell.
+- Player contract: the player node is in group `player` (a CharacterBody3D with gravity). `scripts/world/temp_cam.gd` and `scripts/world/interact_stub.gd` are placeholders for the third-person player and Interactable component.
+- Story: rooms call `StoryTriggers.enter_area(room id)`; usable props call `StoryTriggers.fire(id)`; locked doors read `GameState.has_flag()` (Dad's office: `dad_office_unlocked`).
+- Checks (always with a timeout): `-- --selftest`, `-- --bench` (fps per room), `-- --tour=<png>` (contact sheet of every room), `-- --room=<id> --screenshot=<png>`. Run `--headless --import` after adding a script with `class_name`. Regenerate sounds with `-s tools/gen_audio/gen_audio.gd`.
 
 ## Rules
 1. All game data (parts, levels, dialogue, events) lives in JSON files under `/data`. Never hardcode it in scripts.
