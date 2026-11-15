@@ -70,6 +70,8 @@ const GROUP := &"interactable"
 @export var free_mouse: bool = true
 ## E or Esc ends the interaction. hold_while() turns this off for that interaction.
 @export var cancel_with_key: bool = true
+## Hide the player figure during the shot (close-ups of a shelf, a notice, a book).
+@export var hide_player: bool = false
 ## Figure pose while interacting: "", "type", "sit", "sit_type", "talk" (FigureAnimator).
 @export var pose: StringName = &""
 

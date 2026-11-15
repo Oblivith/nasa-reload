@@ -16,6 +16,7 @@ var _target: Interactable = null
 var _camera: Camera3D = null
 var _shown: float = 0.0
 var _locked_look: bool = false
+var _reticle: bool = false
 
 
 func _ready() -> void:
@@ -83,6 +84,20 @@ func _style(locked: bool) -> void:
 	_key_box.add_theme_stylebox_override("panel", ConsoleTheme.panel(
 			ConsoleTheme.CREAM.darkened(0.12) if locked else ConsoleTheme.MUSTARD, ConsoleTheme.INK, 3, 6, 2))
 	_text.add_theme_color_override("font_color", ConsoleTheme.INK_SOFT if locked else ConsoleTheme.INK)
+
+
+## Shows a small dot at the centre of the screen: where "looking at" is measured from.
+func set_reticle(on: bool) -> void:
+	if on != _reticle:
+		_reticle = on
+		queue_redraw()
+
+
+func _draw() -> void:
+	if _reticle:
+		var centre := size * 0.5
+		draw_circle(centre, 4.0, Color(0.17, 0.15, 0.13, 0.45))
+		draw_circle(centre, 2.5, Color(0.98, 0.96, 0.9, 0.8))
 
 
 func _process(delta: float) -> void:

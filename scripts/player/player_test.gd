@@ -14,7 +14,8 @@ extends Node3D
 ##
 ## Run:  godot --path . scenes/player/player_test.tscn
 ## Debug: `-- [--selftest] [--at=<spot>] [--use] [--walk] [--sprint] [--left]
-##          [--yaw=<deg>] [--pitch=<deg>] [--screenshot=<png>]`   F3 toggles the readout.
+##          [--yaw=<deg>] [--pitch=<deg>] [--readout] [--bench=<seconds>] [--screenshot=<png>]`
+## F3 toggles the readout.
 
 const PLAYER_SCENE := "res://scenes/player/Player.tscn"
 
@@ -155,7 +156,7 @@ func _build_shelf() -> void:
 	_sign("PARTS", at + Vector3(0, 2.3, 0.05), 64)
 
 	var camera_point := Marker3D.new()
-	camera_point.position = Vector3(0.55, 1.45, 2.35)
+	camera_point.position = Vector3(0, 0.2, 2.85)
 	body.add_child(camera_point)
 	var look_point := Marker3D.new()
 	look_point.position = Vector3(0, 0.0, 0)
@@ -169,7 +170,8 @@ func _build_shelf() -> void:
 	_shelf.framing = Interactable.Framing.CAMERA_POINT
 	_shelf.camera_point = camera_point
 	_shelf.look_point = look_point
-	_shelf.shot_fov = 46.0
+	_shelf.shot_fov = 50.0
+	_shelf.hide_player = true
 	body.add_child(_shelf)
 	_shelf.used.connect(func(_p: Player) -> void:
 		(_log["used"] as Array).append(_shelf)
@@ -550,6 +552,7 @@ func _apply_cmdline(args: PackedStringArray) -> void:
 	var selftest := false
 	var use := false
 	var hold: Array[StringName] = []
+	var bench := 0.0
 	for arg in args:
 		if arg.begins_with("--at="):
 			_go(arg.trim_prefix("--at="))
@@ -572,6 +575,8 @@ func _apply_cmdline(args: PackedStringArray) -> void:
 			_readout.visible = true
 		elif arg.begins_with("--screenshot="):
 			screenshot = arg.trim_prefix("--screenshot=")
+		elif arg.begins_with("--bench="):
+			bench = float(arg.trim_prefix("--bench="))
 		elif arg == "--selftest":
 			selftest = true
 	if selftest:
@@ -583,6 +588,20 @@ func _apply_cmdline(args: PackedStringArray) -> void:
 		_player.try_interact()
 	for action in hold:
 		Input.action_press(action)
+	if bench > 0.0:
+		# Orbit the camera for a while and report the average frame rate.
+		await _seconds(1.0)
+		var frames := 0
+		var started := Time.get_ticks_usec()
+		while (Time.get_ticks_usec() - started) / 1000000.0 < bench:
+			await get_tree().process_frame
+			_player.camera_rig.rotate_look(0.01, 0.0)
+			frames += 1
+		var took := (Time.get_ticks_usec() - started) / 1000000.0
+		print("PlayerTest: %.0f fps average over %.1f s (%d draw calls, %d primitives)" % [frames / took, took,
+				Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)])
+		get_tree().quit()
+		return
 	if screenshot != "":
 		await _seconds(1.6 if use else 0.75)
 		await RenderingServer.frame_post_draw

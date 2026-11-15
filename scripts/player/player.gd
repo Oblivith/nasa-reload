@@ -44,6 +44,8 @@ const EYE_HEIGHT := 1.45
 ## Capture the mouse for looking around. Off for tests and screenshot runs.
 @export var capture_mouse: bool = true
 @export_flags_3d_physics var sight_mask: int = 1
+## A small dot at the centre of the screen, so it is clear what "looking at" means.
+@export var show_reticle: bool = true
 
 @onready var figure: BrickFigure = $Figure
 @onready var camera_rig: PlayerCamera = $CameraRig
@@ -61,6 +63,7 @@ var _step_grace: float = 0.0
 var _visual_y: float = 0.0
 var _overlook_time: float = 0.0
 var _turning_to_focus: bool = false
+var _shot_hides_figure: bool = false
 var _carrying: bool = false
 var _surface: StringName = &"default"
 
@@ -305,7 +308,14 @@ func _physics_process(delta: float) -> void:
 	_visual_y = clampf(_visual_y, global_position.y - 0.4, global_position.y + 0.4)
 	figure.position.y = _visual_y - global_position.y
 	# Hide the figure when the camera is squeezed right up against it.
-	figure.visible = camera_rig.is_in_shot() or camera_rig.boom_length() > 0.55
+	if _active != null:
+		_shot_hides_figure = _active.hide_player
+	elif not camera_rig.is_in_shot():
+		_shot_hides_figure = false
+	if _shot_hides_figure:
+		figure.visible = camera_rig.shot_blend() < 0.35
+	else:
+		figure.visible = camera_rig.is_in_shot() or camera_rig.boom_length() > 0.55
 
 	if _active != null:
 		if _active.framing != Interactable.Framing.NONE:
@@ -313,6 +323,7 @@ func _physics_process(delta: float) -> void:
 	elif control_enabled and interact_enabled:
 		_set_focus(_find_focus())
 	prompt.show_for(_focus, camera_rig.camera)
+	prompt.set_reticle(show_reticle and control_enabled and _active == null and not camera_rig.is_in_shot())
 
 
 func _update_facing(delta: float, wish: Vector3) -> void:
