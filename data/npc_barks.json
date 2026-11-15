@@ -1,5 +1,84 @@
 {
-  "comment": "One-liners NPCs say when the player walks past.",
-  "notes": "Code generated with AI assistance (Claude). Reviewed by team. Filled in at stage 4.",
-  "barks": {}
+ "comment": "One-liners NPCs say when the player walks past.",
+ "notes": "Code generated with AI assistance (Claude). Reviewed by team. Keyed by the 'bark' name used on props and people in facility_world.json / facility_npcs.json. Warm, a bit dry, 1962. No real people.",
+ "barks": {
+  "guard": [
+   "Morning. Sign the book. Everybody signs the book.",
+   "You are the new clerk. I knew your father. Kept worse hours than me."
+  ],
+  "visitor": [
+   "They built these out of balsa first. Balsa!",
+   "Is it true the big one was never flown?"
+  ],
+  "gossip": [
+   "Pike cut the pencil budget. The PENCIL budget.",
+   "I heard the program is dead. I also heard that last year."
+  ],
+  "cafeteria": [
+   "Do not touch Dot's pot. Trust me.",
+   "The special is whatever was special yesterday."
+  ],
+  "vending": [
+   "It took my nickel. Again.",
+   "One day this machine and I will settle things."
+  ],
+  "clerk": [
+   "Form 12-B, in triplicate. No, the blue one.",
+   "If it is not filed, it did not happen."
+  ],
+  "parts": [
+   "No chit, no part. Dot's rules, not mine.",
+   "Small fins are on back order. Everyone wants small fins."
+  ],
+  "tunnel": [
+   "Hold onto your tie when the fan starts.",
+   "If the model tumbles in here, it tumbles up there."
+  ],
+  "bay": [
+   "Measure twice. Then ask Dot. Then measure again.",
+   "Every pound up top costs you ten at the bottom."
+  ],
+  "crane": [
+   "Mind your head. Mind my hook.",
+   "Best view in the building, and they pay me for it."
+  ],
+  "ibm": [
+   "Do not lean on the tape drives. They sulk.",
+   "One wrong hole in one card. Six hours. Gone."
+  ],
+  "office": [
+   "Slide rules do not have opinions. That is why I like them.",
+   "Somebody moved my French curve."
+  ],
+  "typing": [
+   "Sixty words a minute. Seventy if Pike is watching.",
+   "He dictates in budget numbers. I type them in my sleep."
+  ],
+  "pike": [
+   "Under budget, or not at all.",
+   "I have a meeting about the cost of meetings."
+  ],
+  "controller": [
+   "Quiet on the loop, please.",
+   "Flight's chair is empty. It has been empty a while."
+  ],
+  "sparks": [
+   "Copy, five by five. Oh, you are not on the net. Hello.",
+   "I was on the radio that night. Ask me another day."
+  ],
+  "gallery": [
+   "You can hear them think from up here.",
+   "My nephew wants to be CAPCOM. He is six."
+  ],
+  "bay_window": [
+   "You can watch the whole bay from here. Dot hates it.",
+   "That bench by the shelves was your father's."
+  ],
+  "walker": [
+   "'Scuse me.",
+   "Late for a meeting about being late.",
+   "Mind the reel!",
+   "Lift is slow today."
+  ]
+ }
 }

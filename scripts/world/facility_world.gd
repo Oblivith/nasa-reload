@@ -34,6 +34,7 @@ var current_room: String = ""
 var visible_rooms: Dictionary = {}
 ## Nodes that walk around (NPCs); doors and the lift react to them like the player.
 var walkers: Array[Node3D] = []
+var npcs: Array[WorldNpc] = []
 ## Set by WorldAudio when it exists: play_sound(id, position).
 var sound_player: Callable
 
@@ -216,6 +217,64 @@ func _prop_interact(room: WorldRoom, prop: KitProp, options: Dictionary) -> void
 	stub.used.connect(func(_by: Node) -> void: StoryTriggers.fire(stub.interact_id, {"say": str(spec.get("say", "")), "room": room.room_id}))
 
 
+# --- People ------------------------------------------------------------------------
+
+## Seats, stands and sends walking everyone in facility_npcs.json and on props' "npc"
+## options. Call once after build().
+func spawn_people(people_cfg: Dictionary, barks_cfg: Dictionary) -> void:
+	var roles: Dictionary = people_cfg.get("roles", {})
+	var barks: Dictionary = barks_cfg.get("barks", {})
+	var packed: PackedScene = load("res://scenes/world/kit/npc.tscn") if ResourceLoader.exists("res://scenes/world/kit/npc.tscn") else null
+	var make := func(spec: Dictionary, pose: String, layers: int) -> WorldNpc:
+		var npc: WorldNpc = (packed.instantiate() as WorldNpc) if packed != null else WorldNpc.new()
+		npc.role = str(spec.get("role", "engineer"))
+		npc.name = "Npc_%s_%d" % [npc.role, npcs.size()]
+		npc.setup(self, roles.get(npc.role, {}), pose, layers, barks.get(str(spec.get("bark", "")), []))
+		npcs.append(npc)
+		return npc
+	for room in room_list:
+		for prop in room.props:
+			var specs: Array = prop.options.get("npcs", [])
+			if prop.options.has("npc"):
+				specs = [prop.options["npc"]]
+			for spec: Dictionary in specs:
+				var spot: Dictionary = {"pos": Vector3(0, 0, 1), "yaw": PI, "pose": "stand"}
+				if not prop.spots.is_empty():
+					spot = prop.spots[mini(int(spec.get("seat", 0)), prop.spots.size() - 1)]
+				var spot_pose := str(spot["pose"])
+				var pose := str(spec.get("pose", spot_pose))
+				if spot_pose == "sit" and not spec.has("at") and not (pose.begins_with("sit") or pose in ["type", "write", "talk_sit"]):
+					pose = "sit"
+				var npc: WorldNpc = make.call(spec, pose, room.layer_bit)
+				prop.add_child(npc)
+				npc.position = spot["pos"]
+				npc.rotation.y = float(spot["yaw"])
+				if spec.has("at"):
+					npc.position = WorldRoom.v3(spec["at"])
+				if spec.has("yaw"):
+					npc.rotation.y = deg_to_rad(float(spec["yaw"]))
+				npc.room_id = room.room_id
+				room.people.append(npc)
+				npc.set_active(room.active)
+	for spec: Dictionary in people_cfg.get("people", []):
+		if not rooms.has(str(spec.get("room", ""))):
+			continue
+		var room: WorldRoom = rooms[str(spec["room"])]
+		var npc: WorldNpc = make.call(spec, str(spec.get("pose", "stand")), room.layer_bit)
+		room.add_child(npc)
+		var at: Array = spec["at"]
+		npc.position = room.local_point(float(at[0]), float(at[1]), float(at[2]))
+		npc.rotation.y = deg_to_rad(float(spec.get("yaw", 0.0)))
+		npc.room_id = room.room_id
+		room.people.append(npc)
+		npc.set_active(room.active)
+	for spec: Dictionary in people_cfg.get("walkers", []):
+		var npc: WorldNpc = make.call(spec, "walk", 1)
+		add_child(npc)
+		npc.set_route(spec.get("route", []))
+		walkers.append(npc)
+
+
 # --- Queries -------------------------------------------------------------------------
 
 func player() -> Node3D:
@@ -326,7 +385,7 @@ func stats() -> Dictionary:
 		prop_count += room.props.size()
 		light_count += room.lights.size()
 	return {"rooms": room_list.size(), "doors": doors.size(), "props": prop_count, "lights": light_count,
-			"chunks": _box_total, "build_ms": _build_ms, "visible": visible_rooms.size()}
+			"people": npcs.size(), "chunks": _box_total, "build_ms": _build_ms, "visible": visible_rooms.size()}
 
 
 func show_everything(on: bool) -> void:

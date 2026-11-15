@@ -25,6 +25,7 @@ var base_y: float = 0.0
 var height: float = 3.3
 var layer_bit: int = 1
 var props: Array[KitProp] = []
+var people: Array = []            # WorldNpc nodes that live in this room
 var lights: Array = []            # [{light, energy, panel}]
 var active: bool = false
 var cast_shadows: bool = false
@@ -430,7 +431,7 @@ func finish() -> void:
 	var index := 0
 	for key: Vector2i in _chunks:
 		var mi := (_chunks[key] as BrickMesh).commit(self, layer_bit, "Shell%d" % index)
-		if mi != null and cast_shadows:
+		if mi != null:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
 		index += 1
 	_solid.build_body(self)
@@ -449,6 +450,8 @@ func set_active(on: bool) -> void:
 	visible = on
 	for prop in props:
 		prop.set_active(on)
+	for person: Node in people:
+		person.call("set_active", on)
 	set_process(on and not _flickers.is_empty())
 
 

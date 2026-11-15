@@ -100,7 +100,7 @@
      "signs": []},
 
     {"id": "cafeteria", "name": "CAFETERIA", "subtitle": "Coffee, cola and gossip.",
-     "rect": [8, 32, 24, 44], "y": 0, "h": 3.3,
+     "rect": [8, 32, 24, 44], "y": 0, "h": 3.3, "sun": true,
      "floor": "e3d3ad", "floor_surface": "tile", "wall": "f6e7c1", "dado": "c8551f", "ceiling": "f4efe2",
      "ambience": "cafeteria", "surface": "lino", "mood": {"ambient": 0.5},
      "lights": {"kind": "fluoro", "nx": 2, "nz": 2, "energy": 0.85, "color": "fff0d6"},

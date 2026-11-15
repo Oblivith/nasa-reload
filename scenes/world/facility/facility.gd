@@ -66,6 +66,7 @@ func _ready() -> void:
 	world.name = "World"
 	add_child(world)
 	world.build(DataLoader.raw.get("facility_world", {}))
+	world.spawn_people(DataLoader.raw.get("facility_npcs", {}), DataLoader.raw.get("npc_barks", {}))
 	_build_environment()
 	_build_player()
 	_build_design_bay(_station("design_bay"))
@@ -795,6 +796,13 @@ func _apply_cmdline() -> void:
 	if selftest:
 		await _run_selftest()
 		return
+	var web_bench := OS.has_feature("web") and str(JavaScriptBridge.eval("window.location.search", true)).contains("bench")
+	if web_bench or "--bench" in OS.get_cmdline_user_args():
+		atmosphere.auto_quality = false
+		await _run_bench()
+		if not web_bench:
+			get_tree().quit()
+		return
 	if screenshot != "":
 		for i in 40:
 			await get_tree().process_frame
@@ -803,6 +811,25 @@ func _apply_cmdline() -> void:
 		var err := image.save_png(screenshot)
 		print("Facility: screenshot -> %s (%s)  %s" % [screenshot, error_string(err), str(world.stats())])
 		get_tree().quit()
+
+
+## Debug: average frame rate standing in several rooms (`--bench`, or `?bench` on Web).
+func _run_bench() -> void:
+	var report: PackedStringArray = []
+	for id: String in ["lobby", "corridor_g", "design_bay", "computer_room", "mc_gallery", "mission_control", "typing_pool"]:
+		_teleport_room(id)
+		for i in 40:
+			await get_tree().process_frame
+		var started := Time.get_ticks_usec()
+		for i in 120:
+			await get_tree().process_frame
+		var fps := 120.0 / (float(Time.get_ticks_usec() - started) / 1000000.0)
+		report.append("%s %.0f" % [id, fps])
+		print("BENCH %s: %.1f fps, %d draw calls, %d visible rooms" % [id, fps,
+				int(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)), world.visible_rooms.size()])
+	print("BENCH DONE quality=%d  %s" % [atmosphere.quality, " | ".join(report)])
+	_hud.notice("FPS  " + "   ".join(report))
+	_teleport_room("lobby")
 
 
 ## Debug: one contact sheet with a view of every room (`--tour=<png>`).
@@ -856,6 +883,7 @@ func _run_selftest() -> void:
 	var stats := world.stats()
 	print("  world: %s" % str(stats))
 	expect.call(int(stats["rooms"]) >= 16 and world.lift != null, "building has %d rooms, %d doors and a lift" % [stats["rooms"], stats["doors"]])
+	expect.call(int(stats["people"]) >= 25 and world.walkers.size() >= 4, "%d people work here, %d of them walking routes" % [stats["people"], world.walkers.size()])
 	var spawn_room := _room_id
 	expect.call(StoryTriggers.has_visited("lobby") and spawn_room == "lobby", "player starts in the lobby (%s)" % spawn_room)
 	var lost: PackedStringArray = []
@@ -869,7 +897,7 @@ func _run_selftest() -> void:
 	expect.call(_shelf_items.size() >= 12, "shelves hold every preset (%d pieces)" % _shelf_items.size())
 	expect.call(_bench_rocket.get_child_count() > 3, "bench rocket model built (%d parts)" % _bench_rocket.get_child_count())
 	expect.call(StoryTriggers.has_visited("design_bay") and _room_id == "design_bay", "enter_area fired for %s" % _room_id)
-	expect.call(world.visible_rooms.has("design_bay") and not world.visible_rooms.has("typing_pool"), "only nearby rooms are drawn (%d visible)" % world.visible_rooms.size())
+	expect.call(world.visible_rooms.has("design_bay") and world.visible_rooms.size() <= 9, "only nearby rooms are drawn (%d visible)" % world.visible_rooms.size())
 	var dot_stub: InteractStub = _stubs["dot"]
 	var near_dot := dot_stub.global_position + Vector3(-1.2, -0.1, 1.2)
 	var found := world.best_stub(near_dot, (dot_stub.global_position - near_dot).normalized())

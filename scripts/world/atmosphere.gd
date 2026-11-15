@@ -11,7 +11,7 @@ extends Node3D
 ## fog. Those are switched on only when a RenderingDevice exists (desktop Forward+);
 ## on Web the look comes from baked vertex shading, depth fog, glow and the shafts.
 ##
-## Quality: 2 = everything, 1 = no sun shadows, 0 = also no glow / fog / film overlay.
+## Quality: 2 = everything, 1 = no sun (its shadows are the cost), 0 = also no glow / fog / film overlay.
 ## F3 cycles it; auto_quality drops a level when the frame rate stays low.
 
 signal quality_changed(level: int)
@@ -99,7 +99,7 @@ func _build_sun() -> void:
 	sun.light_energy = float(_cfg.get("sun_energy", 1.5))
 	sun.light_specular = 0.2
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	sun.directional_shadow_max_distance = 38.0
+	sun.directional_shadow_max_distance = 48.0
 	sun.shadow_bias = 0.06
 	sun.shadow_normal_bias = 1.5
 	var mask := FacilityWorld.EXTERIOR_BIT
@@ -164,7 +164,7 @@ func _build_overlay() -> void:
 
 func set_quality(level: int) -> void:
 	quality = clampi(level, 0, 2)
-	sun.shadow_enabled = quality >= 2
+	sun.shadow_enabled = true
 	env.glow_enabled = quality >= 1
 	env.fog_enabled = quality >= 1
 	_overlay.visible = quality >= 1
@@ -197,7 +197,8 @@ func _process(delta: float) -> void:
 			if world.visible_rooms.has(id):
 				sunny = true
 				break
-	sun.visible = sunny
+	# Walls only stop the sun through its shadow map, so without shadows there is no sun.
+	sun.visible = sunny and quality >= 2
 	_shafts.visible = sunny and quality >= 1
 	# Protect the frame rate on slow machines / browsers: step quality down if it stays low.
 	if auto_quality and quality > 0:
